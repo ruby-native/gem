@@ -1,0 +1,7 @@
+.native-back-button {
+  display: none;
+}
+
+body.can-go-back .native-back-button {
+  display: inline;
+}
