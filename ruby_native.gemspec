@@ -13,8 +13,11 @@ Gem::Specification.new do |spec|
 
   spec.required_ruby_version = ">= 3.2"
 
-  spec.files = Dir["{app,config,lib}/**/*", "LICENSE", "README.md"]
+  spec.files = Dir["{app,config,exe,lib}/**/*", "LICENSE", "README.md"]
+  spec.bindir = "exe"
+  spec.executables = ["ruby_native"]
   spec.require_paths = ["lib"]
 
   spec.add_dependency "rails", ">= 7.1"
+  spec.add_dependency "rqrcode", "~> 3.0"
 end

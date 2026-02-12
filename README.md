@@ -37,6 +37,26 @@ tabs:
     icon: person
 ```
 
+## Preview
+
+Preview your app on a real device without deploying. This starts a Cloudflare tunnel and displays a QR code for the companion app to scan.
+
+```bash
+ruby_native preview
+```
+
+Options:
+
+- `--port 3001` - specify the local server port (defaults to 3000)
+
+Requires `cloudflared`. Install with:
+
+```bash
+brew install cloudflare/cloudflare/cloudflared
+```
+
+The companion app persists the scanned URL across launches. Long-press the app icon and tap "Switch website" to scan a new server.
+
 ## Endpoints
 
 - `GET /native/config` - returns the YAML config as JSON
