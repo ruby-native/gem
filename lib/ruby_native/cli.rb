@@ -8,7 +8,10 @@ module RubyNative
       when "preview"
         RubyNative::CLI::Preview.new(argv).run
       else
-        puts "Usage: ruby_native preview [--port PORT]"
+        puts "Usage: ruby_native <command>"
+        puts ""
+        puts "Commands:"
+        puts "  preview    Start a tunnel and display a QR code"
       end
     end
   end

@@ -1,0 +1,19 @@
+appearance:
+  tint_color: "#007AFF"
+  background_color: "#FFFFFF"
+  status_bar_color: "#F8F9FA"
+  # Dark mode example (replace the plain strings above):
+  # background_color:
+  #   light: "#FFFFFF"
+  #   dark: "#1C1C1E"
+  # status_bar_color:
+  #   light: "#F8F9FA"
+  #   dark: "#1C1C1E"
+
+tabs:
+  - title: Home
+    path: /
+    icon: house
+  - title: Profile
+    path: /profile
+    icon: person

@@ -5,20 +5,31 @@ A Rails engine that provides native detection, configuration, push device regist
 ## Installation
 
 ```ruby
-gem "ruby_native", path: "../../gem"  # local development
+gem "ruby_native"
 ```
 
-Then mount the engine in `config/routes.rb`:
+The engine auto-mounts at `/native`. No route configuration needed.
 
-```ruby
-Rails.application.routes.draw do
-  mount RubyNative::Engine => "/native"
-end
+## Getting started
+
+Run the install generator to create your config file:
+
+```bash
+rails generate ruby_native:install
 ```
+
+This creates `config/ruby_native.yml` with sensible defaults. If you have a `.claude/` directory, it also adds `.claude/ruby_native.md` with AI-assisted setup instructions. Follow the printed instructions to:
+
+1. Edit the config with your app name, colors, and tabs
+2. Add `<%= stylesheet_link_tag :ruby_native %>` to your layout `<head>`
+3. Add `<%= native_tabs_tag %>` to your layout `<body>`
+4. Run `ruby_native preview` to see it on your phone
+
+Using Claude Code? Open it in your project and ask "what do I need to do next?" for guided setup.
 
 ## Configuration
 
-Create `config/ruby_native.yml`:
+Edit `config/ruby_native.yml`:
 
 ```yaml
 app:
@@ -26,7 +37,6 @@ app:
 appearance:
   tint_color: "#4F46E5"
   background_color: "#FFFFFF"
-  status_bar: dark
   status_bar_color: "#FFFFFF"
 tabs:
   - title: Home
@@ -35,6 +45,14 @@ tabs:
   - title: Profile
     path: /profile
     icon: person
+```
+
+Color fields accept a plain hex string or an object with `light` and `dark` keys for dark mode:
+
+```yaml
+background_color:
+  light: "#FFFFFF"
+  dark: "#1C1C1E"
 ```
 
 ## Preview
