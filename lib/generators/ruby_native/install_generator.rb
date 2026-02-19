@@ -22,7 +22,7 @@ module RubyNative
 
       def copy_claude_instructions
         return unless File.directory?(File.join(destination_root, ".claude"))
-        template "CLAUDE.md", ".claude/ruby_native.md"
+        copy_file "CLAUDE.md", ".claude/ruby_native.md"
       end
 
       def print_next_steps
