@@ -122,7 +122,7 @@ The Preview app remembers the scanned URL. Long-press the app icon and tap "Swit
 
 The gem auto-mounts at `/native`. No route configuration needed.
 
-- `GET /native/config.json` returns the YAML config as JSON
+- `GET /native/config` returns the YAML config as JSON
 - `POST /native/push/devices` registers a push notification device token
 
 ## Common tasks
