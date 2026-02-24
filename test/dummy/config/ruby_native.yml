@@ -1,0 +1,10 @@
+app:
+  name: Test App
+appearance:
+  tint_color: "#007AFF"
+  background_color: "#FFFFFF"
+  status_bar_color: "#F8F9FA"
+tabs:
+  - title: Home
+    path: /
+    icon: house
