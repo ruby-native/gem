@@ -23,7 +23,7 @@ This creates `config/ruby_native.yml` with sensible defaults. If you have a `.cl
 1. Edit the config with your app name, colors, and tabs
 2. Add `<%= stylesheet_link_tag :ruby_native %>` to your layout `<head>`
 3. Add `<%= native_tabs_tag %>` to your layout `<body>`
-4. Run `ruby_native preview` to see it on your phone
+4. Run `bundle exec ruby_native preview` to see it on your phone
 
 Using Claude Code? Open it in your project and ask "what do I need to do next?" for guided setup.
 
@@ -60,7 +60,7 @@ background_color:
 Preview your app on a real device without deploying. This starts a Cloudflare tunnel and displays a QR code for the companion app to scan.
 
 ```bash
-ruby_native preview
+bundle exec ruby_native preview
 ```
 
 Options:

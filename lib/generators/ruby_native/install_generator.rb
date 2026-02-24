@@ -35,7 +35,7 @@ module RubyNative
         say "  3. Add to your layout <body>:"
         say "       <%= native_tabs_tag %>"
         say "  4. Preview on your device:"
-        say "       ruby_native preview"
+        say "       bundle exec ruby_native preview"
         say ""
         if File.directory?(File.join(destination_root, ".claude"))
           say "  Tip: .claude/ruby_native.md was added with setup instructions."

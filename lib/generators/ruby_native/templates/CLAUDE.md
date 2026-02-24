@@ -33,7 +33,7 @@ rails generate ruby_native:install
 6. Preview on your phone:
 
 ```bash
-ruby_native preview
+bundle exec ruby_native preview
 ```
 
 Scan the QR code with the Ruby Native Preview app from the App Store.
@@ -100,7 +100,7 @@ Signal elements are hidden `<div>` tags. Place them in the `<body>`, not the `<h
 
 ## Preview
 
-`ruby_native preview` starts a Cloudflare tunnel and displays a QR code. Requires `cloudflared`:
+`bundle exec ruby_native preview` starts a Cloudflare tunnel and displays a QR code. Requires `cloudflared`:
 
 ```bash
 brew install cloudflare/cloudflare/cloudflared
