@@ -5,10 +5,10 @@ module RubyNative
     class Preview
       TUNNEL_URL_PATTERN = %r{https://[a-z0-9-]+\.trycloudflare\.com}
 
-      BLACK_BG = "\033[48;2;0;0;0m"
-      WHITE_BG = "\033[48;2;255;255;255m"
-      BLACK_FG = "\033[38;2;0;0;0m"
-      WHITE_FG = "\033[38;2;255;255;255m"
+      BLACK_BG = "\033[40m"
+      WHITE_BG = "\033[107m"
+      BLACK_FG = "\033[30m"
+      WHITE_FG = "\033[97m"
       RESET = "\033[0m"
 
       def initialize(argv)
