@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.0] - 2026-02-25
+
+### Added
+
+- Advanced Mode with native navigation bar, screen transitions, and swipe-to-go-back.
+- Six bridge controllers (`tabs`, `form`, `button`, `push`, `menu`, `search`) registered via `import "ruby_native/bridge"`.
+- `native_form_data` and `native_submit_data` helpers for native submit buttons that disable during form submission.
+- `native_button_tag` helper for native navigation bar buttons with SF Symbol icons and left/right placement.
+- `native_menu_tag` helper for native action sheet menus with destructive item support.
+- `native_search_tag` helper for native search bars that dispatch query events.
+- Bridge component CSS in the gem's stylesheet. Web submit buttons and native button elements are automatically hidden when their bridge components are active.
+
 ## [0.0.6] - 2026-02-24
 
 - Fix potential issue with rendered QR code
