@@ -32,8 +32,6 @@ Using Claude Code? Open it in your project and ask "what do I need to do next?" 
 Edit `config/ruby_native.yml`:
 
 ```yaml
-app:
-  name: My App
 appearance:
   tint_color: "#4F46E5"
   background_color: "#FFFFFF"
@@ -80,14 +78,88 @@ The companion app persists the scanned URL across launches. Long-press the app i
 - `GET /native/config` - returns the YAML config as JSON
 - `POST /native/push/devices` - registers a push notification token (requires `current_user` from host app)
 
+## Standard and Advanced Modes
+
+Standard Mode works with any frontend framework and requires no JavaScript. You get tabs, form page marking, push notifications, and history management.
+
+Advanced Mode adds native navigation bar buttons, submit buttons, action menus, and search bars. It requires Stimulus and a small JavaScript setup step (see [Advanced Mode setup](#advanced-mode-setup) below). Migration is additive. Start with Standard and add Advanced helpers one page at a time.
+
 ## View helpers
 
-- `native_app?` - true when the request comes from a Ruby Native app (checks user agent)
-- `native_tabs_tag` - renders a hidden signal element for tab bar detection
-- `native_form_tag` - renders a hidden signal element marking the page as a form
-- `native_push_tag` - renders a hidden signal element requesting push permission
+Place helpers in the `<body>`, not the `<head>`.
 
-Signal elements are hidden `<div>` tags with data attributes (e.g., `<div data-native-tabs hidden>`). Place them in the `<body>`, not the `<head>`.
+### Any mode
+
+- `native_app?` - true when the request comes from a Ruby Native app (checks user agent)
+- `native_tabs_tag(enabled: true)` - shows the native tab bar.
+- `native_push_tag` - requests push notification permission.
+- `native_back_button_tag(text = nil, **options)` - renders a back button for Standard Mode. Hidden by default, shown when the native app sets `body.can-go-back`. Not needed in [Advanced Mode](https://rubynative.dev/docs/advanced-mode) where the system provides a native back button.
+
+### Standard Mode
+
+- `native_form_tag` - marks the page as a form. The app skips form pages when navigating back.
+
+### Advanced Mode
+
+These require the JavaScript setup described in [Advanced Mode setup](#advanced-mode-setup).
+
+- `native_form_data` - returns the data hash for the native form submit button. Pass to `form_with`'s `data:` option.
+- `native_submit_data` - returns the data hash for the native submit target. Pass to `form.submit`'s `data:` option.
+- `native_button_tag(title, url, ios_image:, side: :right, **options)` - adds a native navigation bar button.
+- `native_menu_tag(title:, side: :right, &block)` - displays a native action sheet menu.
+- `native_search_tag` - adds a native search bar.
+
+## Advanced Mode setup
+
+1. Install the JavaScript dependency:
+
+```bash
+yarn add @hotwired/hotwire-native-bridge
+# or
+bin/importmap pin @hotwired/hotwire-native-bridge
+```
+
+2. Import the controllers in your JavaScript entrypoint:
+
+```js
+import "ruby_native/bridge"
+```
+
+### `native_form_data` / `native_submit_data`
+
+```erb
+<%= form_with model: @link, data: native_form_data do |f| %>
+  <%= f.text_field :url %>
+  <%= f.submit "Save", data: native_submit_data %>
+<% end %>
+```
+
+### `native_button_tag`
+
+```erb
+<%= native_button_tag "Add a link", new_link_path, ios_image: "plus", class: "btn btn-primary" %>
+```
+
+Options:
+- `ios_image:` - SF Symbol icon name (falls back to the title text)
+- `side:` - `:left` or `:right` (default). Left supplements the back button.
+
+### `native_menu_tag`
+
+```erb
+<%= native_menu_tag(title: "Actions") do |menu| %>
+  <%= menu.item "Edit", edit_link_path(@link) %>
+  <%= menu.item "Delete", link_path(@link), method: :delete, destructive: true %>
+<% end %>
+```
+
+Options on `native_menu_tag`:
+- `title:` - action sheet title
+- `side:` - `:left` or `:right` (default)
+
+Options on `menu.item`:
+- `method:` - Turbo method (e.g., `:delete`)
+- `destructive: true` - red styling
 
 ## Stylesheet
 

@@ -139,16 +139,14 @@ The gem auto-mounts at `/native`. No route configuration needed.
 <%= native_tabs_tag if user_signed_in? %>
 ```
 
-### Add a native back button
+### Add a native back button (Standard Mode only)
 
-Add an element with the `native-back-button` class. The gem's stylesheet handles showing it only when there's history to go back to.
+Use the `native_back_button_tag` helper. The gem's stylesheet handles showing it only when there's history to go back to. Not needed in Advanced Mode where the system provides a native back button.
 
 ```erb
 <%= stylesheet_link_tag :ruby_native %>
 ```
 
 ```erb
-<button class="native-back-button" onclick="webkit.messageHandlers.rubyNative.postMessage({action: 'back'})">
-  Back
-</button>
+<%= native_back_button_tag %>
 ```

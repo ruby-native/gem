@@ -5,3 +5,14 @@
 body.can-go-back .native-back-button {
   display: inline;
 }
+
+[data-bridge-components~="form"]
+[data-controller~="bridge--form"]
+[type="submit"] {
+  display: none;
+}
+
+[data-bridge-components~="button"]
+[data-controller~="bridge--button"] {
+  display: none;
+}

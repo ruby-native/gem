@@ -10,7 +10,16 @@ module RubyNative
     end
 
     initializer "ruby_native.assets" do |app|
-      app.config.assets.paths << root.join("app/assets/stylesheets") if app.config.respond_to?(:assets)
+      if app.config.respond_to?(:assets)
+        app.config.assets.paths << root.join("app/assets/stylesheets")
+        app.config.assets.paths << root.join("app/javascript")
+      end
+    end
+
+    initializer "ruby_native.importmap", before: "importmap" do |app|
+      if app.config.respond_to?(:importmap)
+        app.config.importmap.paths << root.join("config/importmap.rb")
+      end
     end
 
     initializer "ruby_native.config" do
