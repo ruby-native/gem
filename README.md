@@ -78,11 +78,11 @@ The companion app persists the scanned URL across launches. Long-press the app i
 - `GET /native/config` - returns the YAML config as JSON
 - `POST /native/push/devices` - registers a push notification token (requires `current_user` from host app)
 
-## Standard and Advanced Modes
+## Normal and Advanced Modes
 
-Standard Mode works with any frontend framework and requires no JavaScript. You get tabs, form page marking, push notifications, and history management.
+Normal Mode works with any frontend framework and requires no JavaScript. You get tabs, form page marking, push notifications, and history management.
 
-Advanced Mode adds native navigation bar buttons, submit buttons, action menus, and search bars. It requires Stimulus and a small JavaScript setup step (see [Advanced Mode setup](#advanced-mode-setup) below). Migration is additive. Start with Standard and add Advanced helpers one page at a time.
+Advanced Mode adds native navigation bar buttons, submit buttons, action menus, and search bars. It requires Stimulus and a small JavaScript setup step (see [Advanced Mode setup](#advanced-mode-setup) below). Migration is additive. Start with Normal and add Advanced helpers one page at a time.
 
 ## View helpers
 
@@ -93,9 +93,9 @@ Place helpers in the `<body>`, not the `<head>`.
 - `native_app?` - true when the request comes from a Ruby Native app (checks user agent)
 - `native_tabs_tag(enabled: true)` - shows the native tab bar.
 - `native_push_tag` - requests push notification permission.
-- `native_back_button_tag(text = nil, **options)` - renders a back button for Standard Mode. Hidden by default, shown when the native app sets `body.can-go-back`. Not needed in [Advanced Mode](https://rubynative.dev/docs/advanced-mode) where the system provides a native back button.
+- `native_back_button_tag(text = nil, **options)` - renders a back button for Normal Mode. Hidden by default, shown when the native app sets `body.can-go-back`. Not needed in [Advanced Mode](https://rubynative.dev/docs/advanced-mode) where the system provides a native back button.
 
-### Standard Mode
+### Normal Mode
 
 - `native_form_tag` - marks the page as a form. The app skips form pages when navigating back.
 
