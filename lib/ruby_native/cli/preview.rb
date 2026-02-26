@@ -45,6 +45,8 @@ module RubyNative
 
       def start_tunnel
         puts "Starting tunnel to http://localhost:#{@port}..."
+        puts "Make sure your Rails server is running on port #{@port} in another terminal."
+        puts ""
 
         stdin, stdout_err, wait_thread = Open3.popen2e(
           "cloudflared", "tunnel", "--url", "http://localhost:#{@port}"
@@ -108,6 +110,7 @@ module RubyNative
         puts url
         puts ""
         puts "Scan with the Ruby Native preview app."
+        puts "Keep this running and your Rails server on port #{@port} in another terminal."
         puts "Press Ctrl+C to stop."
       end
 

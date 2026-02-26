@@ -30,13 +30,17 @@ rails generate ruby_native:install
 <%= native_tabs_tag %>
 ```
 
-6. Preview on your phone:
+6. Start your Rails server and the preview tunnel in separate terminals:
+
+```bash
+bin/rails server
+```
 
 ```bash
 bundle exec ruby_native preview
 ```
 
-Scan the QR code with the Ruby Native Preview app from the App Store.
+Scan the QR code with the Ruby Native Preview app from the App Store. Keep both the server and tunnel running.
 
 ## Configuration
 
@@ -100,7 +104,7 @@ Signal elements are hidden `<div>` tags. Place them in the `<body>`, not the `<h
 
 ## Preview
 
-`bundle exec ruby_native preview` starts a Cloudflare tunnel and displays a QR code. Requires `cloudflared`:
+`bundle exec ruby_native preview` starts a Cloudflare tunnel and displays a QR code. Your Rails server must be running separately (e.g., `bin/rails server` in another terminal). Requires `cloudflared`:
 
 ```bash
 brew install cloudflare/cloudflare/cloudflared
