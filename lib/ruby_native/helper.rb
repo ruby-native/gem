@@ -32,7 +32,11 @@ module RubyNative
 
     def native_back_button_tag(text = nil, **options)
       options[:class] = [options[:class], "native-back-button"].compact.join(" ")
-      tag.button(text || "Back", onclick: "webkit.messageHandlers.rubyNative.postMessage({action: 'back'})", **options)
+      default_content = tag.svg(
+        tag.path(d: "M15.75 19.5L8.25 12l7.5-7.5", stroke_linecap: "round", stroke_linejoin: "round"),
+        width: 24, height: 24, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", stroke_width: 2.5
+      )
+      tag.button(text || default_content, onclick: "webkit.messageHandlers.rubyNative.postMessage({action: 'back'})", **options)
     end
 
     def native_search_tag
