@@ -93,7 +93,7 @@ Place helpers in the `<body>`, not the `<head>`.
 - `native_app?` - true when the request comes from a Ruby Native app (checks user agent)
 - `native_tabs_tag(enabled: true)` - shows the native tab bar.
 - `native_push_tag` - requests push notification permission.
-- `native_back_button_tag(text = nil, **options)` - renders a back button for Normal Mode. Hidden by default, shown when the native app sets `body.can-go-back`. Not needed in [Advanced Mode](https://rubynative.dev/docs/advanced-mode) where the system provides a native back button.
+- `native_back_button_tag(text = nil, **options)` - renders a back button for Normal Mode. Hidden by default, shown when the native app sets `body.can-go-back`. Not needed in [Advanced Mode](https://rubynative.com/docs/advanced-mode) where the system provides a native back button.
 
 ### Normal Mode
 
