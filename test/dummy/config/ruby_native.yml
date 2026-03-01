@@ -1,5 +1,6 @@
 app:
   name: Test App
+  mode: normal
 appearance:
   tint_color: "#007AFF"
   background_color: "#FFFFFF"
