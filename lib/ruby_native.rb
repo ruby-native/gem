@@ -8,6 +8,10 @@ module RubyNative
 
   def self.load_config
     path = Rails.root.join("config", "ruby_native.yml")
-    self.config = YAML.load_file(path).deep_symbolize_keys if path.exist?
+    return unless path.exist?
+
+    self.config = YAML.load_file(path).deep_symbolize_keys
+    self.config[:app] ||= {}
+    self.config[:app][:name] ||= "Ruby Native"
   end
 end
