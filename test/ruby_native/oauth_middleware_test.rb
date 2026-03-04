@@ -105,6 +105,30 @@ class RubyNative::OAuthMiddlewareTest < Minitest::Test
     assert_equal "https://other-host.com/page", headers["location"]
   end
 
+  def test_oauth_start_relaxes_session_cookie_samesite
+    session_cookie = "_myapp_session=abc123; path=/; SameSite=Lax"
+    app = build_middleware([302, {"location" => "https://provider.com/oauth", "set-cookie" => session_cookie}, [""]])
+    env = Rack::MockRequest.env_for("/auth/test_provider?ruby_native=1&callback_scheme=rubynative-com-example-app")
+
+    _status, headers, _body = app.call(env)
+
+    all_cookies = Array(headers["set-cookie"]).join("\n")
+    assert_match(/samesite=none/i, all_cookies)
+    refute_match(/samesite=lax/i, all_cookies)
+    assert_match(/secure/i, all_cookies)
+  end
+
+  def test_tracking_cookie_uses_samesite_none
+    app = build_middleware([302, {"location" => "https://provider.com/oauth"}, [""]])
+    env = Rack::MockRequest.env_for("/auth/test_provider?ruby_native=1&callback_scheme=rubynative-com-example-app")
+
+    _status, headers, _body = app.call(env)
+
+    cookie = Array(headers["set-cookie"]).join("\n")
+    assert_match(/samesite=none/i, cookie)
+    assert_match(/secure/i, cookie)
+  end
+
   def test_invalid_cookie_does_not_intercept
     app = build_middleware([302, {"location" => "/menu"}, [""]])
     env = Rack::MockRequest.env_for("/auth/callback", "HTTP_COOKIE" => "#{RubyNative::OAuthMiddleware::COOKIE_NAME}=tampered-value")

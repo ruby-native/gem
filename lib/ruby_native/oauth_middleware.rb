@@ -15,6 +15,7 @@ module RubyNative
 
       if started_oauth && callback_scheme.present? && redirect?(status)
         Rails.logger.debug { "[RubyNative] OAuth started for #{request.path}, setting tracking cookie" }
+        relax_cookie_samesite!(headers)
         set_cookie(headers, callback_scheme)
       end
 
@@ -76,8 +77,8 @@ module RubyNative
         value: signed,
         path: "/",
         httponly: true,
-        secure: Rails.env.production?,
-        same_site: :lax,
+        secure: true,
+        same_site: :none,
         max_age: 300
       })
     end
@@ -100,6 +101,23 @@ module RubyNative
         digest: "SHA256",
         purpose: "ruby_native_oauth"
       )
+    end
+
+    # Apple Sign In uses form_post (a cross-origin POST callback).
+    # SameSite=Lax cookies are not sent on cross-origin POSTs, which
+    # breaks OmniAuth's state verification. Relax existing cookies
+    # to SameSite=None so the session cookie survives Apple's callback.
+    def relax_cookie_samesite!(headers)
+      raw = headers["set-cookie"]
+      return unless raw
+
+      cookies = raw.is_a?(Array) ? raw : raw.split("\n")
+      headers["set-cookie"] = cookies.map { |cookie|
+        next cookie unless cookie.match?(/SameSite=Lax/i)
+        cookie.gsub(/SameSite=Lax/i, "SameSite=None").then { |c|
+          c.include?("Secure") ? c : "#{c}; Secure"
+        }
+      }.join("\n")
     end
 
     def redirect?(status)
