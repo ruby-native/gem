@@ -46,23 +46,6 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-controller="bridge--search"'
   end
 
-  FakeRequest = Struct.new(:user_agent)
-
-  def test_native_app_with_ruby_native_user_agent
-    @request = FakeRequest.new("Ruby Native/1.0")
-    assert native_app?
-  end
-
-  def test_native_app_without_ruby_native_user_agent
-    @request = FakeRequest.new("Mozilla/5.0")
-    refute native_app?
-  end
-
-  def test_native_app_with_nil_user_agent
-    @request = FakeRequest.new(nil)
-    refute native_app?
-  end
-
   def test_native_back_button_tag
     html = native_back_button_tag
     assert_includes html, "<button"

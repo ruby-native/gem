@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.4] - 2026-03-04
+
+### Added
+
+- `native_version` helper returns the app version from the user agent string. Always returns a `RubyNative::NativeVersion` instance (defaults to `"0"` when unknown). Supports string comparisons for cleaner version checks in views, e.g. `native_version >= "1.4"`.
+
 ## [0.1.3] - 2026-03-04
 
 ### Added

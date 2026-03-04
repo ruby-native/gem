@@ -1,9 +1,5 @@
 module RubyNative
   module Helper
-    def native_app?
-      request.user_agent.to_s.include?("Ruby Native")
-    end
-
     def native_tabs_tag(enabled: true)
       safe_join([
         (tag.div(data: { native_tabs: true }, hidden: true) if enabled),
