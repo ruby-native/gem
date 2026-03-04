@@ -8,14 +8,18 @@ module RubyNative
 
     def call(env)
       request = ActionDispatch::Request.new(env)
-      started_oauth = oauth_start_request?(request)
-      callback_scheme = request.params["callback_scheme"] if started_oauth
+      on_oauth_path = oauth_path?(request)
+      started_native_oauth = on_oauth_path && request.params["ruby_native"] == "1"
+      callback_scheme = request.params["callback_scheme"] if started_native_oauth
 
       status, headers, body = @app.call(env)
 
-      if started_oauth && callback_scheme.present? && redirect?(status)
-        Rails.logger.debug { "[RubyNative] OAuth started for #{request.path}, setting tracking cookie" }
+      if on_oauth_path && redirect?(status)
         relax_cookie_samesite!(headers)
+      end
+
+      if started_native_oauth && callback_scheme.present? && redirect?(status)
+        Rails.logger.debug { "[RubyNative] OAuth started for #{request.path}, setting tracking cookie" }
         set_cookie(headers, callback_scheme)
       end
 
@@ -66,9 +70,8 @@ module RubyNative
 
     private
 
-    def oauth_start_request?(request)
-      return false unless oauth_paths.any? { |p| request.path == p }
-      request.params["ruby_native"] == "1"
+    def oauth_path?(request)
+      oauth_paths.any? { |p| request.path == p }
     end
 
     def set_cookie(headers, callback_scheme)

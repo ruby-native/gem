@@ -118,6 +118,18 @@ class RubyNative::OAuthMiddlewareTest < Minitest::Test
     assert_match(/secure/i, all_cookies)
   end
 
+  def test_oauth_start_relaxes_samesite_without_ruby_native_param
+    session_cookie = "_myapp_session=abc123; path=/; SameSite=Lax"
+    app = build_middleware([302, {"location" => "https://provider.com/oauth", "set-cookie" => session_cookie}, [""]])
+    env = Rack::MockRequest.env_for("/auth/test_provider")
+
+    _status, headers, _body = app.call(env)
+
+    all_cookies = Array(headers["set-cookie"]).join("\n")
+    assert_match(/samesite=none/i, all_cookies)
+    refute_match(/samesite=lax/i, all_cookies)
+  end
+
   def test_tracking_cookie_uses_samesite_none
     app = build_middleware([302, {"location" => "https://provider.com/oauth"}, [""]])
     env = Rack::MockRequest.env_for("/auth/test_provider?ruby_native=1&callback_scheme=rubynative-com-example-app")

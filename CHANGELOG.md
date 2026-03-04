@@ -4,11 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.1.7] - 2026-03-04
+## [0.1.8] - 2026-03-04
 
 ### Fixed
 
-- Sign in with Apple. The OAuth middleware now sets `SameSite=None; Secure` on the tracking cookie and relaxes the session cookie's `SameSite` attribute during the OAuth start request. Apple's `form_post` callback is a cross-origin POST, and `SameSite=Lax` cookies are not sent on cross-origin POSTs, which broke OmniAuth's state verification.
+- Sign in with Apple. Apple's `form_post` callback is a cross-origin POST, and `SameSite=Lax` cookies are not sent on cross-origin POSTs, which broke OmniAuth's state verification. The middleware now relaxes `SameSite=Lax` to `SameSite=None; Secure` on any OAuth start request (web and native) so the session cookie survives Apple's callback.
 
 ## [0.1.6] - 2026-03-04
 
