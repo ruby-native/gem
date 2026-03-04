@@ -8,3 +8,6 @@ tabs:
   - title: Home
     path: /
     icon: house
+auth:
+  oauth_paths:
+    - /auth/test_provider

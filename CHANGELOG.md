@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.1.3] - 2026-03-04
+
+### Added
+
+- OAuth support. Add `auth.oauth_paths` to `config/ruby_native.yml` to enable native Sign in with Google, GitHub, and other providers. The gem handles the full server-side handoff automatically.
+- `GET /native/auth/start/:provider` endpoint renders an auto-submitting form to kick off the OAuth flow.
+- `GET /native/auth/session` endpoint exchanges an encrypted token for session cookies.
+- Logging throughout the OAuth middleware and controllers for easier debugging.
+- Provider name validation on the OAuth start endpoint.
+- `secure` flag on the OAuth tracking cookie in production.
+
 ## [0.1.2] - 2026-03-01
 
 ### Fixed

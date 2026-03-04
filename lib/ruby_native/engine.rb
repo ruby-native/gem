@@ -28,6 +28,10 @@ module RubyNative
       end
     end
 
+    initializer "ruby_native.oauth_middleware" do |app|
+      app.middleware.insert_before ActionDispatch::Cookies, RubyNative::OAuthMiddleware
+    end
+
     initializer "ruby_native.routes" do |app|
       app.routes.prepend do
         mount RubyNative::Engine, at: "/native"

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signing in…</title>
+</head>
+<body>
+  <p>Signing in…</p>
+  <%= form_tag "/auth/#{@provider}", method: :post, id: "oauth-form" do %>
+    <input type="hidden" name="ruby_native" value="1">
+    <input type="hidden" name="callback_scheme" value="<%= @callback_scheme %>">
+  <% end %>
+  <script>document.getElementById("oauth-form").submit();</script>
+</body>
+</html>

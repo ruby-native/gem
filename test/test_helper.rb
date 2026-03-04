@@ -2,6 +2,8 @@ ENV["RAILS_ENV"] = "test"
 
 require "minitest/autorun"
 require "rails"
+require "action_view"
+require "action_view/test_case"
 require "rails/test_help"
 
 module Dummy
@@ -30,6 +32,9 @@ File.write(File.join(dummy_config_dir, "ruby_native.yml"), <<~YAML)
     - title: Home
       path: /
       icon: house
+  auth:
+    oauth_paths:
+      - /auth/test_provider
 YAML
 
 require "ruby_native"
