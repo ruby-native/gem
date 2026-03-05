@@ -4,34 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [0.1.9] - 2026-03-04
-
-### Changed
-
-- OAuth session endpoint (`GET /native/auth/session`) now sets cookies via `Set-Cookie` headers and redirects directly instead of returning JSON. The native app navigates WKWebView to this endpoint so cookies are set naturally by the browser engine, replacing the previous approach of manual cookie injection.
-
-## [0.1.8] - 2026-03-04
-
-### Fixed
-
-- Sign in with Apple. Apple's `form_post` callback is a cross-origin POST, and `SameSite=Lax` cookies are not sent on cross-origin POSTs, which broke OmniAuth's state verification. The middleware now relaxes `SameSite=Lax` to `SameSite=None; Secure` on any OAuth start request (web and native) so the session cookie survives Apple's callback.
-
-## [0.1.6] - 2026-03-04
+## [0.1.10] - 2026-03-05
 
 ### Added
 
-- `native_version` helper returns the app version from the user agent string. Always returns a `RubyNative::NativeVersion` instance (defaults to `"0"` when unknown). Supports string comparisons for cleaner version checks in views, e.g. `native_version >= "1.4"`.
-
-## [0.1.3] - 2026-03-04
-
-### Added
-
-- OAuth support. Add `auth.oauth_paths` to `config/ruby_native.yml` to enable native Sign in with Google, GitHub, and other providers. The gem handles the full server-side handoff automatically.
-- `GET /native/auth/start/:provider` endpoint renders an auto-submitting form to kick off the OAuth flow.
-- `GET /native/auth/session` endpoint exchanges an encrypted token for session cookies.
-- Logging throughout the OAuth middleware and controllers for easier debugging.
-- Provider name validation on the OAuth start endpoint.
-- `secure` flag on the OAuth tracking cookie in production.
+- OAuth support for native apps. Add `auth.oauth_paths` to `config/ruby_native.yml` to enable Sign in with Google, Apple, and other providers.
+- `native_version` helper for version-gating features in views, e.g. `native_version >= "1.4"`.
 
 ## [0.1.2] - 2026-03-01
 
