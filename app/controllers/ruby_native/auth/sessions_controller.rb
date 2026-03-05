@@ -14,12 +14,14 @@ module RubyNative
         # session cookie, which would overwrite the authenticated one.
         request.session_options[:skip] = true
 
-        if data[:cookies].present?
-          response.headers["set-cookie"] = data[:cookies].join("\n")
+        cookies = data[:cookies] || []
+
+        if cookies.present?
+          response.headers["set-cookie"] = cookies.join("\n")
         end
 
         Rails.logger.debug { "[RubyNative] OAuth token exchanged, redirecting to #{data[:redirect_url]}" }
-        render json: {redirect_url: data[:redirect_url]}
+        redirect_to data[:redirect_url], allow_other_host: true
       end
     end
   end
