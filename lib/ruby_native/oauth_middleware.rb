@@ -8,6 +8,15 @@ module RubyNative
 
     def call(env)
       request = ActionDispatch::Request.new(env)
+
+      # Restore cached session cookies from a native OAuth completion.
+      # The session endpoint stores cookies in Rails.cache and redirects
+      # here with a _rn_session token. We inject them into the request
+      # so the Cookies/Session middleware picks them up naturally.
+      if (restore_token = request.params["_rn_session"])
+        restore_session_cookies!(env, restore_token)
+      end
+
       on_oauth_path = oauth_path?(request)
       started_native_oauth = on_oauth_path && request.params["ruby_native"] == "1"
       callback_scheme = request.params["callback_scheme"] if started_native_oauth
@@ -69,6 +78,21 @@ module RubyNative
     end
 
     private
+
+    def restore_session_cookies!(env, token)
+      cached = Rails.cache.read("ruby_native:oauth_session:#{token}")
+      return unless cached
+
+      Rails.cache.delete("ruby_native:oauth_session:#{token}")
+
+      # Parse Set-Cookie strings to extract name=value pairs and inject
+      # them into the request so downstream middleware sees them.
+      cookie_pairs = cached.map { |c| c.split(";").first.strip }
+      existing = env["HTTP_COOKIE"] || ""
+      env["HTTP_COOKIE"] = [existing, *cookie_pairs].reject(&:blank?).join("; ")
+
+      Rails.logger.info { "[RubyNative] Restored #{cached.size} session cookies from cache" }
+    end
 
     def oauth_path?(request)
       oauth_paths.any? { |p| request.path == p }

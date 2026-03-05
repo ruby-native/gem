@@ -10,37 +10,24 @@ module RubyNative
           return
         end
 
-        # Prevent the session middleware from appending its own (empty)
-        # session cookie, which would overwrite the authenticated one.
-        request.session_options[:skip] = true
-
         cookies = data[:cookies] || []
-
-        if cookies.present?
-          response.headers["set-cookie"] = cookies.join("\n")
-        end
-
         redirect_url = data[:redirect_url]
-        Rails.logger.info { "[RubyNative] OAuth token exchanged with #{cookies.size} cookies, redirecting to #{redirect_url}" }
 
-        # Render a 200 HTML page instead of a 302 redirect. CDNs like
-        # Cloudflare can strip Set-Cookie headers from redirect responses,
-        # preventing WKWebView from applying them. A 200 response guarantees
-        # cookies are set before the meta refresh navigates to the target.
-        render html: redirect_page(redirect_url).html_safe, status: :ok
-      end
+        # Store cookies server-side for the middleware to inject on the
+        # next request. This avoids Set-Cookie headers entirely, which
+        # CDNs like Cloudflare can strip from responses.
+        restore_token = SecureRandom.urlsafe_base64(32)
+        Rails.cache.write(
+          "ruby_native:oauth_session:#{restore_token}",
+          cookies,
+          expires_in: 1.minute
+        )
 
-      private
+        separator = redirect_url.include?("?") ? "&" : "?"
+        target = "#{redirect_url}#{separator}_rn_session=#{restore_token}"
 
-      def redirect_page(url)
-        escaped = ERB::Util.html_escape(url)
-        <<~HTML
-          <!DOCTYPE html>
-          <html>
-          <head><meta http-equiv="refresh" content="0;url=#{escaped}"></head>
-          <body></body>
-          </html>
-        HTML
+        Rails.logger.info { "[RubyNative] Cached #{cookies.size} cookies, redirecting to #{target}" }
+        redirect_to target, allow_other_host: true
       end
     end
   end
