@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Changed
+
+- User agent now includes `RubyNative/X.Y.Z` package version token. `native_version` returns the package version instead of the app version, making it consistent across all apps built with Ruby Native.
+- `native_version` returns `"0"` for older apps that don't include the `RubyNative/` token.
+
 ## [0.1.10] - 2026-03-05
 
 ### Added

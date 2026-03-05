@@ -17,13 +17,14 @@ class RubyNative::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "/menu", body["redirect_url"]
   end
 
-  def test_sets_cookie_header_from_token_cookies
+  def test_returns_cookies_from_token
     token = build_token(cookies: ["_session_id=abc123; path=/"], redirect_url: "/menu")
 
     get "/native/auth/session", params: {token: token}
 
     assert_response :ok
-    assert_includes response.headers["set-cookie"], "_session_id=abc123"
+    body = JSON.parse(response.body)
+    assert_includes body["cookies"], "_session_id=abc123; path=/"
   end
 
   def test_no_set_cookie_header_when_token_cookies_empty

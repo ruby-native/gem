@@ -11,7 +11,7 @@ module RubyNative
     end
 
     def native_version
-      match = request.user_agent.to_s.match(/Ruby Native.*?\/([\d.]+)/)
+      match = request.user_agent.to_s.match(/RubyNative\/([\d.]+)/)
       NativeVersion.new(match ? match[1] : "0")
     end
   end
