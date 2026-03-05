@@ -20,7 +20,7 @@ module RubyNative
           response.headers["set-cookie"] = cookies.join("\n")
         end
 
-        Rails.logger.debug { "[RubyNative] OAuth token exchanged, redirecting to #{data[:redirect_url]}" }
+        Rails.logger.info { "[RubyNative] OAuth token exchanged with #{cookies.size} cookies, redirecting to #{data[:redirect_url]}" }
         redirect_to data[:redirect_url], allow_other_host: true
       end
     end

@@ -150,6 +150,8 @@ module RubyNative
       else []
       end
 
+      Rails.logger.info { "[RubyNative] Captured #{cookies.size} cookies for token (raw type: #{raw_cookies.class})" }
+
       self.class.build_token(cookies: cookies, redirect_url: redirect_url)
     end
 
