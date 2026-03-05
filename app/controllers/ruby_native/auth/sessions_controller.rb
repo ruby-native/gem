@@ -13,21 +13,8 @@ module RubyNative
         cookies = data[:cookies] || []
         redirect_url = data[:redirect_url]
 
-        # Store cookies server-side for the middleware to inject on the
-        # next request. This avoids Set-Cookie headers entirely, which
-        # CDNs like Cloudflare can strip from responses.
-        restore_token = SecureRandom.urlsafe_base64(32)
-        Rails.cache.write(
-          "ruby_native:oauth_session:#{restore_token}",
-          cookies,
-          expires_in: 1.minute
-        )
-
-        separator = redirect_url.include?("?") ? "&" : "?"
-        target = "#{redirect_url}#{separator}_rn_session=#{restore_token}"
-
-        Rails.logger.info { "[RubyNative] Cached #{cookies.size} cookies, redirecting to #{target}" }
-        redirect_to target, allow_other_host: true
+        Rails.logger.info { "[RubyNative] OAuth token exchanged, #{cookies.size} cookies, redirect to #{redirect_url}" }
+        render json: {cookies: cookies, redirect_url: redirect_url}
       end
     end
   end

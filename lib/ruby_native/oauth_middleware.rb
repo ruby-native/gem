@@ -8,15 +8,6 @@ module RubyNative
 
     def call(env)
       request = ActionDispatch::Request.new(env)
-
-      # Restore cached session cookies from a native OAuth completion.
-      # The session endpoint stores cookies in Rails.cache and redirects
-      # here with a _rn_session token. We inject them into the request
-      # so the Cookies/Session middleware picks them up naturally.
-      if (restore_token = request.params["_rn_session"])
-        restore_session_cookies!(env, restore_token)
-      end
-
       on_oauth_path = oauth_path?(request)
       started_native_oauth = on_oauth_path && request.params["ruby_native"] == "1"
       callback_scheme = request.params["callback_scheme"] if started_native_oauth
@@ -51,12 +42,6 @@ module RubyNative
         end
       end
 
-      # Set any restored cookies that the app didn't write itself on the
-      # response so WKWebView persists them for future requests.
-      if (restore_cookies = env["ruby_native.restore_cookies"])
-        set_missing_cookies!(headers, restore_cookies)
-      end
-
       [status, headers, body]
     end
 
@@ -84,47 +69,6 @@ module RubyNative
     end
 
     private
-
-    def set_missing_cookies!(headers, restore_cookies)
-      existing = headers["set-cookie"]
-      existing_names = case existing
-      when String then existing.split("\n").map { |c| c.split("=").first.strip }
-      when Array then existing.map { |c| c.split("=").first.strip }
-      else []
-      end
-
-      new_cookies = restore_cookies.reject { |c| existing_names.include?(c.split("=").first.strip) }
-      return if new_cookies.empty?
-
-      all = case existing
-      when String then [existing, *new_cookies].join("\n")
-      when Array then (existing + new_cookies).join("\n")
-      else new_cookies.join("\n")
-      end
-      headers["set-cookie"] = all
-
-      Rails.logger.info { "[RubyNative] Set #{new_cookies.size} additional cookies on response" }
-    end
-
-    def restore_session_cookies!(env, token)
-      cached = Rails.cache.read("ruby_native:oauth_session:#{token}")
-      return unless cached
-
-      Rails.cache.delete("ruby_native:oauth_session:#{token}")
-
-      # Parse Set-Cookie strings to extract name=value pairs and inject
-      # them into the request so downstream middleware sees them.
-      cookie_pairs = cached.map { |c| c.split(";").first.strip }
-      existing = env["HTTP_COOKIE"] || ""
-      env["HTTP_COOKIE"] = [existing, *cookie_pairs].reject(&:blank?).join("; ")
-
-      # Store the raw Set-Cookie strings so we can set any that the app
-      # doesn't write itself on the response. This ensures WKWebView
-      # persists all cookies (e.g. the user_id cookie) for future requests.
-      env["ruby_native.restore_cookies"] = cached
-
-      Rails.logger.info { "[RubyNative] Restored #{cached.size} session cookies from cache" }
-    end
 
     def oauth_path?(request)
       oauth_paths.any? { |p| request.path == p }
