@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] - 2026-03-07
+
+### Fixed
+
+- OAuth start page now uses the path from `auth.oauth_paths` in config instead of hardcoding `/auth/{provider}`. Fixes 404 errors for apps that mount OmniAuth at a custom prefix like `/users/auth/`.
+
 ## [0.2.0] - 2026-03-04
 
 ### Changed
