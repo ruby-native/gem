@@ -9,6 +9,8 @@ module RubyNative
           return
         end
 
+        oauth_paths = RubyNative.config&.dig(:auth, :oauth_paths) || []
+        @oauth_path = oauth_paths.find { |p| p.end_with?(@provider) } || "/auth/#{@provider}"
         @callback_scheme = params[:callback_scheme]
       end
     end

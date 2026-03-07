@@ -7,7 +7,7 @@
 </head>
 <body>
   <p>Signing in…</p>
-  <%= form_tag "/auth/#{@provider}", method: :post, id: "oauth-form" do %>
+  <%= form_tag @oauth_path, method: :post, id: "oauth-form" do %>
     <input type="hidden" name="ruby_native" value="1">
     <input type="hidden" name="callback_scheme" value="<%= @callback_scheme %>">
   <% end %>
