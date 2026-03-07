@@ -150,6 +150,8 @@ module RubyNative
       else []
       end
 
+      redirect_url = "/" if auth_start_path?(redirect_url)
+
       Rails.logger.info { "[RubyNative] Captured #{cookies.size} cookies for token (raw type: #{raw_cookies.class})" }
 
       self.class.build_token(cookies: cookies, redirect_url: redirect_url)
@@ -158,6 +160,13 @@ module RubyNative
     def redirect_to_native(callback_scheme, token: nil, error: false)
       query = error ? "error=true" : "token=#{CGI.escape(token)}"
       [302, {"location" => "#{callback_scheme}://auth/callback?#{query}"}, [""]]
+    end
+
+    def auth_start_path?(url)
+      path = URI.parse(url).path
+      path&.start_with?("/native/auth/start")
+    rescue URI::InvalidURIError
+      false
     end
 
     def oauth_paths

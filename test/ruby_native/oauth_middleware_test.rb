@@ -141,6 +141,19 @@ class RubyNative::OAuthMiddlewareTest < Minitest::Test
     assert_match(/secure/i, cookie)
   end
 
+  def test_redirect_to_auth_start_page_is_replaced_with_root
+    scheme = "rubynative-com-example-app"
+    app = build_middleware([302, {"location" => "/native/auth/start/google_oauth2?callback_scheme=#{scheme}", "set-cookie" => "_session_id=abc123"}, [""]])
+    env = Rack::MockRequest.env_for("/auth/callback", "HTTP_COOKIE" => "#{RubyNative::OAuthMiddleware::COOKIE_NAME}=#{sign_cookie(scheme)}")
+
+    _status, headers, _body = app.call(env)
+
+    token = extract_token(headers["location"])
+    data = RubyNative::OAuthMiddleware.read_token(token)
+
+    assert_equal "/", data[:redirect_url]
+  end
+
   def test_invalid_cookie_does_not_intercept
     app = build_middleware([302, {"location" => "/menu"}, [""]])
     env = Rack::MockRequest.env_for("/auth/callback", "HTTP_COOKIE" => "#{RubyNative::OAuthMiddleware::COOKIE_NAME}=tampered-value")

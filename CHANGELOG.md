@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- OAuth redirect loop when Devise (or similar) stores the OAuth start page as the post-login redirect. The middleware now replaces `/native/auth/start/*` redirect URLs with `/` before building the token.
+
 ## [0.2.1] - 2026-03-07
 
 ### Fixed
