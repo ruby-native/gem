@@ -2,6 +2,7 @@ require "ruby_native/version"
 require "ruby_native/helper"
 require "ruby_native/native_version"
 require "ruby_native/native_detection"
+require "ruby_native/inertia_support"
 require "ruby_native/oauth_middleware"
 require "ruby_native/engine"
 

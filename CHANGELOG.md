@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- Inertia.js support for React and Vue apps. Include `RubyNative::InertiaSupport` in your application controller to share `native_app` and `native_form` props automatically.
+- React signal components (`NativeTabs`, `NativePush`, `NativeForm`) importable from `ruby_native/react`.
+- Vue signal components (`NativeTabs`, `NativePush`, `NativeForm`) importable from `ruby_native/vue`.
+
+### Changed
+
+- Removed importmap pins for `ruby_native/react` and `ruby_native/vue`. Inertia apps resolve these via the Vite alias instead.
+- `RubyNative::InertiaSupport` raises a clear error if the `inertia_rails` gem is not installed.
+
 ## [0.2.2] - 2026-03-07
 
 ### Fixed
