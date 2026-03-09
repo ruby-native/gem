@@ -14,7 +14,7 @@ module RubyNative
 
       status, headers, body = @app.call(env)
 
-      if on_oauth_path && redirect?(status)
+      if on_oauth_path && redirect?(status) && (started_native_oauth || read_cookie(request))
         relax_cookie_samesite!(headers)
       end
 

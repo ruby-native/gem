@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- OAuth middleware no longer relaxes `SameSite` on session cookies for non-native requests. Previously, all requests to configured `auth.oauth_paths` had their cookies changed to `SameSite=None; Secure`, which silently dropped session cookies in non-HTTPS environments like Rails integration tests.
+
 ## [0.2.3] - 2026-03-08
 
 ### Added
