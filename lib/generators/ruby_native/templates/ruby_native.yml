@@ -1,5 +1,6 @@
 app:
   mode: normal  # normal or advanced
+  # entry_path: /inbox  # Initial URL on app launch (defaults to first tab's path)
 
 appearance:
   tint_color: "#007AFF"

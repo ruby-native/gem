@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `app.entry_path` config option to control the initial URL on app launch. Defaults to the first tab's path, then `/`. Removes the need for server-side redirects to route native users to the right page.
+
 ## [0.2.4] - 2026-03-09
 
 ### Fixed

@@ -46,6 +46,27 @@ class RubyNative::ConfigTest < Minitest::Test
     end
   end
 
+  def test_entry_path_defaults_to_first_tab_path
+    with_config(app: {}, tabs: [{title: "Inbox", path: "/inbox", icon: "tray"}]) do
+      RubyNative.load_config
+      assert_equal "/inbox", RubyNative.config[:app][:entry_path]
+    end
+  end
+
+  def test_entry_path_defaults_to_slash_when_no_tabs
+    with_config(app: {}, tabs: []) do
+      RubyNative.load_config
+      assert_equal "/", RubyNative.config[:app][:entry_path]
+    end
+  end
+
+  def test_entry_path_not_overwritten_when_present
+    with_config(app: {entry_path: "/dashboard"}, tabs: [{title: "Home", path: "/", icon: "house"}]) do
+      RubyNative.load_config
+      assert_equal "/dashboard", RubyNative.config[:app][:entry_path]
+    end
+  end
+
   private
 
   def with_config(config)

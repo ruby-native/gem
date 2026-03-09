@@ -16,6 +16,7 @@ module RubyNative
     self.config = YAML.load_file(path).deep_symbolize_keys
     self.config[:app] ||= {}
     self.config[:app][:name] ||= "Ruby Native"
+    self.config[:app][:entry_path] ||= self.config.dig(:tabs, 0, :path) || "/"
     self.config[:auth] ||= {}
   end
 end

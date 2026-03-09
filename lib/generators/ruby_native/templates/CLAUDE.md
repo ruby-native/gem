@@ -49,6 +49,7 @@ Scan the QR code with the Ruby Native Preview app from the App Store. Keep both 
 ```yaml
 app:
   name: My App
+  entry_path: /inbox  # initial URL on app launch (defaults to first tab's path)
 
 appearance:
   tint_color: "#007AFF"
