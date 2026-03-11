@@ -36,7 +36,7 @@ appearance:
   tint_color: "#4F46E5"
   background_color: "#FFFFFF"
   status_bar_color: "#FFFFFF"
-tabs:
+tabs:  # optional
   - title: Home
     path: /
     icon: house
@@ -44,6 +44,8 @@ tabs:
     path: /profile
     icon: person
 ```
+
+You may also omit `tabs` to hide the tab bar entirely. The app will load `entry_path` or fall back to `/`.
 
 Color fields accept a plain hex string or an object with `light` and `dark` keys for dark mode:
 

@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `tabs` is now optional in `config/ruby_native.yml`. Omit it to show a single full-screen web view without a tab bar. The app loads `entry_path` or falls back to `/`.
+- Config endpoint returns an `X-Ruby-Native-Version` response header with the gem version.
+- Tapping the version number on the error screen opens a detail sheet with the full error message, app version, gem version, and a copy-to-clipboard button.
+
+### Changed
+
+- Tab bar is only shown when two or more tabs are configured. A single tab no longer renders an empty-looking tab bar.
+- `entry_path` now defaults to the first tab's path (then `/`) instead of always falling back to `/`.
+
 ## [0.2.6] - 2026-03-10
 
 ### Added
