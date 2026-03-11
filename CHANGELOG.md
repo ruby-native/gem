@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- Session cookies no longer silently fail through the Cloudflare preview tunnel. Apps that configure `domain: :all` on their session store had cookies scoped to `.trycloudflare.com` (a public suffix), which browsers and WKWebView reject. A new middleware automatically strips the `domain` attribute from cookies on tunnel requests so they scope to the exact hostname instead.
+
 ## [0.2.5] - 2026-03-09
 
 ### Added

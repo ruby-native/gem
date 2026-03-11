@@ -32,6 +32,12 @@ module RubyNative
       app.middleware.insert_before ActionDispatch::Cookies, RubyNative::OAuthMiddleware
     end
 
+    initializer "ruby_native.tunnel_cookie_middleware" do |app|
+      if Rails.env.development?
+        app.middleware.insert_before ActionDispatch::Cookies, RubyNative::TunnelCookieMiddleware
+      end
+    end
+
     initializer "ruby_native.routes" do |app|
       app.routes.prepend do
         mount RubyNative::Engine, at: "/native"
