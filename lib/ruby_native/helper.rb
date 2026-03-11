@@ -59,6 +59,15 @@ module RubyNative
       }) { builder.to_html }
     end
 
+    def native_haptic_data(feedback = :success, **data)
+      feedback = feedback.to_s
+      feedback = "success" if feedback.empty?
+
+      data[:native_haptic] = feedback
+      data[:bridge__haptic_feedback_value] = feedback
+      merge_controller(data, "bridge--haptic")
+    end
+
     private
 
     def merge_controller(data, controller)

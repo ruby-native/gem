@@ -128,6 +128,49 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-bridge--menu-side-value="right"'
   end
 
+  def test_native_haptic_data_defaults_to_success
+    data = native_haptic_data
+    assert_equal "success", data[:native_haptic]
+    assert_equal "bridge--haptic", data[:controller]
+    assert_equal "success", data[:bridge__haptic_feedback_value]
+  end
+
+  def test_native_haptic_data_with_symbol_feedback
+    data = native_haptic_data(:error)
+    assert_equal "error", data[:native_haptic]
+    assert_equal "error", data[:bridge__haptic_feedback_value]
+  end
+
+  def test_native_haptic_data_with_string_feedback
+    data = native_haptic_data("warning")
+    assert_equal "warning", data[:native_haptic]
+    assert_equal "warning", data[:bridge__haptic_feedback_value]
+  end
+
+  def test_native_haptic_data_nil_defaults_to_success
+    data = native_haptic_data(nil)
+    assert_equal "success", data[:native_haptic]
+    assert_equal "success", data[:bridge__haptic_feedback_value]
+  end
+
+  def test_native_haptic_data_blank_defaults_to_success
+    data = native_haptic_data("")
+    assert_equal "success", data[:native_haptic]
+    assert_equal "success", data[:bridge__haptic_feedback_value]
+  end
+
+  def test_native_haptic_data_merges_existing_controller
+    data = native_haptic_data(:success, controller: "my-controller")
+    assert_equal "my-controller bridge--haptic", data[:controller]
+  end
+
+  def test_native_haptic_data_preserves_other_data_keys
+    data = native_haptic_data(:success, turbo_method: :delete, id: "btn")
+    assert_equal :delete, data[:turbo_method]
+    assert_equal "btn", data[:id]
+    assert_equal "bridge--haptic", data[:controller]
+  end
+
   private
 
   def request

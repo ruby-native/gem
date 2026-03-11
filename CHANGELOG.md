@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- `native_haptic_data` helper for triggering device haptics on tap. Works in both Normal Mode (via `data-native-haptic` attribute) and Advanced Mode (via `bridge--haptic` Stimulus controller). Accepts a feedback type: `:success` (default), `:warning`, `:error`, `:impact`, or `:selection`. Unknown and blank values default to `:success`.
+- `RubyNative.haptic("success")` JavaScript API for triggering haptics programmatically.
+- `RubyNative.postMessage()` JavaScript API that wraps the native message handler. All internal JS-to-native communication now routes through this method.
+
+### Changed
+
+- `native_form_data` now accepts `**data` keyword arguments and merges the `controller` key instead of clobbering it. Existing usage without arguments is unchanged.
+- `native_back_button_tag` onclick now uses `RubyNative.postMessage()` instead of calling `webkit.messageHandlers` directly.
+
+### Added
+
 - `tabs` is now optional in `config/ruby_native.yml`. Omit it to show a single full-screen web view without a tab bar. The app loads `entry_path` or falls back to `/`.
 - Config endpoint returns an `X-Ruby-Native-Version` response header with the gem version.
 - Tapping the version number on the error screen opens a detail sheet with the full error message, app version, gem version, and a copy-to-clipboard button.
