@@ -26,7 +26,18 @@ class RubyNative::HelperTest < ActionView::TestCase
 
   def test_native_form_data
     data = native_form_data
-    assert_equal({ controller: "bridge--form" }, data)
+    assert_equal "bridge--form", data[:controller]
+  end
+
+  def test_native_form_data_merges_existing_controller
+    data = native_form_data(controller: "my-controller")
+    assert_equal "my-controller bridge--form", data[:controller]
+  end
+
+  def test_native_form_data_preserves_other_data_keys
+    data = native_form_data(controller: "other", turbo_frame: "modal")
+    assert_equal "other bridge--form", data[:controller]
+    assert_equal "modal", data[:turbo_frame]
   end
 
   def test_native_submit_data

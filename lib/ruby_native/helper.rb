@@ -11,8 +11,8 @@ module RubyNative
       tag.div(data: { native_form: true }, hidden: true)
     end
 
-    def native_form_data
-      { controller: "bridge--form" }
+    def native_form_data(**data)
+      merge_controller(data, "bridge--form")
     end
 
     def native_submit_data
@@ -57,6 +57,13 @@ module RubyNative
         bridge__menu_title_value: title,
         bridge__menu_side_value: side.to_s
       }) { builder.to_html }
+    end
+
+    private
+
+    def merge_controller(data, controller)
+      data[:controller] = [data[:controller], controller].compact.join(" ")
+      data
     end
 
     class MenuBuilder
