@@ -6,6 +6,7 @@ appearance:
   tint_color: "#007AFF"
   background_color: "#FFFFFF"
   status_bar_color: "#F8F9FA"
+  # edge_to_edge: true  # Let the web view extend behind the status bar (Normal Mode only)
   # Dark mode example (replace the plain strings above):
   # background_color:
   #   light: "#FFFFFF"

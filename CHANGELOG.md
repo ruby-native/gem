@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Added
+
+- `appearance.edge_to_edge` config option to let the web view extend behind the status bar and Dynamic Island. Enables full-bleed backgrounds, gradients, and images. Normal Mode only.
+
 ### Fixed
 
 - Session cookies no longer silently fail through the Cloudflare preview tunnel. Apps that configure `domain: :all` on their session store had cookies scoped to `.trycloudflare.com` (a public suffix), which browsers and WKWebView reject. A new middleware automatically strips the `domain` attribute from cookies on tunnel requests so they scope to the exact hostname instead.
