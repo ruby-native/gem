@@ -51,7 +51,7 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, "<button"
     assert_includes html, "<svg"
     assert_includes html, 'class="native-back-button"'
-    assert_includes html, "webkit.messageHandlers.rubyNative.postMessage({action: &#39;back&#39;})"
+    assert_includes html, "RubyNative.postMessage({action: &#39;back&#39;})"
   end
 
   def test_native_back_button_tag_custom_text
