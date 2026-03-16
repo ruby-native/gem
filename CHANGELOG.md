@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- `import "ruby_native/bridge"` now resolves correctly for importmap-rails apps. Previously, the barrel import was pinned as `ruby_native/bridge/index` which required users to manually add the pin. The gem's importmap config now explicitly pins `ruby_native/bridge` to the index file.
+- Install generator now prints Advanced Mode setup instructions (pinning `@hotwired/hotwire-native-bridge` and adding the import) so users aren't left guessing.
+
 ## [0.2.7] - 2026-03-11
 
 ### Added
