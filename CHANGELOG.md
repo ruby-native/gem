@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.9] - 2026-03-16
+
+### Fixed
+
+- Preview QR code no longer garbles the first line of output in process managers like Overmind. Replaced the terminal-clear escape sequence with simple newline spacing.
+
 ## [0.2.8] - 2026-03-16
 
 ### Fixed
