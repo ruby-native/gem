@@ -109,7 +109,7 @@ module RubyNative
         puts ""
         puts url
         puts ""
-        puts "Scan with the Ruby Native preview app."
+        puts "Scan the QR code or paste the URL into the Ruby Native Preview app."
         puts "Keep this running and your Rails server on port #{@port} in another terminal."
         puts "Press Ctrl+C to stop."
       end
