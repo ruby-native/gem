@@ -76,7 +76,7 @@ module RubyNative
         qr = RQRCode::QRCode.new(url)
         modules = qr.modules
 
-        print "\033[2J\033[H" # Clear terminal
+        puts "\n\n"
 
         # Use Unicode half-block characters to render two QR rows per
         # terminal row, cutting the height in half for square proportions.
