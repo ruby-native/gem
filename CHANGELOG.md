@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `ruby_native login` and `ruby_native logout` CLI commands for authenticating with the Ruby Native platform via browser-based OAuth flow.
+- `ruby_native screenshots` CLI command captures web screenshots via Playwright, then uploads them to the platform for compositor processing. Prompts for Playwright install on first run. Auto-links to an app on your account and persists the selection in `config/ruby_native.yml`.
+- Install generator adds `.ruby_native/` to `.gitignore`.
+
 ## [0.2.9] - 2026-03-16
 
 ### Fixed

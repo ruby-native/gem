@@ -20,6 +20,15 @@ module RubyNative
         say "  Added .trycloudflare.com to allowed hosts in development.rb", :green
       end
 
+      def add_gitignore
+        gitignore = File.join(destination_root, ".gitignore")
+        return unless File.exist?(gitignore)
+        return if File.read(gitignore).include?(".ruby_native")
+
+        append_to_file ".gitignore", "\n# Ruby Native (Playwright, screenshots, session data)\n.ruby_native/\n"
+        say "  Added .ruby_native/ to .gitignore", :green
+      end
+
       def copy_claude_instructions
         return unless File.directory?(File.join(destination_root, ".claude"))
         copy_file "CLAUDE.md", ".claude/ruby_native.md"
