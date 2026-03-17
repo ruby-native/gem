@@ -1,5 +1,7 @@
-require "socket"
+require "securerandom"
+require "net/http"
 require "uri"
+require "json"
 require "ruby_native/cli/credentials"
 
 module RubyNative
@@ -11,22 +13,20 @@ module RubyNative
       end
 
       def run
-        server = TCPServer.new("127.0.0.1", 0)
-        port = server.addr[1]
+        code = SecureRandom.hex(20)
+        url = "#{HOST}/cli/session/new?code=#{code}"
 
-        url = "#{HOST}/cli/session/new?port=#{port}"
         puts "Opening browser to authorize..."
         open_browser(url)
         puts "Waiting for authorization..."
 
-        token = wait_for_callback(server)
-        server.close
+        token = poll_for_token(code)
 
         if token
           Credentials.save(token)
           puts "Logged in to Ruby Native."
         else
-          puts "Authorization failed. No token received."
+          puts "Authorization timed out. Please try again."
           exit 1
         end
       end
@@ -44,34 +44,25 @@ module RubyNative
         end
       end
 
-      def wait_for_callback(server)
-        client = server.accept
-        request_line = client.gets
-        token = extract_token(request_line)
+      def poll_for_token(code)
+        uri = URI("#{HOST}/cli/session/poll?code=#{code}")
+        attempts = 0
+        max_attempts = 60
 
-        body = if token
-          "Authenticated! You can close this window."
-        else
-          "Something went wrong. No token found in the callback."
+        loop do
+          attempts += 1
+          return nil if attempts > max_attempts
+
+          sleep 2
+
+          response = Net::HTTP.get_response(uri)
+          if response.is_a?(Net::HTTPSuccess)
+            data = JSON.parse(response.body)
+            return data["token"]
+          end
         end
-
-        client.print "HTTP/1.1 200 OK\r\n"
-        client.print "Content-Type: text/html\r\n"
-        client.print "Connection: close\r\n"
-        client.print "\r\n"
-        client.print "<html><body><p>#{body}</p></body></html>"
-        client.close
-
-        token
-      end
-
-      def extract_token(request_line)
-        return unless request_line
-        path = request_line.split(" ")[1]
-        return unless path
-        uri = URI.parse("http://localhost#{path}")
-        params = URI.decode_www_form(uri.query || "")
-        params.assoc("token")&.last
+      rescue Interrupt
+        nil
       end
     end
   end
