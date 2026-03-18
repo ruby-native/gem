@@ -3,6 +3,7 @@ require "open3"
 require "fileutils"
 require "tempfile"
 require "net/http"
+require "uri"
 require "ruby_native/cli/credentials"
 
 module RubyNative
@@ -21,9 +22,18 @@ module RubyNative
       HOST = ENV.fetch("RUBY_NATIVE_HOST", "https://rubynative.com")
 
       def initialize(argv)
-        @port = parse_option(argv, "--port", 3000).to_i
+        @url = parse_option(argv, "--url", nil)
+        @port = parse_option(argv, "--port", nil)
         @output = parse_option(argv, "--output", OUTPUT_DIR)
         @login = argv.delete("--login")
+
+        if @url
+          @url = "https://#{@url}" unless @url.match?(%r{\Ahttps?://})
+          @url = @url.chomp("/")
+          @port = URI(@url).port if @port.nil?
+        else
+          @port = (@port || 3000).to_i
+        end
       end
 
       def run
@@ -162,13 +172,20 @@ module RubyNative
       end
 
       def check_server!
-        uri = URI("http://localhost:#{@port}/")
-        Net::HTTP.get_response(uri)
-      rescue Errno::ECONNREFUSED, Errno::ECONNRESET, SocketError
-        puts "No server running on port #{@port}."
-        puts ""
-        puts "Start your Rails server first:"
-        puts "  bin/rails server#{" -p #{@port}" if @port != 3000}"
+        uri = URI("#{base_url}/")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = uri.scheme == "https"
+        http.open_timeout = 5
+        http.request(Net::HTTP::Head.new(uri))
+      rescue Errno::ECONNREFUSED, Errno::ECONNRESET, SocketError, Net::OpenTimeout
+        if @url
+          puts "Could not reach #{@url}."
+        else
+          puts "No server running on port #{@port}."
+          puts ""
+          puts "Start your Rails server first:"
+          puts "  bin/rails server#{" -p #{@port}" if @port != 3000}"
+        end
         puts ""
         puts "Then run this command again."
         exit 1
@@ -205,10 +222,14 @@ module RubyNative
         end
       end
 
+      def base_url
+        @url || "http://localhost:#{@port}"
+      end
+
       # --- Login ---
 
       def run_login
-        puts "Opening browser to http://localhost:#{@port}..."
+        puts "Opening browser to #{base_url}..."
         puts "Sign in to your app, then close the browser window."
         puts ""
 
@@ -509,7 +530,7 @@ module RubyNative
             const context = await browser.newContext();
             const page = await context.newPage();
 
-            await page.goto('http://localhost:#{@port}/');
+            await page.goto('#{base_url}/');
             console.log('Sign in to your app, then close the browser window.');
 
             await page.waitForEvent('close', { timeout: 0 }).catch(() => {});
@@ -532,7 +553,7 @@ module RubyNative
           output_path = File.join(@output, "#{"%02d" % (i + 1)}_#{safe_name}.png")
 
           <<~CAPTURE
-            const response_#{i} = await page.goto('http://localhost:#{@port}#{path}', { waitUntil: 'networkidle' });
+            const response_#{i} = await page.goto('#{base_url}#{path}', { waitUntil: 'networkidle' });
             if (response_#{i} && response_#{i}.status() >= 400) {
               console.log('  #{path} -> ERROR ' + response_#{i}.status() + ' (skipped)');
             } else {
