@@ -291,20 +291,20 @@ module RubyNative
       end
 
       def upload_screenshots
-        app_id = @config.dig(:ruby_native, :app_id)
-        app_id = link_app unless app_id
-        return unless app_id
-
-        files = Dir.glob(File.join(@output, "*.png")).sort
-        if files.empty?
-          puts "No screenshots to upload."
-          return
-        end
-
-        puts ""
-        puts "Uploading #{files.length} screenshot#{"s" if files.length > 1}..."
-
         begin
+          app_id = @config.dig(:ruby_native, :app_id)
+          app_id = link_app unless app_id
+          return unless app_id
+
+          files = Dir.glob(File.join(@output, "*.png")).sort
+          if files.empty?
+            puts "No screenshots to upload."
+            return
+          end
+
+          puts ""
+          puts "Uploading #{files.length} screenshot#{"s" if files.length > 1}..."
+
           api_delete("/api/v1/apps/#{app_id}/web_screenshots")
 
           files.each_with_index do |file, index|
