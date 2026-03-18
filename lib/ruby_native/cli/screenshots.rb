@@ -28,7 +28,11 @@ module RubyNative
         @login = argv.delete("--login")
 
         if @url
-          @url = "https://#{@url}" unless @url.match?(%r{\Ahttps?://})
+          unless @url.match?(%r{\Ahttps?://})
+            host = @url.split(":", 2).first
+            scheme = (host == "localhost" || host.match?(/\A\d+\.\d+\.\d+\.\d+\z/)) ? "http" : "https"
+            @url = "#{scheme}://#{@url}"
+          end
           @url = @url.chomp("/")
           @port = URI(@url).port if @port.nil?
         else
