@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `appearance.theme` config option to force light or dark mode. Accepts `light`, `dark`, or `auto` (default). When omitted, follows the device setting.
+
 ## [0.3.0] - 2026-03-18
 
 ### Added
