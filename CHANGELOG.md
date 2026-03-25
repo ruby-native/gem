@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `native_badge_tag` helper for updating the app icon badge and tab bar badge from page loads. Works in both Normal Mode (via `data-native-badge` signal element) and Advanced Mode (via `bridge--badge` Stimulus controller). Pass a single count to set both badges, or use `home:` and `tab:` keyword arguments for independent control. Omitted parameters leave that badge unchanged.
+- `RubyNative.setBadge(5)` JavaScript API for updating badges programmatically. Accepts a number (sets both) or an object with `home` and `tab` keys.
+- `badge: true` tab config option in `config/ruby_native.yml` to designate which tab receives the tab bar badge.
+
 ## [0.3.1] - 2026-03-19
 
 ### Added

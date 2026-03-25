@@ -128,6 +128,49 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-bridge--menu-side-value="right"'
   end
 
+  def test_native_badge_tag_with_count
+    html = native_badge_tag(5)
+    assert_includes html, 'data-native-badge'
+    assert_includes html, 'data-native-badge-home="5"'
+    assert_includes html, 'data-native-badge-tab="5"'
+    assert_includes html, 'hidden'
+    assert_includes html, 'data-controller="bridge--badge"'
+    assert_includes html, 'data-bridge--badge-home-value="5"'
+    assert_includes html, 'data-bridge--badge-tab-value="5"'
+  end
+
+  def test_native_badge_tag_with_independent_values
+    html = native_badge_tag(home: 2, tab: 3)
+    assert_includes html, 'data-native-badge-home="2"'
+    assert_includes html, 'data-native-badge-tab="3"'
+    assert_includes html, 'data-bridge--badge-home-value="2"'
+    assert_includes html, 'data-bridge--badge-tab-value="3"'
+  end
+
+  def test_native_badge_tag_home_only
+    html = native_badge_tag(home: 2)
+    assert_includes html, 'data-native-badge-home="2"'
+    refute_includes html, 'data-native-badge-tab'
+    assert_includes html, 'data-bridge--badge-home-value="2"'
+    refute_includes html, 'data-bridge--badge-tab-value'
+  end
+
+  def test_native_badge_tag_tab_only
+    html = native_badge_tag(tab: 3)
+    refute_includes html, 'data-native-badge-home'
+    assert_includes html, 'data-native-badge-tab="3"'
+    refute_includes html, 'data-bridge--badge-home-value'
+    assert_includes html, 'data-bridge--badge-tab-value="3"'
+  end
+
+  def test_native_badge_tag_zero_clears_both
+    html = native_badge_tag(0)
+    assert_includes html, 'data-native-badge-home="0"'
+    assert_includes html, 'data-native-badge-tab="0"'
+    assert_includes html, 'data-bridge--badge-home-value="0"'
+    assert_includes html, 'data-bridge--badge-tab-value="0"'
+  end
+
   def test_native_haptic_data_defaults_to_success
     data = native_haptic_data
     assert_equal "success", data[:native_haptic]

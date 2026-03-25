@@ -59,6 +59,24 @@ module RubyNative
       }) { builder.to_html }
     end
 
+    def native_badge_tag(count = nil, home: nil, tab: nil)
+      home = count if count && home.nil?
+      tab = count if count && tab.nil?
+
+      signal_data = { native_badge: "" }
+      signal_data[:native_badge_home] = home unless home.nil?
+      signal_data[:native_badge_tab] = tab unless tab.nil?
+
+      bridge_data = { controller: "bridge--badge" }
+      bridge_data[:bridge__badge_home_value] = home unless home.nil?
+      bridge_data[:bridge__badge_tab_value] = tab unless tab.nil?
+
+      safe_join([
+        tag.div(data: signal_data, hidden: true),
+        tag.div(data: bridge_data)
+      ])
+    end
+
     def native_haptic_data(feedback = :success, **data)
       feedback = feedback.to_s
       feedback = "success" if feedback.empty?
