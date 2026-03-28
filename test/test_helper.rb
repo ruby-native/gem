@@ -37,5 +37,25 @@ File.write(File.join(dummy_config_dir, "ruby_native.yml"), <<~YAML)
 YAML
 
 require "ruby_native"
+require "active_record"
 
 Dummy::Application.initialize!
+
+# Explicitly require the model since engine autoloading may not work in the minimal dummy app.
+require_relative "../app/models/ruby_native/iap/purchase_intent"
+
+# Set up in-memory database for PurchaseIntent tests.
+ActiveRecord::Base.establish_connection(adapter: "sqlite3", database: ":memory:")
+ActiveRecord::Schema.define do
+  create_table :ruby_native_purchase_intents, force: true do |t|
+    t.string :uuid, null: false
+    t.string :customer_id, null: false
+    t.string :product_id
+    t.string :success_path
+    t.string :status, null: false, default: "pending"
+    t.string :environment
+    t.timestamps
+  end
+  add_index :ruby_native_purchase_intents, :uuid, unique: true
+  add_index :ruby_native_purchase_intents, :customer_id
+end

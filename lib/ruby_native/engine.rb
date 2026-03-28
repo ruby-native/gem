@@ -2,6 +2,12 @@ module RubyNative
   class Engine < ::Rails::Engine
     isolate_namespace RubyNative
 
+    initializer "ruby_native.inflections", before: "ruby_native.helpers" do
+      ActiveSupport::Inflector.inflections(:en) do |inflect|
+        inflect.acronym "IAP"
+      end
+    end
+
     initializer "ruby_native.helpers" do
       ActiveSupport.on_load(:action_controller_base) do
         include RubyNative::NativeDetection

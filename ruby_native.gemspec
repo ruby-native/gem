@@ -20,4 +20,5 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "rails", ">= 7.1"
   spec.add_dependency "rqrcode", "~> 3.0"
+  spec.add_dependency "jwt", "~> 2.0"
 end
