@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `ruby_native deploy` CLI command triggers an iOS build from the terminal, polls for status, and reports success or failure. Links to your app on first run and saves the selection. Blocks concurrent deploys when a build is already in progress.
+
 ## [0.3.2] - 2026-03-24
 
 ### Added
