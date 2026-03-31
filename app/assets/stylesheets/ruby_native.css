@@ -1,3 +1,7 @@
+[data-native-app] .native-hidden {
+  display: none !important;
+}
+
 .native-back-button {
   display: none;
 }

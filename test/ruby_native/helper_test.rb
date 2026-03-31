@@ -206,12 +206,12 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-native-position="leading"'
   end
 
-  def test_native_navbar_tag_button_with_action
+  def test_native_navbar_tag_button_with_click
     html = native_navbar_tag("Page") do |navbar|
-      navbar.button icon: "ellipsis.circle", action: "menu"
+      navbar.button icon: "ellipsis.circle", click: "#my-button"
     end
 
-    assert_includes html, 'data-native-action="menu"'
+    assert_includes html, 'data-native-click="#my-button"'
     refute_includes html, 'data-native-href'
   end
 
@@ -225,9 +225,9 @@ class RubyNative::HelperTest < ActionView::TestCase
 
   def test_native_navbar_tag_button_with_menu_items
     html = native_navbar_tag("Profile") do |navbar|
-      navbar.button icon: "ellipsis.circle", position: :leading, action: "profile-menu" do |button|
-        button.item "Edit profile", value: "edit", icon: "pencil"
-        button.item "Sign out", value: "sign-out", icon: "rectangle.portrait.and.arrow.right"
+      navbar.button icon: "ellipsis.circle", position: :leading do |button|
+        button.item "Edit profile", href: "/profile/edit", icon: "pencil"
+        button.item "Sign out", click: "#sign-out-button", icon: "rectangle.portrait.and.arrow.right"
       end
     end
 
@@ -235,22 +235,22 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-native-button'
     assert_includes html, 'data-native-menu-item'
     assert_includes html, 'data-native-title="Edit profile"'
-    assert_includes html, 'data-native-value="edit"'
+    assert_includes html, 'data-native-href="/profile/edit"'
     assert_includes html, 'data-native-icon="pencil"'
     assert_includes html, 'data-native-title="Sign out"'
-    assert_includes html, 'data-native-value="sign-out"'
+    assert_includes html, 'data-native-click="#sign-out-button"'
   end
 
   def test_native_navbar_tag_menu_item_selected
     html = native_navbar_tag("Page") do |navbar|
-      navbar.button icon: "line.3.horizontal.decrease", action: "filter" do |button|
-        button.item "All", value: "all", selected: true
-        button.item "Active", value: "active"
+      navbar.button icon: "line.3.horizontal.decrease" do |button|
+        button.item "All", href: "/all", selected: true
+        button.item "Active", href: "/active"
       end
     end
 
-    assert_match(/data-native-value="all".*data-native-selected/, html)
-    refute_match(/data-native-value="active".*data-native-selected/, html)
+    assert_match(/data-native-href="\/all".*data-native-selected/, html)
+    refute_match(/data-native-href="\/active".*data-native-selected/, html)
   end
 
   def test_native_navbar_tag_multiple_buttons
@@ -269,12 +269,12 @@ class RubyNative::HelperTest < ActionView::TestCase
 
   def test_native_navbar_tag_submit_button_with_regular_button
     html = native_navbar_tag("Edit") do |navbar|
-      navbar.button icon: "trash", action: "delete"
+      navbar.button icon: "trash", click: "#delete-button"
       navbar.submit_button title: "Save"
     end
 
     assert_includes html, 'data-native-icon="trash"'
-    assert_includes html, 'data-native-action="delete"'
+    assert_includes html, 'data-native-click="#delete-button"'
     assert_includes html, 'data-native-submit-button'
     assert_includes html, 'data-native-title="Save"'
   end
@@ -288,6 +288,29 @@ class RubyNative::HelperTest < ActionView::TestCase
     refute_includes html, 'data-native-submit-button'
   end
 
+  def test_native_navbar_tag_menu_item_click
+    html = native_navbar_tag("Account") do |navbar|
+      navbar.button icon: "ellipsis.circle", position: :leading do |button|
+        button.item "Edit profile", click: "#edit-profile-link", icon: "pencil"
+        button.item "Sign out", click: "#sign-out-button", icon: "rectangle.portrait.and.arrow.right"
+      end
+    end
+
+    assert_includes html, 'data-native-click="#edit-profile-link"'
+    assert_includes html, 'data-native-click="#sign-out-button"'
+  end
+
+  def test_native_navbar_tag_menu_item_href
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.button icon: "gear" do |button|
+        button.item "Settings", href: "/settings"
+      end
+    end
+
+    assert_includes html, 'data-native-href="/settings"'
+    refute_includes html, 'data-native-click'
+  end
+
   def test_native_navbar_tag_submit_button
     html = native_navbar_tag("Edit habit") do |navbar|
       navbar.submit_button title: "Save"
@@ -296,7 +319,7 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-native-navbar="Edit habit"'
     assert_includes html, 'data-native-submit-button'
     assert_includes html, 'data-native-title="Save"'
-    assert_includes html, "data-native-selector"
+    assert_includes html, "data-native-click"
   end
 
   def test_native_navbar_tag_submit_button_defaults
@@ -305,16 +328,16 @@ class RubyNative::HelperTest < ActionView::TestCase
     end
 
     assert_includes html, 'data-native-title="Save"'
-    assert_includes html, "data-native-selector"
+    assert_includes html, "data-native-click"
   end
 
-  def test_native_navbar_tag_submit_button_custom_selector
+  def test_native_navbar_tag_submit_button_custom_click
     html = native_navbar_tag("Page") do |navbar|
-      navbar.submit_button title: "Create", selector: "#my-submit"
+      navbar.submit_button title: "Create", click: "#my-submit"
     end
 
     assert_includes html, 'data-native-title="Create"'
-    assert_includes html, 'data-native-selector="#my-submit"'
+    assert_includes html, 'data-native-click="#my-submit"'
   end
 
   def test_native_haptic_data_defaults_to_success

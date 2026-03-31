@@ -12,9 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- `native_navbar_tag` ERB helper for rendering a native navigation bar in Normal Mode. Supports trailing/leading buttons with icons, href navigation, action callbacks, and nested menu items via a builder API. Includes `submit_button` for native form submission.
+- `native_navbar_tag` ERB helper for rendering a native navigation bar in Normal Mode. Supports trailing/leading buttons with icons, `href` navigation, `click` element targeting, and nested menu items via a builder API. Includes `submit_button` for native form submission.
 - `NativeNavbar`, `NativeButton`, `NativeMenuItem`, and `NativeSubmitButton` components for React (`ruby_native/react`) and Vue (`ruby_native/vue`) Inertia apps. Render signal elements that the native bridge parses into a native navigation bar with buttons, menus, and submit actions.
-- `useNativeButton` hook (React) and composable (Vue) for handling native button and menu item tap callbacks via `ruby-native:button` CustomEvent.
+- `native-hidden` CSS class. Elements with this class are hidden when running inside the native app. Use for web UI that has a native equivalent (e.g., buttons targeted by `click`). Requires the gem stylesheet (`stylesheet_link_tag :ruby_native`).
 - `ruby_native deploy` CLI command triggers an iOS build from the terminal, polls for status, and reports success or failure. Links to your app on first run and saves the selection. Blocks concurrent deploys when a build is already in progress.
 
 ## [0.3.2] - 2026-03-24

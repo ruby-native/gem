@@ -1,4 +1,4 @@
-import { createElement, useEffect } from "react"
+import { createElement } from "react"
 import { router } from "@inertiajs/react"
 
 window.__inertiaRouter = router
@@ -19,43 +19,33 @@ export function NativeNavbar({ title, children }) {
   return createElement("div", { "data-native-navbar": title, hidden: true }, children)
 }
 
-export function NativeButton({ position = "trailing", icon, title, href, action, selected, children }) {
+export function NativeButton({ position = "trailing", icon, title, href, click, selected, children }) {
   const props = { "data-native-button": true }
   if (icon) props["data-native-icon"] = icon
   if (title) props["data-native-title"] = title
   if (href) props["data-native-href"] = href
-  if (action) props["data-native-action"] = action
+  if (click) props["data-native-click"] = click
   if (position) props["data-native-position"] = position
   if (selected) props["data-native-selected"] = ""
   return createElement("div", props, children)
 }
 
-export function NativeMenuItem({ title, value, icon, selected }) {
+export function NativeMenuItem({ title, href, click, icon, selected }) {
   const props = { "data-native-menu-item": true }
   if (title) props["data-native-title"] = title
-  if (value) props["data-native-value"] = value
+  if (href) props["data-native-href"] = href
+  if (click) props["data-native-click"] = click
   if (icon) props["data-native-icon"] = icon
   if (selected) props["data-native-selected"] = ""
   return createElement("div", props)
 }
 
-export function NativeSubmitButton({ title = "Save", selector = "[type='submit']" }) {
+export function NativeSubmitButton({ title = "Save", click = "[type='submit']" }) {
   return createElement("div", {
     "data-native-submit-button": true,
     "data-native-title": title,
-    "data-native-selector": selector,
+    "data-native-click": click,
     hidden: true
   })
 }
 
-export function useNativeButton(name, callback) {
-  useEffect(() => {
-    function handler(event) {
-      if (event.detail.action === name) {
-        callback(event.detail.value)
-      }
-    }
-    document.addEventListener("ruby-native:button", handler)
-    return () => document.removeEventListener("ruby-native:button", handler)
-  }, [name, callback])
-}
