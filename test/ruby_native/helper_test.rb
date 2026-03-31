@@ -171,6 +171,152 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-bridge--badge-tab-value="0"'
   end
 
+  def test_native_navbar_tag
+    html = native_navbar_tag("Today")
+    assert_includes html, 'data-native-navbar="Today"'
+    assert_includes html, 'hidden'
+  end
+
+  def test_native_navbar_tag_with_button
+    html = native_navbar_tag("Habits") do |navbar|
+      navbar.button icon: "plus", href: "/habits/new"
+    end
+
+    assert_includes html, 'data-native-navbar="Habits"'
+    assert_includes html, 'data-native-button'
+    assert_includes html, 'data-native-icon="plus"'
+    assert_includes html, 'data-native-href="/habits/new"'
+    assert_includes html, 'data-native-position="trailing"'
+  end
+
+  def test_native_navbar_tag_button_with_title
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.button title: "Add", href: "/add"
+    end
+
+    assert_includes html, 'data-native-title="Add"'
+    refute_includes html, 'data-native-icon'
+  end
+
+  def test_native_navbar_tag_button_leading_position
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.button icon: "gear", position: :leading
+    end
+
+    assert_includes html, 'data-native-position="leading"'
+  end
+
+  def test_native_navbar_tag_button_with_action
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.button icon: "ellipsis.circle", action: "menu"
+    end
+
+    assert_includes html, 'data-native-action="menu"'
+    refute_includes html, 'data-native-href'
+  end
+
+  def test_native_navbar_tag_button_selected
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.button icon: "star", selected: true
+    end
+
+    assert_includes html, 'data-native-selected'
+  end
+
+  def test_native_navbar_tag_button_with_menu_items
+    html = native_navbar_tag("Profile") do |navbar|
+      navbar.button icon: "ellipsis.circle", position: :leading, action: "profile-menu" do |button|
+        button.item "Edit profile", value: "edit", icon: "pencil"
+        button.item "Sign out", value: "sign-out", icon: "rectangle.portrait.and.arrow.right"
+      end
+    end
+
+    assert_includes html, 'data-native-navbar="Profile"'
+    assert_includes html, 'data-native-button'
+    assert_includes html, 'data-native-menu-item'
+    assert_includes html, 'data-native-title="Edit profile"'
+    assert_includes html, 'data-native-value="edit"'
+    assert_includes html, 'data-native-icon="pencil"'
+    assert_includes html, 'data-native-title="Sign out"'
+    assert_includes html, 'data-native-value="sign-out"'
+  end
+
+  def test_native_navbar_tag_menu_item_selected
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.button icon: "line.3.horizontal.decrease", action: "filter" do |button|
+        button.item "All", value: "all", selected: true
+        button.item "Active", value: "active"
+      end
+    end
+
+    assert_match(/data-native-value="all".*data-native-selected/, html)
+    refute_match(/data-native-value="active".*data-native-selected/, html)
+  end
+
+  def test_native_navbar_tag_multiple_buttons
+    html = native_navbar_tag("Habits") do |navbar|
+      navbar.button icon: "person", position: :leading, href: "/profile"
+      navbar.button icon: "plus", href: "/habits/new"
+    end
+
+    assert_includes html, 'data-native-position="leading"'
+    assert_includes html, 'data-native-icon="person"'
+    assert_includes html, 'data-native-href="/profile"'
+    assert_includes html, 'data-native-position="trailing"'
+    assert_includes html, 'data-native-icon="plus"'
+    assert_includes html, 'data-native-href="/habits/new"'
+  end
+
+  def test_native_navbar_tag_submit_button_with_regular_button
+    html = native_navbar_tag("Edit") do |navbar|
+      navbar.button icon: "trash", action: "delete"
+      navbar.submit_button title: "Save"
+    end
+
+    assert_includes html, 'data-native-icon="trash"'
+    assert_includes html, 'data-native-action="delete"'
+    assert_includes html, 'data-native-submit-button'
+    assert_includes html, 'data-native-title="Save"'
+  end
+
+  def test_native_navbar_tag_empty_block
+    html = native_navbar_tag("Page") { |_| }
+
+    assert_includes html, 'data-native-navbar="Page"'
+    assert_includes html, 'hidden'
+    refute_includes html, 'data-native-button'
+    refute_includes html, 'data-native-submit-button'
+  end
+
+  def test_native_navbar_tag_submit_button
+    html = native_navbar_tag("Edit habit") do |navbar|
+      navbar.submit_button title: "Save"
+    end
+
+    assert_includes html, 'data-native-navbar="Edit habit"'
+    assert_includes html, 'data-native-submit-button'
+    assert_includes html, 'data-native-title="Save"'
+    assert_includes html, "data-native-selector"
+  end
+
+  def test_native_navbar_tag_submit_button_defaults
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.submit_button
+    end
+
+    assert_includes html, 'data-native-title="Save"'
+    assert_includes html, "data-native-selector"
+  end
+
+  def test_native_navbar_tag_submit_button_custom_selector
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.submit_button title: "Create", selector: "#my-submit"
+    end
+
+    assert_includes html, 'data-native-title="Create"'
+    assert_includes html, 'data-native-selector="#my-submit"'
+  end
+
   def test_native_haptic_data_defaults_to_success
     data = native_haptic_data
     assert_equal "success", data[:native_haptic]

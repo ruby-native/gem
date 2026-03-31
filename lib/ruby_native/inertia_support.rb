@@ -8,7 +8,7 @@ module RubyNative
       end
 
       inertia_share do
-        { native_app: native_app?, native_form: @native_form || false }
+        { nativeApp: native_app?, nativeForm: @native_form || false }
       end
     end
   end

@@ -77,6 +77,13 @@ module RubyNative
       ])
     end
 
+    def native_navbar_tag(title, &block)
+      builder = NavbarBuilder.new(self)
+      capture(builder, &block) if block
+
+      tag.div(data: { native_navbar: title }, hidden: true) { builder.to_html }
+    end
+
     def native_haptic_data(feedback = :success, **data)
       feedback = feedback.to_s
       feedback = "success" if feedback.empty?
@@ -106,6 +113,62 @@ module RubyNative
         data[:destructive] = "" if destructive
 
         @items << @context.link_to(title, url, **options, data: data, hidden: true)
+      end
+
+      def to_html
+        @context.safe_join(@items)
+      end
+    end
+
+    class NavbarBuilder
+      def initialize(context)
+        @context = context
+        @items = []
+      end
+
+      def button(icon: nil, title: nil, href: nil, action: nil, position: :trailing, selected: false, &block)
+        data = { native_button: "" }
+        data[:native_icon] = icon if icon
+        data[:native_title] = title if title
+        data[:native_href] = href if href
+        data[:native_action] = action if action
+        data[:native_position] = position.to_s
+        data[:native_selected] = "" if selected
+
+        if block
+          menu = NavbarMenuBuilder.new(@context)
+          @context.capture(menu, &block)
+          @items << @context.tag.div(data: data) { menu.to_html }
+        else
+          @items << @context.tag.div(data: data)
+        end
+      end
+
+      def submit_button(title: "Save", selector: "[type='submit']")
+        @items << @context.tag.div(data: {
+          native_submit_button: "",
+          native_title: title,
+          native_selector: selector
+        })
+      end
+
+      def to_html
+        @context.safe_join(@items)
+      end
+    end
+
+    class NavbarMenuBuilder
+      def initialize(context)
+        @context = context
+        @items = []
+      end
+
+      def item(title, value: nil, icon: nil, selected: false)
+        data = { native_menu_item: "", native_title: title }
+        data[:native_value] = value if value
+        data[:native_icon] = icon if icon
+        data[:native_selected] = "" if selected
+        @items << @context.tag.div(data: data)
       end
 
       def to_html

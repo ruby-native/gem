@@ -28,27 +28,27 @@ class RubyNative::InertiaSupportTest < Minitest::Test
 
   def test_shares_native_app_true_for_native_user_agent
     controller = FakeController.new(FakeRequest.new("Ruby Native/1.0"))
-    assert_equal true, controller.shared_data[:native_app]
+    assert_equal true, controller.shared_data[:nativeApp]
   end
 
   def test_shares_native_app_false_for_browser_user_agent
     controller = FakeController.new(FakeRequest.new("Mozilla/5.0"))
-    assert_equal false, controller.shared_data[:native_app]
+    assert_equal false, controller.shared_data[:nativeApp]
   end
 
   def test_shares_native_form_false_by_default
     controller = FakeController.new(FakeRequest.new("Ruby Native/1.0"))
-    assert_equal false, controller.shared_data[:native_form]
+    assert_equal false, controller.shared_data[:nativeForm]
   end
 
   def test_shares_native_form_true_when_set
     controller = FakeController.new(FakeRequest.new("Ruby Native/1.0"))
     controller.instance_variable_set(:@native_form, true)
-    assert_equal true, controller.shared_data[:native_form]
+    assert_equal true, controller.shared_data[:nativeForm]
   end
 
   def test_only_shares_native_app_and_native_form
     controller = FakeController.new(FakeRequest.new("Ruby Native/1.0"))
-    assert_equal [:native_app, :native_form], controller.shared_data.keys
+    assert_equal [:nativeApp, :nativeForm], controller.shared_data.keys
   end
 end
