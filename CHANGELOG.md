@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `enabled` prop on `NativeTabs` for React and Vue Inertia components. Pass `enabled={false}` (React) or `:enabled="false"` (Vue) to dynamically hide the tab bar, for example during edit mode. Defaults to `true`.
+
 ## [0.4.0] - 2026-03-31
 
 ### Breaking

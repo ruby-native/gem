@@ -3,7 +3,8 @@ import { router } from "@inertiajs/react"
 
 window.__inertiaRouter = router
 
-export function NativeTabs() {
+export function NativeTabs({ enabled = true }) {
+  if (!enabled) return null
   return createElement("div", { "data-native-tabs": true, hidden: true })
 }
 

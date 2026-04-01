@@ -5,7 +5,11 @@ window.__inertiaRouter = router
 
 export const NativeTabs = defineComponent({
   name: "NativeTabs",
+  props: {
+    enabled: { type: Boolean, default: true }
+  },
   render() {
+    if (!this.enabled) return null
     return h("div", { "data-native-tabs": true, hidden: true })
   }
 })
