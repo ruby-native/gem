@@ -15,6 +15,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Breaking
 
 - `RubyNative::InertiaSupport` shared props renamed from `native_app`/`native_form` to `nativeApp`/`nativeForm` to match JavaScript naming conventions. Update your Inertia components to use the new camelCase names.
+- **Vite + Inertia apps:** The gem's React and Vue entry points now import from `@inertiajs/react` and `@inertiajs/vue3` respectively. If you resolve the gem's JavaScript via a Vite path alias, add the Inertia package to `resolve.dedupe` in your `vite.config.ts` to prevent Vite from resolving it relative to the gem's bundler path instead of your app's `node_modules`:
+
+  ```js
+  // React
+  dedupe: ["react", "react-dom", "@inertiajs/react"],
+
+  // Vue
+  dedupe: ["vue", "@inertiajs/vue3"],
+  ```
 
 ### Added
 
