@@ -1,0 +1,26 @@
+{
+  "name": "ruby-native",
+  "version": "0.4.1",
+  "description": "React and Vue components for Ruby Native",
+  "exports": {
+    "./react": "./app/javascript/ruby_native/react.js",
+    "./vue": "./app/javascript/ruby_native/vue.js"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "@inertiajs/react": ">=2",
+    "vue": ">=3",
+    "@inertiajs/vue3": ">=2"
+  },
+  "peerDependenciesMeta": {
+    "react": { "optional": true },
+    "@inertiajs/react": { "optional": true },
+    "vue": { "optional": true },
+    "@inertiajs/vue3": { "optional": true }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Ruby-Native/gem.git"
+  },
+  "license": "MIT"
+}
