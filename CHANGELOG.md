@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `native_overscroll_tag` ERB helper for per-page overscroll colors. Declares top and bottom colors that are dynamically swapped based on scroll position, solving the WKWebView limitation of a single `background-color` for all overscroll directions. Usage: `native_overscroll_tag(top: "#f0f9ff", bottom: "#f5f1ea")`.
+- `NativeOverscroll` component for React and Vue Inertia apps. Usage: `<NativeOverscroll top="#f0f9ff" bottom="#f5f1ea" />`.
+- Overscroll color logic in the bundled JavaScript. Detects `data-native-overscroll-top` and `data-native-overscroll-bottom` signal elements via the MutationObserver and swaps `html` background-color based on scroll position. Works with Turbo and Inertia navigation.
+
+### Changed
+
+- Edge-to-edge mode no longer switches `contentInsetAdjustmentBehavior` or web view constraints when a NativeNavbar appears. The web view stays in `.never` mode. Developers using NativeNavbar with edge-to-edge should add `padding-top: env(safe-area-inset-top)` to their content wrapper (not the body) to clear the nav bar.
+- Pull-to-refresh is no longer added when NativeNavbar is used. The UIRefreshControl is incompatible with edge-to-edge mode (`.never` inset behavior) as it positions behind the nav bar.
+
 ## [0.4.2] - 2026-04-04
 
 ### Added

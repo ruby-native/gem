@@ -41,6 +41,14 @@ export function NativeMenuItem({ title, href, click, icon, selected }) {
   return createElement("div", props)
 }
 
+export function NativeOverscroll({ top, bottom }) {
+  return createElement("div", {
+    "data-native-overscroll-top": top,
+    "data-native-overscroll-bottom": bottom || top,
+    hidden: true
+  })
+}
+
 export function NativeSubmitButton({ title = "Save", click = "[type='submit']" }) {
   return createElement("div", {
     "data-native-submit-button": true,

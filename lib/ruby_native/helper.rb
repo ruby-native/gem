@@ -84,6 +84,10 @@ module RubyNative
       tag.div(data: { native_navbar: title }, hidden: true) { builder.to_html }
     end
 
+    def native_overscroll_tag(top:, bottom: nil)
+      tag.div(data: { native_overscroll_top: top, native_overscroll_bottom: bottom || top }, hidden: true)
+    end
+
     def native_haptic_data(feedback = :success, **data)
       feedback = feedback.to_s
       feedback = "success" if feedback.empty?
