@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `appearance.landscape` config option. Set `landscape: true` in `config/ruby_native.yml` to allow landscape orientation on iPhone. Defaults to portrait only.
+
 ## [0.4.1] - 2026-03-31
 
 ### Added
