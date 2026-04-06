@@ -410,8 +410,7 @@ module RubyNative
         {
           tabs: tabs,
           tint_color: resolve_color(appearance[:tint_color]),
-          background_color: resolve_color(appearance[:background_color]),
-          status_bar_color: resolve_color(appearance[:status_bar_color])
+          background_color: resolve_color(appearance[:background_color])
         }.compact
       end
 

@@ -35,7 +35,6 @@ Edit `config/ruby_native.yml`:
 appearance:
   tint_color: "#4F46E5"
   background_color: "#FFFFFF"
-  status_bar_color: "#FFFFFF"
 tabs:  # optional
   - title: Home
     path: /

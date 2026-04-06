@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Breaking
+
+- **Always edge-to-edge.** The `edge_to_edge` config option has been removed. The web view always extends behind the status bar and Dynamic Island. Add the `native-inset` CSS class to your content wrapper to handle safe area spacing (see below).
+- **`status_bar_color` renamed to `background_color`.** The old `background_color` (unused at runtime) has been removed. The new `background_color` is the unified window background color, visible during app launch and transitions. Set it to match your CSS body background or omit it.
+- **`viewport-fit=cover` injected automatically.** The JavaScript bridge now injects `viewport-fit=cover` into the viewport meta tag at document start. This enables CSS `env(safe-area-inset-*)` variables. No manual viewport changes needed.
+
+### Added
+
+- `native-inset`, `native-inset-top`, and `native-inset-bottom` CSS utility classes in the gem stylesheet. These use `::before`/`::after` pseudo-elements so they stack with existing padding utilities like `pb-8`. Include the stylesheet with `stylesheet_link_tag :ruby_native`.
+- `native_overscroll_tag` ERB helper for per-page overscroll colors. Declares top and bottom colors that are dynamically swapped based on scroll position, solving the WKWebView limitation of a single `background-color` for all overscroll directions. Usage: `native_overscroll_tag(top: "#f0f9ff", bottom: "#f5f1ea")`.
+- `NativeOverscroll` component for React and Vue Inertia apps. Usage: `<NativeOverscroll top="#f0f9ff" bottom="#f5f1ea" />`.
+- Overscroll color logic in the bundled JavaScript. Detects `data-native-overscroll-top` and `data-native-overscroll-bottom` signal elements via the MutationObserver and swaps `html` background-color based on scroll position. Works with Turbo and Inertia navigation.
+
+### Upgrade guide
+
+1. Update `config/ruby_native.yml`: remove `edge_to_edge` and `status_bar_color`. Rename your old `status_bar_color` value to `background_color` (or remove the old `background_color` if it was the same).
+2. Add `<%= stylesheet_link_tag :ruby_native %>` to your layout `<head>` if not already present.
+3. Add the `native-inset` class to your main content wrapper: `<main class="native-inset">`.
+4. For fixed navbars, add `native-inset-top` to the `<nav>` element.
+
 ## [0.4.2] - 2026-04-04
 
 ### Added

@@ -78,6 +78,21 @@ export const NativeMenuItem = defineComponent({
   }
 })
 
+export const NativeOverscroll = defineComponent({
+  name: "NativeOverscroll",
+  props: {
+    top: { type: String, required: true },
+    bottom: String
+  },
+  render() {
+    return h("div", {
+      "data-native-overscroll-top": this.top,
+      "data-native-overscroll-bottom": this.bottom || this.top,
+      hidden: true
+    })
+  }
+})
+
 export const NativeSubmitButton = defineComponent({
   name: "NativeSubmitButton",
   props: {

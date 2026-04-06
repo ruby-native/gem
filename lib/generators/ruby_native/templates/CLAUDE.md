@@ -54,7 +54,6 @@ app:
 appearance:
   tint_color: "#007AFF"
   background_color: "#FFFFFF"
-  status_bar_color: "#F8F9FA"
 
 tabs:
   - title: Home
@@ -75,12 +74,9 @@ Color fields accept a plain hex string or an object with `light` and `dark` keys
 background_color:
   light: "#FFFFFF"
   dark: "#212529"
-status_bar_color:
-  light: "#F8F9FA"
-  dark: "#2B3035"
 ```
 
-Match these to your CSS framework's dark mode colors. For Bootstrap, `#212529` is `--bs-body-bg` and `#2B3035` is `--bs-tertiary-bg` in dark mode.
+Match these to your CSS framework's dark mode colors. For Bootstrap, `#212529` is `--bs-body-bg` in dark mode.
 
 ## View helpers
 

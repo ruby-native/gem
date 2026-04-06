@@ -27,7 +27,6 @@ File.write(File.join(dummy_config_dir, "ruby_native.yml"), <<~YAML)
   appearance:
     tint_color: "#007AFF"
     background_color: "#FFFFFF"
-    status_bar_color: "#F8F9FA"
   tabs:
     - title: Home
       path: /
