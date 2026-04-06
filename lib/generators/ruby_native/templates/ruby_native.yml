@@ -5,16 +5,11 @@ app:
 appearance:
   tint_color: "#007AFF"
   background_color: "#FFFFFF"
-  status_bar_color: "#F8F9FA"
   # theme: auto  # auto (default), light, or dark
-  # edge_to_edge: true  # Let the web view extend behind the status bar (Normal Mode only)
   # landscape: true  # Allow landscape orientation on iPhone (defaults to portrait only)
-  # Dark mode example (replace the plain strings above):
+  # Dark mode example (replace the plain string above):
   # background_color:
   #   light: "#FFFFFF"
-  #   dark: "#1C1C1E"
-  # status_bar_color:
-  #   light: "#F8F9FA"
   #   dark: "#1C1C1E"
 
 tabs:

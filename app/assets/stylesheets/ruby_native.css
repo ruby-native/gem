@@ -2,6 +2,20 @@
   display: none !important;
 }
 
+.native-inset-top::before,
+.native-inset::before {
+  content: "";
+  display: block;
+  height: env(safe-area-inset-top);
+}
+
+.native-inset-bottom::after,
+.native-inset::after {
+  content: "";
+  display: block;
+  height: env(safe-area-inset-bottom);
+}
+
 .native-back-button {
   display: none;
 }
