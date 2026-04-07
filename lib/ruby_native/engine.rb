@@ -8,6 +8,10 @@ module RubyNative
       end
     end
 
+    initializer "ruby_native.filter_params" do |app|
+      app.config.filter_parameters += [:signedPayload]
+    end
+
     initializer "ruby_native.helpers" do
       ActiveSupport.on_load(:action_controller_base) do
         include RubyNative::NativeDetection
