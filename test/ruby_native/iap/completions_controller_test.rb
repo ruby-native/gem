@@ -37,6 +37,23 @@ class RubyNative::IAP::CompletionsControllerTest < ActionDispatch::IntegrationTe
     assert received_event.active?
   end
 
+  def test_returns_ok_for_already_completed_intent
+    intent = RubyNative::IAP::PurchaseIntent.create!(
+      customer_id: "user_42",
+      product_id: "com.example.annual",
+      status: :completed,
+      environment: :xcode
+    )
+
+    callback_fired = false
+    RubyNative.on_subscription_change { |_| callback_fired = true }
+
+    post "/native/iap/completions/#{intent.uuid}"
+
+    assert_response :ok
+    assert_not callback_fired
+  end
+
   def test_returns_not_found_for_unknown_uuid
     post "/native/iap/completions/nonexistent"
 

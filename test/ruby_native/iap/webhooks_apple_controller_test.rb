@@ -9,17 +9,16 @@ class RubyNative::Webhooks::AppleControllerTest < ActionDispatch::IntegrationTes
     assert_response :bad_request
   end
 
-  def test_returns_ok_for_invalid_jws
-    # Returns 200 so Apple doesn't retry unprocessable payloads
+  def test_returns_unprocessable_entity_for_invalid_jws
     post "/native/webhooks/apple",
       params: {signedPayload: "invalid.jws.payload"}.to_json,
       headers: {"CONTENT_TYPE" => "application/json"}
 
-    assert_response :ok
+    assert_response :unprocessable_entity
   end
 
   def test_returns_ok_for_missing_signed_payload
-    # Returns 200 so Apple doesn't retry
+    # Missing signedPayload is silently ignored (nothing to process).
     post "/native/webhooks/apple",
       params: {unexpected: "format"}.to_json,
       headers: {"CONTENT_TYPE" => "application/json"}

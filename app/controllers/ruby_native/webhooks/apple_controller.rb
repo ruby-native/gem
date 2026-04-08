@@ -6,6 +6,7 @@ module RubyNative
       def create
         payload = JSON.parse(request.raw_post)
         signed_payload = payload["signedPayload"]
+        return head :ok unless signed_payload
 
         processor = RubyNative::IAP::AppleWebhookProcessor.new
         processor.process(signed_payload)
@@ -13,12 +14,12 @@ module RubyNative
         head :ok
       rescue JSON::ParserError
         head :bad_request
-      rescue RubyNative::IAP::VerificationError => e
+      rescue RubyNative::IAP::VerificationError, JWT::DecodeError => e
         Rails.logger.error "[RubyNative] Apple webhook verification failed: #{e.message}"
-        head :unauthorized
+        head :unprocessable_entity
       rescue => e
         Rails.logger.error "[RubyNative] Apple webhook error: #{e.message}"
-        head :ok
+        head :internal_server_error
       end
     end
   end
