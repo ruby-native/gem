@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `eager: true` tab config example to the install generator's YAML template. Set `eager: true` on a tab to load it on app launch instead of when first tapped.
+
 ## [0.5.3] - 2026-04-08
 
 ### Fixed

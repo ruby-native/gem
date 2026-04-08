@@ -19,3 +19,4 @@ tabs:
   - title: Profile
     path: /profile
     icon: person
+    # eager: true  # Load this tab on app launch instead of when first tapped
