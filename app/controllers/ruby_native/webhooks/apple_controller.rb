@@ -8,6 +8,10 @@ module RubyNative
         signed_payload = payload["signedPayload"]
         return head :ok unless signed_payload
 
+        # TEST notifications from Apple have no transaction data to process.
+        decoded = JWT.decode(signed_payload, nil, false).first
+        return head :ok if decoded["notificationType"] == "TEST"
+
         processor = RubyNative::IAP::AppleWebhookProcessor.new
         processor.process(signed_payload)
 

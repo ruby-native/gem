@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- Apple webhook endpoint now handles `TEST` notification type. Previously, test notifications sent via the App Store Server API's "Request a Test Notification" endpoint would return HTTP 500 because the processor tried to decode a `signedTransactionInfo` that doesn't exist in test payloads. The endpoint now returns 200 immediately for `TEST` notifications without processing.
+
 ## [0.5.0] - 2026-04-06
 
 ### Breaking

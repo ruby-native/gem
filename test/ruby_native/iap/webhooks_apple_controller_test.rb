@@ -17,6 +17,18 @@ class RubyNative::Webhooks::AppleControllerTest < ActionDispatch::IntegrationTes
     assert_response :unprocessable_entity
   end
 
+  def test_returns_ok_for_test_notification
+    header = Base64.urlsafe_encode64({alg: "ES256"}.to_json, padding: false)
+    payload = Base64.urlsafe_encode64({notificationType: "TEST", notificationUUID: "test-123"}.to_json, padding: false)
+    jws = "#{header}.#{payload}.fakesignature"
+
+    post "/native/webhooks/apple",
+      params: {signedPayload: jws}.to_json,
+      headers: {"CONTENT_TYPE" => "application/json"}
+
+    assert_response :ok
+  end
+
   def test_returns_ok_for_missing_signed_payload
     # Missing signedPayload is silently ignored (nothing to process).
     post "/native/webhooks/apple",
