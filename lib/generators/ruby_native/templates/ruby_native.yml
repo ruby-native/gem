@@ -16,6 +16,7 @@ tabs:
   - title: Home
     path: /
     icon: house
+    # autoroute: false  # Disable automatic tab switching for this tab (e.g., "/" matches everything)
   - title: Profile
     path: /profile
     icon: person
