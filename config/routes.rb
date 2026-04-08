@@ -13,5 +13,6 @@ RubyNative::Engine.routes.draw do
   namespace :iap do
     resources :purchases, only: :create
     post "completions/:uuid", to: "completions#create", as: :completion
+    resource :restore, only: :create
   end
 end
