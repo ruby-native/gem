@@ -16,7 +16,10 @@ tabs:
   - title: Home
     path: /
     icon: house
-    # autoroute: false  # Disable automatic tab switching for this tab (e.g., "/" matches everything)
+    # auto_route: false  # Disable automatic tab switching for this tab (e.g., "/" matches everything)
+    # auto_route:  # Or provide explicit route prefixes (replaces default prefix match):
+    #   - /
+    #   - /pages/
   - title: Profile
     path: /profile
     icon: person

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- `auto_route` tab config option for controlling tab routing. Accepts `false` (disable routing for this tab) or an array of route prefixes (replaces the default prefix match on `path`). Trailing slash routes like `/breweries/` match sub-paths but not the bare path. Omit `auto_route` to keep the default behavior (prefix match on the tab's `path`).
+
 ## [0.5.5] - 2026-04-08
 
 ### Added
