@@ -13,9 +13,7 @@
     "@inertiajs/vue3": ">=2"
   },
   "peerDependenciesMeta": {
-    "react": { "optional": true },
     "@inertiajs/react": { "optional": true },
-    "vue": { "optional": true },
     "@inertiajs/vue3": { "optional": true }
   },
   "repository": {

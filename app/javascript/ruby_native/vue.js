@@ -1,7 +1,6 @@
 import { defineComponent, h } from "vue"
-import { router } from "@inertiajs/vue3"
 
-window.__inertiaRouter = router
+import("@inertiajs/vue3").then(m => { window.__inertiaRouter = m.router }).catch(() => {})
 
 export const NativeTabs = defineComponent({
   name: "NativeTabs",

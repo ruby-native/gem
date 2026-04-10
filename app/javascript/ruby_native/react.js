@@ -1,7 +1,6 @@
 import { createElement } from "react"
-import { router } from "@inertiajs/react"
 
-window.__inertiaRouter = router
+import("@inertiajs/react").then(m => { window.__inertiaRouter = m.router }).catch(() => {})
 
 export function NativeTabs({ enabled = true }) {
   if (!enabled) return null

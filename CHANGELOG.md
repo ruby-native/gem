@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- `ruby-native` npm package now builds correctly in Vite consumers. Vite's optional-peer-dep shim was breaking static imports in the React and Vue Inertia component files. The `@inertiajs/*` router is now imported dynamically (silently skipped when Inertia isn't installed), and `react` / `vue` are no longer marked optional in `peerDependenciesMeta` (only `@inertiajs/react` and `@inertiajs/vue3` remain optional).
+
 ## [0.5.7] - 2026-04-09
 
 ### Added
