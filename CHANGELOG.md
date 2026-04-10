@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Breaking
+
+- **Advanced Mode no longer uses bridge components.** The `@hotwired/hotwire-native-bridge` JavaScript dependency, the `ruby_native/bridge` Stimulus controllers, and the per-feature Swift `BridgeComponent` classes are all removed. Advanced Mode now reads signal elements (`data-native-*`) via the same `RubyNative.js` bridge that Normal Mode already uses. One code path for both modes, significantly less surface area to maintain.
+- **Removed deprecated helpers that only emitted the bridge Stimulus markup.** If you were still calling any of these, migrate to the signal-based equivalents:
+  - `native_button_tag`, `native_menu_tag` → use `native_navbar_tag` with nested `navbar.button(...)` and `navbar.button do |button| button.item(...) end`.
+  - `native_form_data`, `native_submit_data` → use `native_form_tag` plus `navbar.submit_button` inside a `native_navbar_tag`.
+  - `native_search_tag` → no signal-based replacement yet; reach out if you need it.
+- **Helpers now emit only signal markup.** `native_tabs_tag`, `native_push_tag`, `native_badge_tag`, and `native_haptic_data` previously emitted both `data-native-*` and the redundant `data-controller="bridge--*"` attributes. They no longer emit the bridge half, which removes some DOM noise but means any code that relied on observing those Stimulus controllers will stop firing.
+
+### Upgrade guide
+
+1. Remove `@hotwired/hotwire-native-bridge` from your JavaScript dependencies and delete the `import "ruby_native/bridge"` line from your entrypoint.
+2. If you have Advanced Mode pages still using `native_button_tag`, `native_menu_tag`, `native_form_data`, or `native_submit_data`, migrate them to `native_navbar_tag` with nested signals (see the [Advanced Mode guide](/docs/advanced-mode)).
+3. Rebuild your Ruby Native iOS app against gem 0.7.0 (or use the cloud build pipeline to regenerate it).
+
 ## [0.6.0] - 2026-04-10
 
 ### Breaking

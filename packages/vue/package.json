@@ -3,7 +3,7 @@
   "version": "0.6.0",
   "description": "Vue components for Ruby Native",
   "main": "index.js",
-  "files": ["index.js"],
+  "files": ["index.js", "README.md"],
   "peerDependencies": {
     "vue": ">=3",
     "@inertiajs/vue3": ">=2"

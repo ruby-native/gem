@@ -46,11 +46,6 @@ module RubyNative
         say "  4. Preview on your device:"
         say "       bundle exec ruby_native preview"
         say ""
-        say "  For Advanced Mode (native buttons, menus, search):"
-        say "       bin/importmap pin @hotwired/hotwire-native-bridge"
-        say "    Then add to your JavaScript entrypoint:"
-        say "       import \"ruby_native/bridge\""
-        say ""
         if File.directory?(File.join(destination_root, ".claude"))
           say "  Tip: .claude/ruby_native.md was added with setup instructions."
           say "  Open Claude Code and ask \"what do I need to do next?\" for guided help."
