@@ -1,0 +1,21 @@
+{
+  "name": "@ruby-native/vue",
+  "version": "0.6.0",
+  "description": "Vue components for Ruby Native",
+  "main": "index.js",
+  "files": ["index.js"],
+  "peerDependencies": {
+    "vue": ">=3",
+    "@inertiajs/vue3": ">=2"
+  },
+  "peerDependenciesMeta": {
+    "@inertiajs/vue3": { "optional": true }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruby-native/gem.git",
+    "directory": "packages/vue"
+  },
+  "homepage": "https://rubynative.com",
+  "license": "MIT"
+}

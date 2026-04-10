@@ -6,9 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Breaking
+
+- **Scoped npm packages.** The unscoped `ruby-native` npm package is replaced with two scoped packages published under the Ruby Native org: `@ruby-native/react` and `@ruby-native/vue`. Update your imports:
+  - `import { NativeTabs } from "ruby-native/react"` → `import { NativeTabs } from "@ruby-native/react"`
+  - `import { NativeTabs } from "ruby-native/vue"` → `import { NativeTabs } from "@ruby-native/vue"`
+  - In `package.json`, replace `"ruby-native": "..."` with `"@ruby-native/react": "^0.6.0"` or `"@ruby-native/vue": "^0.6.0"` depending on your framework.
+
 ### Fixed
 
-- `ruby-native` npm package now builds correctly in Vite consumers. Vite's optional-peer-dep shim was breaking static imports in the React and Vue Inertia component files. The `@inertiajs/*` router is now imported dynamically (silently skipped when Inertia isn't installed), and `react` / `vue` are no longer marked optional in `peerDependenciesMeta` (only `@inertiajs/react` and `@inertiajs/vue3` remain optional).
+- React and Vue Inertia components now build cleanly in Vite consumers. The `@inertiajs/*` router is imported dynamically (silently skipped when Inertia isn't installed), and `react` / `vue` are no longer marked optional in `peerDependenciesMeta` (only `@inertiajs/react` and `@inertiajs/vue3` remain optional). Previously, Vite's optional-peer-dep shim broke the components' static imports.
 
 ## [0.5.7] - 2026-04-09
 

@@ -1,0 +1,21 @@
+{
+  "name": "@ruby-native/react",
+  "version": "0.6.0",
+  "description": "React components for Ruby Native",
+  "main": "index.js",
+  "files": ["index.js"],
+  "peerDependencies": {
+    "react": ">=18",
+    "@inertiajs/react": ">=2"
+  },
+  "peerDependenciesMeta": {
+    "@inertiajs/react": { "optional": true }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ruby-native/gem.git",
+    "directory": "packages/react"
+  },
+  "homepage": "https://rubynative.com",
+  "license": "MIT"
+}
