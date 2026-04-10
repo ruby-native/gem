@@ -14,12 +14,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   - `native_form_data`, `native_submit_data` → use `native_form_tag` plus `navbar.submit_button` inside a `native_navbar_tag`.
   - `native_search_tag` → no signal-based replacement yet; reach out if you need it.
 - **Helpers now emit only signal markup.** `native_tabs_tag`, `native_push_tag`, `native_badge_tag`, and `native_haptic_data` previously emitted both `data-native-*` and the redundant `data-controller="bridge--*"` attributes. They no longer emit the bridge half, which removes some DOM noise but means any code that relied on observing those Stimulus controllers will stop firing.
+- **`navbar.button` takes title as its first positional argument.** The old `title:` kwarg form no longer works. Update nested navbar buttons from `navbar.button title: "Sign out", icon: "..."` to `navbar.button "Sign out", icon: "..."`. Applies to both the ERB helper and the equivalent usage in React/Vue (which already used positional-style props).
+
+### Added
+
+- **`native_navbar_tag` now accepts no title.** Calling `native_navbar_tag do |navbar| navbar.button(...) end` without a title string is valid. In Advanced Mode, the destination keeps whatever title Hotwire Native derived from the HTML `<title>` tag. When a title IS provided, the shared `RubyNative.js` bridge also syncs `document.title` so Hotwire's own title observer can't race into the wrong value.
+- **Bar buttons with both title and image keep the title for accessibility.** If you set both `title:` and `icon:` on a `navbar.button`, the native bar button shows the SF Symbol visually and uses the title as the VoiceOver label automatically. The Swift side builds these via `UIBarButtonItem(title:image:primaryAction:menu:)` so UIKit handles the accessibility wiring.
+- **`@ruby-native/react` and `@ruby-native/vue` `NativeNavbar` `title` prop is optional.** `<NativeNavbar>{children}</NativeNavbar>` works without a title for Inertia apps, mirroring the ERB helper's behavior.
 
 ### Upgrade guide
 
 1. Remove `@hotwired/hotwire-native-bridge` from your JavaScript dependencies and delete the `import "ruby_native/bridge"` line from your entrypoint.
 2. If you have Advanced Mode pages still using `native_button_tag`, `native_menu_tag`, `native_form_data`, or `native_submit_data`, migrate them to `native_navbar_tag` with nested signals (see the [Advanced Mode guide](/docs/advanced-mode)).
-3. Rebuild your Ruby Native iOS app against gem 0.7.0 (or use the cloud build pipeline to regenerate it).
+3. Update any `navbar.button title: "..."` call sites to pass the title positionally: `navbar.button "...", icon: "..."`.
+4. Rebuild your Ruby Native iOS app against gem 0.7.0 (or use the cloud build pipeline to regenerate it).
 
 ## [0.6.0] - 2026-04-10
 
