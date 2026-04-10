@@ -29,7 +29,7 @@ export const NativeForm = defineComponent({
 
 export const NativeNavbar = defineComponent({
   name: "NativeNavbar",
-  props: { title: { type: String, required: true } },
+  props: { title: { type: String, default: "" } },
   render() {
     return h("div", { "data-native-navbar": this.title, hidden: true }, this.$slots.default?.())
   }

@@ -33,11 +33,11 @@ module RubyNative
       tag.div(data: data, hidden: true)
     end
 
-    def native_navbar_tag(title, &block)
+    def native_navbar_tag(title = nil, &block)
       builder = NavbarBuilder.new(self)
       capture(builder, &block) if block
 
-      tag.div(data: { native_navbar: title }, hidden: true) { builder.to_html }
+      tag.div(data: { native_navbar: title.to_s }, hidden: true) { builder.to_html }
     end
 
     def native_overscroll_tag(top:, bottom: nil)
@@ -57,10 +57,10 @@ module RubyNative
         @items = []
       end
 
-      def button(icon: nil, title: nil, href: nil, click: nil, position: :trailing, selected: false, &block)
+      def button(title = nil, icon: nil, href: nil, click: nil, position: :trailing, selected: false, &block)
         data = { native_button: "" }
-        data[:native_icon] = icon if icon
         data[:native_title] = title if title
+        data[:native_icon] = icon if icon
         data[:native_href] = href if href
         data[:native_click] = click if click
         data[:native_position] = position.to_s

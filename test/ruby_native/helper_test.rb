@@ -89,6 +89,58 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'hidden'
   end
 
+  def test_native_navbar_tag_without_title
+    html = native_navbar_tag
+    assert_includes html, 'data-native-navbar=""'
+    assert_includes html, 'hidden'
+  end
+
+  def test_native_navbar_tag_without_title_with_buttons
+    html = native_navbar_tag do |navbar|
+      navbar.button "Sign out", icon: "rectangle.portrait.and.arrow.forward", click: "#sign-out-button"
+    end
+
+    assert_includes html, 'data-native-navbar=""'
+    assert_includes html, 'data-native-button'
+    assert_includes html, 'data-native-title="Sign out"'
+    assert_includes html, 'data-native-icon="rectangle.portrait.and.arrow.forward"'
+    assert_includes html, 'data-native-click="#sign-out-button"'
+  end
+
+  def test_native_navbar_tag_button_positional_title
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.button "Add", href: "/add"
+    end
+
+    assert_includes html, 'data-native-title="Add"'
+    assert_includes html, 'data-native-href="/add"'
+  end
+
+  def test_native_navbar_tag_button_positional_title_and_icon
+    html = native_navbar_tag("Page") do |navbar|
+      navbar.button "Sign out", icon: "rectangle.portrait.and.arrow.forward", click: "#sign-out-button"
+    end
+
+    assert_includes html, 'data-native-title="Sign out"'
+    assert_includes html, 'data-native-icon="rectangle.portrait.and.arrow.forward"'
+    assert_includes html, 'data-native-click="#sign-out-button"'
+  end
+
+  def test_native_navbar_tag_button_positional_title_with_menu
+    html = native_navbar_tag("Profile") do |navbar|
+      navbar.button "More", icon: "ellipsis.circle" do |button|
+        button.item "Edit", href: "/edit"
+        button.item "Delete", click: "#delete", icon: "trash"
+      end
+    end
+
+    assert_includes html, 'data-native-title="More"'
+    assert_includes html, 'data-native-icon="ellipsis.circle"'
+    assert_includes html, 'data-native-menu-item'
+    assert_includes html, 'data-native-title="Edit"'
+    assert_includes html, 'data-native-title="Delete"'
+  end
+
   def test_native_navbar_tag_with_button
     html = native_navbar_tag("Habits") do |navbar|
       navbar.button icon: "plus", href: "/habits/new"
@@ -103,7 +155,7 @@ class RubyNative::HelperTest < ActionView::TestCase
 
   def test_native_navbar_tag_button_with_title
     html = native_navbar_tag("Page") do |navbar|
-      navbar.button title: "Add", href: "/add"
+      navbar.button "Add", href: "/add"
     end
 
     assert_includes html, 'data-native-title="Add"'
