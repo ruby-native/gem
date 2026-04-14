@@ -80,12 +80,15 @@ module RubyNative
       end
 
       def screenshots_configured?
-        paths = @config.dig(:screenshots, :paths)
-        paths.is_a?(Array) && !paths.empty?
+        paths = screenshot_paths
+        !paths.empty?
       end
 
       def screenshot_paths
-        @config.dig(:screenshots, :paths) || []
+        screenshots = @config[:screenshots]
+        return [] unless screenshots.is_a?(Hash)
+        paths = screenshots[:paths]
+        paths.is_a?(Array) ? paths : []
       end
 
       def tab_paths
@@ -292,7 +295,8 @@ module RubyNative
 
       def upload_screenshots
         begin
-          app_id = @config.dig(:ruby_native, :app_id)
+          ruby_native_section = @config[:ruby_native]
+          app_id = ruby_native_section.is_a?(Hash) ? ruby_native_section[:app_id] : nil
           app_id = link_app unless app_id
           return unless app_id
 
