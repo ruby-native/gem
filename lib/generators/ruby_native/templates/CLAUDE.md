@@ -21,8 +21,11 @@ rails generate ruby_native:install
 4. Add to your layout `<head>`:
 
 ```erb
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <%= stylesheet_link_tag :ruby_native %>
 ```
+
+The `viewport-fit=cover` attribute is required so CSS `env(safe-area-inset-*)` variables return real values. If you already have a viewport meta tag, add `viewport-fit=cover` to its `content` attribute.
 
 5. Add to your layout `<body>`:
 
