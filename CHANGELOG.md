@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Breaking
+
+- **Add `viewport-fit=cover` to your viewport meta tag.** The native bridge no longer injects it automatically. Inject-after-the-fact was unreliable when the page already had a viewport meta tag, because WebKit can resolve safe area insets before the JS runs, leaving `env(safe-area-inset-*)` at `0` and breaking `native-inset`. Update your layout:
+
+  ```erb
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  ```
+
 ## [0.7.0] - 2026-04-10
 
 ### Breaking
