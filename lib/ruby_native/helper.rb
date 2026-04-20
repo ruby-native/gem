@@ -40,6 +40,13 @@ module RubyNative
       tag.div(data: { native_navbar: title.to_s }, hidden: true) { builder.to_html }
     end
 
+    def native_fab_tag(icon:, href: nil, click: nil)
+      data = { native_fab: true, native_icon: icon }
+      data[:native_href] = href if href
+      data[:native_click] = click if click
+      tag.div(data: data, hidden: true)
+    end
+
     def native_overscroll_tag(top:, bottom: nil)
       tag.div(data: { native_overscroll_top: top, native_overscroll_bottom: bottom || top }, hidden: true)
     end

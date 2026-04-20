@@ -83,6 +83,30 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-native-badge-tab="0"'
   end
 
+  def test_native_fab_tag_with_href
+    html = native_fab_tag(icon: "square.and.pencil", href: "/compose")
+    assert_includes html, 'data-native-fab'
+    assert_includes html, 'data-native-icon="square.and.pencil"'
+    assert_includes html, 'data-native-href="/compose"'
+    refute_includes html, 'data-native-click'
+    assert_includes html, 'hidden'
+  end
+
+  def test_native_fab_tag_with_click
+    html = native_fab_tag(icon: "plus", click: "#new-button")
+    assert_includes html, 'data-native-fab'
+    assert_includes html, 'data-native-icon="plus"'
+    assert_includes html, 'data-native-click="#new-button"'
+    refute_includes html, 'data-native-href'
+  end
+
+  def test_native_fab_tag_icon_only
+    html = native_fab_tag(icon: "star")
+    assert_includes html, 'data-native-icon="star"'
+    refute_includes html, 'data-native-href'
+    refute_includes html, 'data-native-click'
+  end
+
   def test_native_navbar_tag
     html = native_navbar_tag("Today")
     assert_includes html, 'data-native-navbar="Today"'

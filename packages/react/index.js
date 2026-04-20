@@ -40,6 +40,13 @@ export function NativeMenuItem({ title, href, click, icon, selected }) {
   return createElement("div", props)
 }
 
+export function NativeFab({ icon, href, click }) {
+  const props = { "data-native-fab": true, "data-native-icon": icon, hidden: true }
+  if (href) props["data-native-href"] = href
+  if (click) props["data-native-click"] = click
+  return createElement("div", props)
+}
+
 export function NativeOverscroll({ top, bottom }) {
   return createElement("div", {
     "data-native-overscroll-top": top,

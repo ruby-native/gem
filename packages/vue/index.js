@@ -77,6 +77,21 @@ export const NativeMenuItem = defineComponent({
   }
 })
 
+export const NativeFab = defineComponent({
+  name: "NativeFab",
+  props: {
+    icon: { type: String, required: true },
+    href: String,
+    click: String
+  },
+  render() {
+    const attrs = { "data-native-fab": true, "data-native-icon": this.icon, hidden: true }
+    if (this.href) attrs["data-native-href"] = this.href
+    if (this.click) attrs["data-native-click"] = this.click
+    return h("div", attrs)
+  }
+})
+
 export const NativeOverscroll = defineComponent({
   name: "NativeOverscroll",
   props: {

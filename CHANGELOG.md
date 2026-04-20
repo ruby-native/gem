@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **`native_fab_tag` floating action button signal.** Renders a native floating button above the tab bar. Accepts `icon:` (SF Symbols name, required), `href:` (URL to visit), and `click:` (CSS selector to click). Shows/hides per page based on signal presence. Works in both Normal and Advanced Mode. iOS 26+ renders with Liquid Glass styling, older versions use a bordered button.
+- **`NativeFab` component for React and Vue.** Same API as the ERB helper: `icon`, `href`, and `click` props.
+
+### Fixed
+
+- **Tab auto-routing with trailing-slash patterns no longer breaks Normal Mode navigation.** Routes like `/breweries/` now correctly match the bare path `/breweries`, preventing an infinite routing loop when Turbo.js is present.
+- **Tab path matching now groups routes by tab index.** `_tabPaths` is an array of arrays instead of a flat array, so multiple auto-route patterns on the same tab are correctly identified as the same tab.
+
 ### Breaking
 
 - **Add `viewport-fit=cover` to your viewport meta tag.** The native bridge no longer injects it automatically. Inject-after-the-fact was unreliable when the page already had a viewport meta tag, because WebKit can resolve safe area insets before the JS runs, leaving `env(safe-area-inset-*)` at `0` and breaking `native-inset`. Update your layout:
