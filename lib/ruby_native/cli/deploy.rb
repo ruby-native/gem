@@ -29,6 +29,8 @@ module RubyNative
         end
 
         build = trigger_build(app_id)
+        return if @if_needed
+
         poll_build_status(app_id, build)
       end
 
