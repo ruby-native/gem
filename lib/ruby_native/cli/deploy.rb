@@ -2,6 +2,7 @@ require "json"
 require "net/http"
 require "uri"
 require "ruby_native/cli/credentials"
+require "ruby_native/version"
 
 module RubyNative
   class CLI
@@ -14,13 +15,22 @@ module RubyNative
       TokenExpiredError = Class.new(StandardError)
 
       def initialize(argv)
+        @if_needed = argv.include?("--if-needed")
       end
 
       def run
         load_config!
         ensure_authenticated!
         app_id = resolve_app_id!
+
+        if @if_needed && skip_build?(app_id)
+          puts "Ruby Native v#{RubyNative::VERSION} already built. Skipping deploy."
+          return
+        end
+
         build = trigger_build(app_id)
+        return if @if_needed
+
         poll_build_status(app_id, build)
       end
 
@@ -53,6 +63,39 @@ module RubyNative
         app_id
       end
 
+      # --- Version check ---
+
+      def skip_build?(app_id)
+        latest = fetch_latest_build(app_id)
+        return false unless latest
+
+        latest_gem_version = latest["gem_version"]
+        return false unless latest_gem_version
+
+        Gem::Version.new(latest_gem_version) >= Gem::Version.new(RubyNative::VERSION)
+      rescue ArgumentError
+        false
+      end
+
+      def fetch_latest_build(app_id)
+        uri = URI("#{HOST}/api/v1/apps/#{app_id}/builds/latest")
+        req = Net::HTTP::Get.new(uri)
+        req["Authorization"] = "Token #{Credentials.token}"
+
+        response = make_request(uri, req)
+
+        case response
+        when Net::HTTPSuccess
+          JSON.parse(response.body)
+        when Net::HTTPNoContent
+          nil
+        when Net::HTTPUnauthorized
+          raise TokenExpiredError
+        else
+          nil
+        end
+      end
+
       # --- Build ---
 
       def trigger_build(app_id)
@@ -62,6 +105,7 @@ module RubyNative
         req = Net::HTTP::Post.new(uri)
         req["Authorization"] = "Token #{Credentials.token}"
         req["Content-Type"] = "application/json"
+        req.body = JSON.generate(gem_version: RubyNative::VERSION)
 
         response = make_request(uri, req)
 

@@ -129,6 +129,35 @@ The gem auto-mounts at `/native`. No route configuration needed.
 - `GET /native/config` returns the YAML config as JSON
 - `POST /native/push/devices` registers a push notification device token
 
+## CLI
+
+### Deploy from CI
+
+Use `--if-needed` to auto-deploy only when the gem version changes:
+
+```sh
+bundle exec ruby_native deploy --if-needed
+```
+
+Set `RUBY_NATIVE_TOKEN` as an environment variable for CI (no interactive login needed):
+
+```yaml
+# GitHub Actions
+- run: bundle exec ruby_native deploy --if-needed
+  env:
+    RUBY_NATIVE_TOKEN: ${{ secrets.RUBY_NATIVE_TOKEN }}
+```
+
+### Other commands
+
+```sh
+bundle exec ruby_native login         # authenticate (opens browser)
+bundle exec ruby_native deploy        # trigger a build
+bundle exec ruby_native preview       # start a tunnel and display a QR code
+bundle exec ruby_native screenshots   # capture App Store screenshots
+bundle exec ruby_native logout        # remove stored credentials
+```
+
 ## Common tasks
 
 ### Hide web navigation in the native app
