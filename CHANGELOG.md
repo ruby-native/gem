@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- `ruby_native deploy --if-needed` skips the build when the gem version matches the last successful build. Designed for CI: add it as a post-deploy step and it's a no-op until you bump the gem. Triggers the build and exits immediately without polling.
+- `RUBY_NATIVE_TOKEN` environment variable for CLI authentication in CI. Takes priority over the stored credentials file. Generate a token with `ruby_native login` locally, then set it as a CI secret.
+- Build failure email notifications. When a build fails, the account owner receives an email with the error details and a link to the builds page.
+
 ### Breaking
 
 - **Add `viewport-fit=cover` to your viewport meta tag.** The native bridge no longer injects it automatically. Inject-after-the-fact was unreliable when the page already had a viewport meta tag, because WebKit can resolve safe area insets before the JS runs, leaving `env(safe-area-inset-*)` at `0` and breaking `native-inset`. Update your layout:
