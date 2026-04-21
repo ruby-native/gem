@@ -7,6 +7,10 @@ module RubyNative
       PATH = File.join(Dir.home, ".ruby_native", "credentials")
 
       def self.token
+        ENV["RUBY_NATIVE_TOKEN"] || file_token
+      end
+
+      def self.file_token
         return unless File.exist?(PATH)
         JSON.parse(File.read(PATH))["token"]
       rescue JSON::ParserError
