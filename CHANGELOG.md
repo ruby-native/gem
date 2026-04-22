@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- Tab routing no longer cancels navigation from an unclaimed URL back to a tab's claimed URL in Normal Mode. Under Turbo this could lock up the tab bar; under Inertia the page silently failed to navigate. See [#50](https://github.com/ruby-native/gem/issues/50) for details.
+
 ## [0.8.0] - 2026-04-21
 
 ### Added
