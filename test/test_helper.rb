@@ -41,6 +41,9 @@ require "active_record"
 
 Dummy::Application.initialize!
 
+# Captured before any test reads the config; see RubyNative.config.
+CONFIG_LOADED_AT_BOOT = RubyNative.instance_variable_defined?(:@config)
+
 # Explicitly require the model since engine autoloading may not work in the minimal dummy app.
 require_relative "../app/models/ruby_native/iap/purchase_intent"
 

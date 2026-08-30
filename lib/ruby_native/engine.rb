@@ -32,12 +32,6 @@ module RubyNative
       end
     end
 
-    initializer "ruby_native.config" do
-      config.after_initialize do
-        RubyNative.load_config
-      end
-    end
-
     initializer "ruby_native.oauth_middleware", before: :build_middleware_stack do |app|
       app.middleware.insert_before ActionDispatch::Cookies, RubyNative::OAuthMiddleware
     end

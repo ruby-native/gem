@@ -1,9 +1,30 @@
 require "test_helper"
 
 class RubyNative::ConfigTest < Minitest::Test
+  def teardown
+    RubyNative.load_config
+  end
+
   def test_load_config_reads_yaml
     RubyNative.load_config
     refute_nil RubyNative.config
+  end
+
+  def test_config_is_not_loaded_while_rails_boots
+    refute CONFIG_LOADED_AT_BOOT, "the dummy app read RubyNative.config during boot"
+  end
+
+  def test_config_loads_on_first_read
+    RubyNative.load_config
+    RubyNative.remove_instance_variable(:@config)
+
+    assert_equal "Test App", RubyNative.config[:app][:name]
+  end
+
+  def test_a_nil_config_is_not_reloaded_on_read
+    RubyNative.config = nil
+
+    assert_nil RubyNative.config
   end
 
   def test_config_is_deep_symbolized

@@ -1,4 +1,5 @@
 require "erb"
+require "monitor"
 require "ruby_native/version"
 require "ruby_native/helper"
 require "ruby_native/native_version"
@@ -16,7 +17,6 @@ require "ruby_native/screenshots/sign_in_helper"
 require "ruby_native/engine"
 
 module RubyNative
-  mattr_accessor :config
   mattr_accessor :subscription_callbacks, default: []
 
   # Screenshot configuration. Set via `RubyNative.configure` in an initializer.
@@ -41,6 +41,26 @@ module RubyNative
     subscription_callbacks.each { |cb| cb.call(event) }
   end
 
+  CONFIG_LOCK = Monitor.new
+  private_constant :CONFIG_LOCK
+
+  # Loaded on first read, not at boot: rendering the YAML's ERB runs asset
+  # helpers, and under `assets:precompile` those run before the bundles are
+  # built, leaving Propshaft's manifest without them.
+  def self.config
+    return @config if defined?(@config)
+
+    CONFIG_LOCK.synchronize do
+      load_config unless defined?(@config)
+      @config = nil unless defined?(@config) # missing or empty file
+      @config
+    end
+  end
+
+  def self.config=(value)
+    @config = value
+  end
+
   def self.load_config
     path = Rails.root.join("config", "ruby_native.yml")
     return unless path.exist?
@@ -48,7 +68,7 @@ module RubyNative
     parsed = YAML.load(render_config(path), filename: path.to_s, aliases: true)
 
     # An empty file, comments only, or ERB rendering to nothing parses to nil;
-    # treat it like a missing file instead of crashing Rails boot.
+    # treat it like a missing file instead of raising.
     unless parsed.is_a?(Hash)
       Rails.logger.warn("[RubyNative] #{path} is empty or not a YAML mapping; ignoring it.")
       return
