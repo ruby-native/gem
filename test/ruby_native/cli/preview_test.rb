@@ -1,4 +1,6 @@
 require "minitest/autorun"
+require "json"
+require "tmpdir"
 require "ruby_native/cli/preview"
 
 class PreviewTest < Minitest::Test
@@ -259,7 +261,7 @@ class PreviewTest < Minitest::Test
     out, _err = capture_io do
       @preview.send(:display_qr, "https://example.trycloudflare.com")
     end
-    assert_match(%r{into the Ruby Native app}, out)
+    assert_match(%r{Download the Ruby Native app and scan the QR code}, out)
     assert_match(%r{https://rubynative\.com/try/download}, out)
     refute_match(/Preview app/, out)
   end
@@ -318,6 +320,58 @@ class PreviewTest < Minitest::Test
     assert light.call(grid[4...-4].flat_map { |row| row.last(4) }), "right quiet zone"
   end
 
+
+  def test_a_narrow_terminal_gets_a_note_instead_of_a_wrapped_code
+    out, _err = with_terminal_columns(60) do
+      capture_io { @preview.send(:display_qr, "https://example.trycloudflare.com") }
+    end
+
+    assert_match "Your terminal is 60 columns wide and the QR code needs 74.", out
+    refute_match "\e[48;2;0;0;0m", out
+    assert_match "https://example.trycloudflare.com", out
+    assert_match "Download the Ruby Native app and scan the QR code", out
+  end
+
+  def test_a_wide_terminal_gets_the_code
+    out, _err = with_terminal_columns(120) do
+      capture_io { @preview.send(:display_qr, "https://example.trycloudflare.com") }
+    end
+
+    assert_match "\e[48;2;0;0;0m", out
+    refute_match "columns wide", out
+  end
+
+  def test_an_unknown_terminal_width_still_prints_the_code
+    out, _err = with_terminal_columns(nil) do
+      capture_io { @preview.send(:display_qr, "https://example.trycloudflare.com") }
+    end
+
+    assert_match "\e[48;2;0;0;0m", out
+  end
+
+  def test_the_qr_screen_is_download_scan_and_keep_running
+    out, _err = capture_io { @preview.send(:display_qr, "https://example.trycloudflare.com") }
+
+    assert_match "Download the Ruby Native app and scan the QR code: https://rubynative.com/try/download", out
+    assert_match "in another terminal. Press Ctrl+C to stop.", out
+    refute_match "rubynative.com/deploy", out
+  end
+
+  def test_ctrl_c_points_a_first_time_user_at_deploy
+    without_credentials do
+      out, _err = capture_io { @preview.send(:print_farewell) }
+      assert_match "Like what you see? `ruby_native deploy` puts a real app on your phone for good.", out
+      assert_match "Free until you ship: https://rubynative.com/deploy", out
+    end
+  end
+
+  def test_ctrl_c_is_quiet_once_logged_in
+    with_credentials do
+      out, _err = capture_io { @preview.send(:print_farewell) }
+      assert_empty out
+    end
+  end
+
   private
 
   def http_response(klass, code, body: "")
@@ -362,4 +416,34 @@ class PreviewTest < Minitest::Test
   def stub_dns(ip)
     @preview.define_singleton_method(:resolve_via_public_dns) { |_host| ip }
   end
+
+  def without_credentials(&block)
+    swap_credentials(nil, &block)
+  end
+
+  def with_credentials(&block)
+    swap_credentials("a-token", &block)
+  end
+
+  def swap_credentials(token)
+    original_path = RubyNative::CLI::Credentials.path
+    original_env = ENV.delete("RUBY_NATIVE_TOKEN")
+    Dir.mktmpdir do |dir|
+      RubyNative::CLI::Credentials.path = File.join(dir, "credentials")
+      File.write(RubyNative::CLI::Credentials.path, JSON.generate(token: token)) if token
+      yield
+    end
+  ensure
+    RubyNative::CLI::Credentials.path = original_path
+    ENV["RUBY_NATIVE_TOKEN"] = original_env if original_env
+  end
+
+
+  def with_terminal_columns(columns)
+    @preview.define_singleton_method(:terminal_columns) { columns }
+    yield
+  ensure
+    @preview.singleton_class.remove_method(:terminal_columns)
+  end
+
 end

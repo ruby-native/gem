@@ -2,6 +2,7 @@ require "open3"
 require "net/http"
 require "uri"
 require "resolv"
+require "ruby_native/cli/credentials"
 
 module RubyNative
   class CLI
@@ -14,6 +15,8 @@ module RubyNative
       DEFAULT_PORT = 3000
       PORT_RANGE = (1..65_535)
       OUTPUT_TAIL_LINES = 5
+      DEPLOY_URL = "https://rubynative.com/deploy"
+      QR_QUIET_ZONE = 4
 
       def initialize(argv)
         @url = parse_option(argv, "--url")
@@ -269,6 +272,17 @@ module RubyNative
         require "rqrcode"
 
         qr = RQRCode::QRCode.new(url, level: :l)
+        width = (qr.modules.size + QR_QUIET_ZONE * 2) * 2
+        columns = terminal_columns
+
+        # A row that wraps prints as two, and the code never scans. Longer tunnel
+        # hostnames make bigger codes, so a pane that fit yesterday can fail today.
+        if columns && columns < width
+          puts ""
+          puts "Your terminal is #{columns} columns wide and the QR code needs #{width}. Widen the window, or paste the URL into the Ruby Native app."
+          print_preview_details(url)
+          return
+        end
 
         # Painted as background colors, not block glyphs: a glyph takes the terminal's
         # foreground color, which prints the code inverted on a dark theme, and Android
@@ -281,23 +295,49 @@ module RubyNative
         print qr.as_ansi(
           light: "\e[48;2;255;255;255m",
           dark: "\e[48;2;0;0;0m",
-          quiet_zone_size: 4
+          quiet_zone_size: QR_QUIET_ZONE
         )
+        print_preview_details(url)
+      end
+
+      def print_preview_details(url)
         puts ""
         puts url
         puts ""
-        puts "Scan the QR code or paste the URL into the Ruby Native app."
-        puts "Don't have it yet? Download it at https://rubynative.com/try/download"
+        puts "Download the Ruby Native app and scan the QR code: https://rubynative.com/try/download"
+        puts ""
         if @url
-          puts "Keep this running and your Rails server reachable at #{@url}."
+          puts "Keep this running and your Rails server reachable at #{@url}. Press Ctrl+C to stop."
         else
-          puts "Keep this running and your Rails server on port #{port_description} in another terminal."
+          puts "Keep this running and your Rails server on port #{port_description} in another terminal. Press Ctrl+C to stop."
         end
-        puts "Press Ctrl+C to stop."
+      end
+
+      def terminal_columns
+        require "io/console"
+        IO.console&.winsize&.last
+      rescue StandardError
+        nil
+      end
+
+      # Nobody has deployed from a machine that has never logged in, so the
+      # hint reaches first-time users and spares customers previewing day to day.
+      def never_logged_in?
+        Credentials.token.nil?
+      end
+
+      def print_farewell
+        return unless never_logged_in?
+
+        puts ""
+        puts "Like what you see? `ruby_native deploy` puts a real app on your phone for good."
+        puts ""
+        puts "Free until you ship: #{DEPLOY_URL}"
       end
 
       def trap_interrupt
         Signal.trap("INT") do
+          print_farewell
           kill_tunnel
           exit 0
         end

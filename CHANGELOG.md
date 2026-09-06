@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- **`ruby_native preview` ends with a next step.** Until you've logged in from that machine, stopping the preview points you at a free TestFlight build.
+
+### Fixed
+
+- **`ruby_native preview` tells you when the QR code won't fit your terminal.** It printed a wrapped code that couldn't scan before. Widen the window or paste the URL.
+
 ## [0.17.1] - 2026-09-05
 
 ### Fixed
