@@ -313,7 +313,10 @@ module RubyNative
         end
       end
 
+      # Only a terminal can wrap the code; captured or piped output never does.
       def terminal_columns
+        return unless $stdout.tty?
+
         require "io/console"
         IO.console&.winsize&.last
       rescue StandardError

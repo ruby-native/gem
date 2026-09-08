@@ -565,7 +565,7 @@ class DeployTest < Minitest::Test
 
   # Minitest 6 dropped minitest/mock, so swap singleton methods by hand.
   # Remove-then-define keeps the redefinition warnings out of the test output.
-def test_the_signal_preflight_blocks_a_deploy_with_broken_signals
+  def test_the_signal_preflight_blocks_a_deploy_with_broken_signals
     offense = RubyNative::CLI::Check::Offense.new(
       file: "app/views/pages/show.html.erb", line: 1, severity: :error, message: "Unknown signal `data-native-tab`."
     )
