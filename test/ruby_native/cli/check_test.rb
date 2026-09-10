@@ -166,6 +166,104 @@ class CheckTest < Minitest::Test
     assert_empty check.send(:deployed_offenses_for, "ios", "app_1", { "data-native-tabs" => ["a.erb", 1] })
   end
 
+  def test_a_helper_called_twice_is_a_warning
+    output = check(<<~ERB)
+      <%= native_fab_tag icon: "plus", href: "/new" %>
+      <%= native_fab_tag icon: "plus", href: "/new" %>
+    ERB
+
+    assert_match "2 elements carry `data-native-fab`; only the first one is used.", output
+    assert_match "0 errors, 1 warning", output
+  end
+
+  def test_a_helper_called_once_is_fine
+    assert_match "No problems found.", check(%(<%= native_fab_tag icon: "plus" %>))
+  end
+
+  # `<%= native_navbar_tag "Orders" do |navbar| %>` opens a block, so its Ruby
+  # never reaches the parser as a complete expression on its own.
+  def test_a_helper_in_block_form_counts
+    output = check(<<~ERB)
+      <%= native_navbar_tag "Orders" do |navbar| %>
+        <%= navbar.button "Export", href: "/export" %>
+      <% end %>
+      <%= native_navbar_tag "Filters" %>
+    ERB
+
+    assert_match "2 elements carry `data-native-navbar`", output
+  end
+
+  def test_a_helper_nested_in_a_conditional_counts
+    output = check(<<~ERB)
+      <%= native_tabs_tag %>
+      <% if @admin %>
+        <%= native_tabs_tag %>
+      <% end %>
+    ERB
+
+    assert_match "2 elements carry `data-native-tabs`", output
+  end
+
+  def test_a_helper_and_the_attribute_it_emits_count_together
+    output = check(<<~ERB)
+      <div data-native-tabs hidden></div>
+      <%= native_tabs_tag %>
+    ERB
+
+    assert_match "2 elements carry `data-native-tabs`", output
+  end
+
+  # Parsing rather than scanning for helper names is the whole point: a literal
+  # that happens to spell one is a string, not a call.
+  def test_a_helper_name_inside_a_string_is_not_a_call
+    output = check(<<~ERB)
+      <%= native_tabs_tag %>
+      <%= f.text_field :name, placeholder: "native_tabs_tag" %>
+    ERB
+
+    assert_match "No problems found.", output
+  end
+
+  def test_a_helper_name_inside_an_erb_comment_is_not_a_call
+    output = check(<<~ERB)
+      <%= native_tabs_tag %>
+      <%# native_tabs_tag is documented at rubynative.com/docs %>
+    ERB
+
+    assert_match "No problems found.", output
+  end
+
+  # A helper emits some signals only when passed the matching argument, so a
+  # bare call must not be counted against them.
+  def test_a_conditional_signal_is_not_counted_from_a_helper_call
+    with_version("0.13.0") do
+      assert_match "No problems found.", check(%(<%= native_fab_tag icon: "plus" %>))
+    end
+  end
+
+  # Ruby that does not parse is the app's own syntax error. Rails raises on
+  # render and `herb lint` reports it properly; `check` stays quiet.
+  def test_ruby_that_does_not_parse_is_skipped_rather_than_crashing
+    output = check(<<~ERB)
+      <%= native_navbar_tag "unterminated %>
+      <%= native_tabs_tag %>
+    ERB
+
+    assert_match "No problems found.", output
+  end
+
+  def test_deploy_sees_helper_calls_too
+    in_app do
+      FileUtils.mkdir_p("app/views/pages")
+      File.write("app/views/pages/show.html.erb", "<%= native_tabs_tag %>\n<%= native_tabs_tag %>")
+
+      offenses = RubyNative::CLI::Check.signal_offenses
+
+      assert_equal 1, offenses.size
+      assert_match "2 elements carry `data-native-tabs`", offenses.first.message
+    end
+  end
+
   private
 
   def deployed_offenses_for(platform, built:, signal:)

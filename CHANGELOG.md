@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- **`ruby_native check` now checks views written with the helpers.** It only ever read hand-written `data-native-*` attributes, so a template calling `native_fab_tag` or `native_navbar_tag` twice passed clean. Duplicates now warn the same way the raw attribute always did, and `--deployed` sees helper calls too.
+
 ## [0.17.2] - 2026-09-08
 
 ### Added

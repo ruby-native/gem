@@ -62,4 +62,28 @@ class SignalsTest < Minitest::Test
   def test_nearest_gives_up_on_an_unrelated_attribute
     assert_nil RubyNative::Signals.nearest("data-native-wombat")
   end
+
+  def test_signals_for_helper_lists_what_every_call_emits
+    assert_equal ["data-native-navbar"], RubyNative::Signals.signals_for_helper("native_navbar_tag")
+  end
+
+  # native_fab_tag emits these only when passed `href:`, `click:` or `color:`,
+  # so counting a call against them would report markup the view never renders.
+  def test_signals_for_helper_leaves_out_the_conditional_ones
+    signals = RubyNative::Signals.signals_for_helper("native_fab_tag")
+
+    assert_includes signals, "data-native-fab"
+    refute_includes signals, "data-native-color"
+    refute_includes signals, "data-native-href"
+  end
+
+  def test_signals_for_helper_is_empty_for_an_unknown_helper
+    assert_empty RubyNative::Signals.signals_for_helper("native_wombat_tag")
+  end
+
+  def test_every_always_signal_names_the_helper_it_belongs_to
+    orphans = RubyNative::Signals.all.select { |_name, meta| meta["always"] && meta["helper"].nil? }
+
+    assert_empty orphans.keys, "`always` only means anything alongside `helper`"
+  end
 end

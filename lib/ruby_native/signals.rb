@@ -41,6 +41,25 @@ module RubyNative
         all.dig(name, "helper")
       end
 
+      # Signals a helper emits on every call, keyed by helper name. Only
+      # `always` signals are listed: native_fab_tag can emit data-native-color,
+      # but only when you pass `color:`, so counting it against a call would
+      # have `check` report markup the view never renders.
+      def helper_signals
+        @helper_signals ||= begin
+          map = {}
+          all.each do |name, meta|
+            helper = meta["helper"]
+            (map[helper] ||= []) << name if helper && meta["always"]
+          end
+          map.freeze
+        end
+      end
+
+      def signals_for_helper(helper)
+        helper_signals.fetch(helper, [])
+      end
+
       # Closest known signal within one or two edits, for "did you mean". A
       # genuinely unrelated attribute gets no suggestion rather than a
       # confusing one.

@@ -7,6 +7,11 @@
 #
 # `owner: shell` marks a signal the app writes into the page rather than one
 # your views emit.
+#
+# `helper` names the helper that can emit the signal; `always: true` means every
+# call to that helper emits it. Without `always`, `check` cannot count a helper
+# call against the signal: native_fab_tag emits data-native-color only when you
+# pass `color:`, so counting it would report markup the view never renders.
 ---
 signals:
   data-native-action:
@@ -19,6 +24,7 @@ signals:
   data-native-badge:
     since: "0.3.2"
     helper: native_badge_tag
+    always: true
     singleton: true
   data-native-badge-home:
     since: "0.3.2"
@@ -42,23 +48,28 @@ signals:
   data-native-fab:
     since: "0.8.0"
     helper: native_fab_tag
+    always: true
     singleton: true
   data-native-form:
     since: "0.1.2"
     helper: native_form_tag
+    always: true
     singleton: true
   data-native-haptic:
     since: "0.2.7"
     helper: native_haptic_data
+    always: true
   data-native-href:
     since: "0.4.0"
     helper: native_fab_tag
   data-native-icon:
     since: "0.4.0"
     helper: native_fab_tag
+    always: true
   data-native-identity:
     since: "0.12.0"
     helper: native_identity_tag
+    always: true
     singleton: true
   data-native-keyboard-toolbar:
     since: "0.15.0"
@@ -67,25 +78,30 @@ signals:
   data-native-menu:
     since: "0.14.0"
     helper: native_menu_tag
+    always: true
   data-native-menu-item:
     since: "0.4.0"
   data-native-navbar:
     since: "0.4.0"
     helper: native_navbar_tag
+    always: true
     singleton: true
   data-native-overscroll-bottom:
     since: "0.5.0"
     helper: native_overscroll_tag
+    always: true
     singleton: true
   data-native-overscroll-top:
     since: "0.5.0"
     helper: native_overscroll_tag
+    always: true
     singleton: true
   data-native-position:
     since: "0.4.0"
   data-native-presentation:
     since: "0.11.2"
     helper: native_presentation_tag
+    always: true
     singleton: true
   data-native-price:
     since: "0.5.3"
@@ -97,12 +113,14 @@ signals:
   data-native-push:
     since: "0.1.2"
     helper: native_push_tag
+    always: true
     singleton: true
   data-native-restore:
     since: "0.5.3"
   data-native-review:
     since: "0.9.3"
     helper: native_review_tag
+    always: true
   data-native-segment:
     since: "0.10.12"
   data-native-selected:
@@ -120,12 +138,14 @@ signals:
   data-native-tabs:
     since: "0.1.2"
     helper: native_tabs_tag
+    always: true
     singleton: true
   data-native-title:
     since: "0.4.0"
   data-native-toast:
     since: "0.12.1"
     helper: native_toast_tag
+    always: true
   data-native-toast-appearance:
     since: "0.12.1"
     helper: native_toast_tag
@@ -138,3 +158,4 @@ signals:
   data-native-toast-message:
     since: "0.12.1"
     helper: native_toast_tag
+    always: true
