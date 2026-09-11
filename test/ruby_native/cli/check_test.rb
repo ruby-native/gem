@@ -180,17 +180,51 @@ class CheckTest < Minitest::Test
     assert_match "No problems found.", check(%(<%= native_fab_tag icon: "plus" %>))
   end
 
-  # native_tabs_tag(enabled: false) renders nothing, so a call is not proof the
-  # signal reaches the page. Missing this duplicate is the deliberate cost of
-  # never warning about markup that was never rendered. Written out as two
-  # attributes it still warns.
-  def test_a_helper_that_can_render_nothing_is_not_counted
+  def test_a_helper_that_can_render_nothing_counts_when_it_renders
     output = check(<<~ERB)
       <%= native_tabs_tag %>
       <%= native_tabs_tag %>
     ERB
 
+    assert_match "2 elements carry `data-native-tabs`", output
+  end
+
+  def test_an_argument_that_silences_the_helper_is_not_counted
+    output = check(<<~ERB)
+      <%= native_tabs_tag enabled: false %>
+      <%= native_tabs_tag enabled: false %>
+    ERB
+
     assert_match "No problems found.", output
+  end
+
+  def test_a_silenced_call_does_not_count_against_a_rendering_one
+    output = check(<<~ERB)
+      <%= native_tabs_tag %>
+      <%= native_tabs_tag enabled: false %>
+    ERB
+
+    assert_match "No problems found.", output
+  end
+
+  # Whether this renders is a request-time decision, so counting it would be a
+  # guess. Same reasoning as an attribute name built out of ERB.
+  def test_an_argument_decided_at_runtime_is_not_counted
+    output = check(<<~ERB)
+      <%= native_tabs_tag enabled: @show_tabs %>
+      <%= native_tabs_tag enabled: @show_tabs %>
+    ERB
+
+    assert_match "No problems found.", output
+  end
+
+  def test_the_condition_reads_the_helpers_own_default
+    output = check(<<~ERB)
+      <%= native_keyboard_tag %>
+      <%= native_keyboard_tag %>
+    ERB
+
+    assert_match "2 elements carry `data-native-keyboard-toolbar`", output
   end
 
   # `<%= native_navbar_tag "Orders" do |navbar| %>` opens a block, so its Ruby

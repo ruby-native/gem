@@ -60,6 +60,26 @@ module RubyNative
         helper_signals.fetch(helper, [])
       end
 
+      # The keyword values a helper needs in order to render at all, keyed by
+      # helper name. native_tabs_tag(enabled: false) returns an empty string, so
+      # `always` alone would count a call that never reaches the page.
+      def render_conditions
+        @render_conditions ||= begin
+          map = {}
+          all.each do |_name, meta|
+            helper = meta["helper"]
+            next unless helper && meta["always"] && meta["renders_when"]
+
+            (map[helper] ||= {}).merge!(meta["renders_when"])
+          end
+          map.freeze
+        end
+      end
+
+      def render_condition(helper)
+        render_conditions[helper]
+      end
+
       # Closest known signal within one or two edits, for "did you mean". A
       # genuinely unrelated attribute gets no suggestion rather than a
       # confusing one.

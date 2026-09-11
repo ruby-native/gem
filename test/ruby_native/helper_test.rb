@@ -885,7 +885,16 @@ class RubyNative::HelperTest < ActionView::TestCase
     "native_overscroll_tag" => -> { native_overscroll_tag(top: "#ffffff") },
     "native_presentation_tag" => -> { native_presentation_tag(:root) },
     "native_push_tag" => -> { native_push_tag },
-    "native_review_tag" => -> { native_review_tag }
+    "native_review_tag" => -> { native_review_tag },
+    "native_tabs_tag" => -> { native_tabs_tag },
+    "native_keyboard_tag" => -> { native_keyboard_tag }
+  }.freeze
+
+  # The argument that decides whether the helper renders at all, as declared by
+  # `renders_when` in config/signals.yml.
+  RENDER_CONDITIONS = {
+    "native_tabs_tag" => { renders: -> { native_tabs_tag(enabled: true) }, silent: -> { native_tabs_tag(enabled: false) } },
+    "native_keyboard_tag" => { renders: -> { native_keyboard_tag(toolbar: false) }, silent: -> { native_keyboard_tag(toolbar: true) } }
   }.freeze
 
   def test_every_always_signal_is_emitted_by_a_bare_call_to_its_helper
@@ -902,17 +911,29 @@ class RubyNative::HelperTest < ActionView::TestCase
     end
   end
 
-  # A helper that can render nothing cannot be `always`: check would count the
-  # call against a signal that never reaches the page.
-  def test_a_helper_that_can_render_nothing_is_not_marked_always
-    assert_equal "", native_tabs_tag(enabled: false)
-    assert_equal "", native_keyboard_tag(toolbar: true)
+  def test_every_declared_render_condition_matches_the_helper
+    declared = RubyNative::Signals.render_conditions.keys
+
+    assert_equal declared.sort, RENDER_CONDITIONS.keys.sort,
+      "signals.yml and this test disagree about which helpers declare a render condition"
+
+    RENDER_CONDITIONS.each do |helper, invocations|
+      refute_empty attributes_in(instance_exec(&invocations[:renders])),
+        "#{helper} should render with the arguments signals.yml calls its rendering case"
+      assert_equal "", instance_exec(&invocations[:silent]),
+        "#{helper} should render nothing with the arguments signals.yml excludes"
+    end
+  end
+
+  # Without a `renders_when` to go on, `always` would have check count a call
+  # against a signal that never reaches the page. native_toast_tag takes its
+  # message as a positional argument that is usually a variable, so there is
+  # nothing to declare and it stays uncounted.
+  def test_a_helper_that_can_render_nothing_needs_a_condition_or_no_always
     assert_equal "", native_toast_tag("")
 
-    %w[native_tabs_tag native_keyboard_tag native_toast_tag].each do |helper|
-      assert_empty RubyNative::Signals.signals_for_helper(helper),
-        "#{helper} can render nothing, so no signal of its should be marked `always`"
-    end
+    assert_empty RubyNative::Signals.signals_for_helper("native_toast_tag"),
+      "native_toast_tag can render nothing and declares no condition, so nothing of its can be `always`"
   end
 
   private

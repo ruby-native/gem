@@ -12,6 +12,10 @@
 # call to that helper emits it. Without `always`, `check` cannot count a helper
 # call against the signal: native_fab_tag emits data-native-color only when you
 # pass `color:`, so counting it would report markup the view never renders.
+#
+# `renders_when` covers the helpers that can render nothing at all, naming the
+# keyword values they need in order to emit anything. A call that passes
+# something else, or something only known at request time, is left uncounted.
 ---
 signals:
   data-native-action:
@@ -74,6 +78,9 @@ signals:
   data-native-keyboard-toolbar:
     since: "0.15.0"
     helper: native_keyboard_tag
+    always: true
+    renders_when:
+      toolbar: false
     singleton: true
   data-native-menu:
     since: "0.14.0"
@@ -138,6 +145,9 @@ signals:
   data-native-tabs:
     since: "0.1.2"
     helper: native_tabs_tag
+    always: true
+    renders_when:
+      enabled: true
     singleton: true
   data-native-title:
     since: "0.4.0"
