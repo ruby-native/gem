@@ -1,4 +1,5 @@
 require "test_helper"
+require "ruby_native/signals"
 
 class RubyNative::HelperTest < ActionView::TestCase
   include RubyNative::Helper
@@ -869,7 +870,59 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes error.message, ":inverted or :system"
   end
 
+  # `ruby_native check` counts a helper call against every signal marked
+  # `always` in config/signals.yml, so a helper that stops emitting one turns
+  # into a warning about markup the view never renders. These render each
+  # helper and hold the metadata to what the code actually does.
+  ALWAYS_INVOCATIONS = {
+    "native_badge_tag" => -> { native_badge_tag(3) },
+    "native_fab_tag" => -> { native_fab_tag(icon: "plus") },
+    "native_form_tag" => -> { native_form_tag },
+    "native_haptic_data" => -> { native_haptic_data },
+    "native_identity_tag" => -> { native_identity_tag(42) },
+    "native_menu_tag" => -> { native_menu_tag(anchor: "#profile") },
+    "native_navbar_tag" => -> { native_navbar_tag("Orders") },
+    "native_overscroll_tag" => -> { native_overscroll_tag(top: "#ffffff") },
+    "native_presentation_tag" => -> { native_presentation_tag(:root) },
+    "native_push_tag" => -> { native_push_tag },
+    "native_review_tag" => -> { native_review_tag }
+  }.freeze
+
+  def test_every_always_signal_is_emitted_by_a_bare_call_to_its_helper
+    RubyNative::Signals.helper_signals.each do |helper, signals|
+      invocation = ALWAYS_INVOCATIONS[helper]
+      refute_nil invocation, "#{helper} is marked `always` in signals.yml but has no invocation here"
+
+      emitted = attributes_in(instance_exec(&invocation))
+
+      signals.each do |signal|
+        assert_includes emitted, signal,
+          "signals.yml marks #{signal} as always, but #{helper} did not emit it"
+      end
+    end
+  end
+
+  # A helper that can render nothing cannot be `always`: check would count the
+  # call against a signal that never reaches the page.
+  def test_a_helper_that_can_render_nothing_is_not_marked_always
+    assert_equal "", native_tabs_tag(enabled: false)
+    assert_equal "", native_keyboard_tag(toolbar: true)
+    assert_equal "", native_toast_tag("")
+
+    %w[native_tabs_tag native_keyboard_tag native_toast_tag].each do |helper|
+      assert_empty RubyNative::Signals.signals_for_helper(helper),
+        "#{helper} can render nothing, so no signal of its should be marked `always`"
+    end
+  end
+
   private
+
+  # native_haptic_data returns the data hash itself rather than an element.
+  def attributes_in(rendered)
+    return rendered.keys.map { |key| "data-#{key.to_s.tr("_", "-")}" } if rendered.is_a?(Hash)
+
+    rendered.to_s.scan(/data-native-[a-z-]+/)
+  end
 
   def request
     @request

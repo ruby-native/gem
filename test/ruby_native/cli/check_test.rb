@@ -180,6 +180,19 @@ class CheckTest < Minitest::Test
     assert_match "No problems found.", check(%(<%= native_fab_tag icon: "plus" %>))
   end
 
+  # native_tabs_tag(enabled: false) renders nothing, so a call is not proof the
+  # signal reaches the page. Missing this duplicate is the deliberate cost of
+  # never warning about markup that was never rendered. Written out as two
+  # attributes it still warns.
+  def test_a_helper_that_can_render_nothing_is_not_counted
+    output = check(<<~ERB)
+      <%= native_tabs_tag %>
+      <%= native_tabs_tag %>
+    ERB
+
+    assert_match "No problems found.", output
+  end
+
   # `<%= native_navbar_tag "Orders" do |navbar| %>` opens a block, so its Ruby
   # never reaches the parser as a complete expression on its own.
   def test_a_helper_in_block_form_counts
@@ -195,30 +208,30 @@ class CheckTest < Minitest::Test
 
   def test_a_helper_nested_in_a_conditional_counts
     output = check(<<~ERB)
-      <%= native_tabs_tag %>
+      <%= native_push_tag %>
       <% if @admin %>
-        <%= native_tabs_tag %>
+        <%= native_push_tag %>
       <% end %>
     ERB
 
-    assert_match "2 elements carry `data-native-tabs`", output
+    assert_match "2 elements carry `data-native-push`", output
   end
 
   def test_a_helper_and_the_attribute_it_emits_count_together
     output = check(<<~ERB)
-      <div data-native-tabs hidden></div>
-      <%= native_tabs_tag %>
+      <div data-native-push hidden></div>
+      <%= native_push_tag %>
     ERB
 
-    assert_match "2 elements carry `data-native-tabs`", output
+    assert_match "2 elements carry `data-native-push`", output
   end
 
   # Parsing rather than scanning for helper names is the whole point: a literal
   # that happens to spell one is a string, not a call.
   def test_a_helper_name_inside_a_string_is_not_a_call
     output = check(<<~ERB)
-      <%= native_tabs_tag %>
-      <%= f.text_field :name, placeholder: "native_tabs_tag" %>
+      <%= native_push_tag %>
+      <%= f.text_field :name, placeholder: "native_push_tag" %>
     ERB
 
     assert_match "No problems found.", output
@@ -226,8 +239,8 @@ class CheckTest < Minitest::Test
 
   def test_a_helper_name_inside_an_erb_comment_is_not_a_call
     output = check(<<~ERB)
-      <%= native_tabs_tag %>
-      <%# native_tabs_tag is documented at rubynative.com/docs %>
+      <%= native_push_tag %>
+      <%# native_push_tag is documented at rubynative.com/docs %>
     ERB
 
     assert_match "No problems found.", output
@@ -246,7 +259,7 @@ class CheckTest < Minitest::Test
   def test_ruby_that_does_not_parse_is_skipped_rather_than_crashing
     output = check(<<~ERB)
       <%= native_navbar_tag "unterminated %>
-      <%= native_tabs_tag %>
+      <%= native_push_tag %>
     ERB
 
     assert_match "No problems found.", output
@@ -255,12 +268,12 @@ class CheckTest < Minitest::Test
   def test_deploy_sees_helper_calls_too
     in_app do
       FileUtils.mkdir_p("app/views/pages")
-      File.write("app/views/pages/show.html.erb", "<%= native_tabs_tag %>\n<%= native_tabs_tag %>")
+      File.write("app/views/pages/show.html.erb", "<%= native_push_tag %>\n<%= native_push_tag %>")
 
       offenses = RubyNative::CLI::Check.signal_offenses
 
       assert_equal 1, offenses.size
-      assert_match "2 elements carry `data-native-tabs`", offenses.first.message
+      assert_match "2 elements carry `data-native-push`", offenses.first.message
     end
   end
 

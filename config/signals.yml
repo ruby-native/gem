@@ -138,14 +138,12 @@ signals:
   data-native-tabs:
     since: "0.1.2"
     helper: native_tabs_tag
-    always: true
     singleton: true
   data-native-title:
     since: "0.4.0"
   data-native-toast:
     since: "0.12.1"
     helper: native_toast_tag
-    always: true
   data-native-toast-appearance:
     since: "0.12.1"
     helper: native_toast_tag
@@ -158,4 +156,3 @@ signals:
   data-native-toast-message:
     since: "0.12.1"
     helper: native_toast_tag
-    always: true
