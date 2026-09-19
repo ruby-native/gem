@@ -30,7 +30,43 @@ module RubyNative
 
         check = new([], paths: paths)
 
-        check.send(:template_files).flat_map { |file| check.send(:check_file, file) }
+        template_files(paths: paths).flat_map { |file| check.send(:check_file, file) }
+      end
+
+      # The templates a run covers. Public so a caller can count them without
+      # running the checks, and so there is one definition of what gets scanned.
+      def self.template_files(paths: DEFAULT_PATHS)
+        paths.flat_map { |path| Dir.glob(File.join(path, "**", "*.html.erb")) }.sort
+      end
+
+      # The report `run` prints, as lines, so another front end renders
+      # offenses the way the CLI does instead of inventing a second format.
+      def self.report_lines(files, offenses)
+        lines = []
+
+        offenses.group_by(&:file).sort.each do |file, file_offenses|
+          lines << file
+          file_offenses.sort_by(&:line).each do |offense|
+            location = "#{offense.line}:".ljust(5)
+            marker = offense.severity.to_s.ljust(8)
+            lines << "  #{location}#{marker}#{offense.message}"
+          end
+          lines << ""
+        end
+
+        lines << summary_line(files, offenses)
+      end
+
+      def self.summary_line(files, offenses)
+        errors, warnings = offenses.partition { |offense| offense.severity == :error }
+        summary = "Checked #{files.size} #{files.size == 1 ? "template" : "templates"}"
+
+        if offenses.empty?
+          "#{summary}. No problems found."
+        else
+          "#{summary}: #{errors.size} #{errors.size == 1 ? "error" : "errors"}, " \
+            "#{warnings.size} #{warnings.size == 1 ? "warning" : "warnings"}."
+        end
       end
 
       def self.herb_available?
@@ -79,7 +115,7 @@ module RubyNative
       end
 
       def template_files
-        @paths.flat_map { |path| Dir.glob(File.join(path, "**", "*.html.erb")) }.sort
+        self.class.template_files(paths: @paths)
       end
 
       # --- Per-file checks ---
@@ -222,25 +258,7 @@ module RubyNative
       # --- Reporting ---
 
       def report(files, offenses)
-        errors, warnings = offenses.partition { |offense| offense.severity == :error }
-
-        offenses.group_by(&:file).sort.each do |file, file_offenses|
-          puts file
-          file_offenses.sort_by(&:line).each do |offense|
-            location = "#{offense.line}:".ljust(5)
-            marker = offense.severity.to_s.ljust(8)
-            puts "  #{location}#{marker}#{offense.message}"
-          end
-          puts ""
-        end
-
-        summary = "Checked #{files.size} #{files.size == 1 ? "template" : "templates"}"
-        if offenses.empty?
-          puts "#{summary}. No problems found."
-        else
-          puts "#{summary}: #{errors.size} #{errors.size == 1 ? "error" : "errors"}, " \
-               "#{warnings.size} #{warnings.size == 1 ? "warning" : "warnings"}."
-        end
+        puts self.class.report_lines(files, offenses)
       end
 
       def parse_paths(argv)

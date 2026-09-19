@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- **`ruby_native mcp` hands your views, signals, and config to a coding agent.** An MCP server over stdio with three read-only tools: `check_views` reports the signals a build will silently ignore, `lookup_signals` answers what a `data-native-*` attribute is and which version it needs, and `validate_config` checks `config/ruby_native.yml` against what the apps actually decode. An agent writing markup it will never see rendered now gets the feedback the apps don't give it. Nothing deploys and nothing leaves your machine. See the README for how to register it.
+
 ## [0.17.3] - 2026-09-10
 
 ### Fixed
