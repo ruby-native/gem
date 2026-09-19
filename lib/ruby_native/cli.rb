@@ -2,6 +2,7 @@ require "ruby_native/cli/check"
 require "ruby_native/cli/credentials"
 require "ruby_native/cli/deploy"
 require "ruby_native/cli/login"
+require "ruby_native/cli/mcp"
 require "ruby_native/cli/preview"
 
 module RubyNative
@@ -17,6 +18,8 @@ module RubyNative
         RubyNative::CLI::Preview.new(argv).run
       when "login"
         RubyNative::CLI::Login.new(argv).run
+      when "mcp"
+        RubyNative::CLI::Mcp.new(argv).run
       when "logout"
         RubyNative::CLI::Credentials.clear
         puts "Logged out of Ruby Native."
@@ -54,6 +57,7 @@ module RubyNative
       puts "    --skip-check       Deploy without checking your views for broken signals"
       puts "  login         Authenticate with Ruby Native"
       puts "  logout        Remove stored credentials"
+      puts "  mcp           Serve the check, signal, and config tools to a coding agent over MCP"
       puts "  preview       Start a tunnel and display a QR code"
       puts "    --port PORT        Rails server port (default: PORT or 3000)"
       puts "    --url URL          Tunnel to this URL instead of localhost"
