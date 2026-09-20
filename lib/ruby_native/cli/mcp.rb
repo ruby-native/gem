@@ -1,6 +1,7 @@
 require "json"
 require "ruby_native/cli/check"
 require "ruby_native/cli/mcp/config_validator"
+require "ruby_native/cli/mcp/platform"
 require "ruby_native/signals"
 require "ruby_native/version"
 
@@ -16,10 +17,14 @@ module RubyNative
     # attributes. These tools hand it the same answers `ruby_native check`
     # gives a person, in a shape it can act on without a device.
     #
-    # Read-only and offline on purpose: every tool answers from this working
-    # copy. Nothing deploys, nothing reaches rubynative.com, and nothing needs
-    # credentials -- an agent that can start an App Store build is a different
-    # feature with a different set of questions.
+    # Read-only throughout, and local by default: check_views, lookup_signals,
+    # and validate_config answer from this working copy alone. Three more --
+    # config_errors, deployed_builds, and build_status -- read the Ruby Native
+    # API with the token `ruby_native login` already stored, because what they
+    # answer exists nowhere else: what real devices are failing on, and what
+    # the binary in the store is old enough to ignore. Nothing here writes,
+    # and nothing deploys -- an agent that can start an App Store build is a
+    # different feature with a different set of questions.
     class Mcp
       # The versions of the protocol this speaks. A client asking for one of
       # them gets it back; anything else is answered with the newest, which is
@@ -96,8 +101,72 @@ module RubyNative
             additionalProperties: false
           },
           annotations: { title: "Validate config", readOnlyHint: true, openWorldHint: false }
+        },
+        {
+          name: "config_errors",
+          description: "Report what the app your users are running is failing on: the config errors real devices " \
+                       "sent back over the last 48 hours, each with the decode failure that caused it. This is " \
+                       "the runtime counterpart to validate_config -- that one says what will fail, this one says " \
+                       "what did, on which devices. Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              app_id: {
+                type: "string",
+                description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml."
+              }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Config errors from devices", readOnlyHint: true, openWorldHint: true }
+        },
+        {
+          name: "deployed_builds",
+          description: "Report the latest iOS and Android build your users can install, and which signals that " \
+                       "build is too old to understand. check_views compares your templates against the installed " \
+                       "gem; this compares them against the binary in the store, which is where \"the attribute " \
+                       "is right but nothing happens on my phone\" usually comes from. Reaches rubynative.com and " \
+                       "needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              app_id: {
+                type: "string",
+                description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml."
+              }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Deployed builds", readOnlyHint: true, openWorldHint: true }
+        },
+        {
+          name: "build_status",
+          description: "Look up one build by id: whether it succeeded, and the error message if it did not. Use " \
+                       "it to follow a build `ruby_native deploy` started. Reaches rubynative.com and needs " \
+                       "`ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              build_id: { type: "integer", description: "The build's id, as deploy and this server report it." },
+              app_id: {
+                type: "string",
+                description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml."
+              }
+            },
+            required: [ "build_id" ],
+            additionalProperties: false
+          },
+          annotations: { title: "Build status", readOnlyHint: true, openWorldHint: true }
         }
       ].freeze
+
+      # How many inert signals deployed_builds names before it just counts the
+      # rest: enough to act on, not so many that the answer is a wall.
+      SIGNAL_PREVIEW = 10
+
+      # A raw decode failure can run long. The whole value stays in the
+      # structured result; this keeps the readable report readable.
+      DETAIL_LIMIT = 400
 
       # `argv` is accepted so the CLI can build every command the same way; this
       # one takes no flags.
@@ -175,6 +244,9 @@ module RubyNative
           when "check_views" then check_views(arguments)
           when "lookup_signals" then lookup_signals(arguments)
           when "validate_config" then validate_config(arguments)
+          when "config_errors" then config_errors(arguments)
+          when "deployed_builds" then deployed_builds(arguments)
+          when "build_status" then build_status(arguments)
           else raise ToolFailure, "Unknown tool: #{name.inspect}. Call tools/list for the ones this server has."
           end
         end
@@ -250,7 +322,174 @@ module RubyNative
         })
       end
 
+      # --- Tools that read the API ---
+
+      def config_errors(arguments)
+        app_id = resolve_app_id(arguments)
+        return tool_result(Platform::NO_APP_ID, { app_id: nil }, is_error: true) unless app_id
+
+        result = Platform.get("/api/v1/apps/#{app_id}/config_error_reports")
+        unless result.ok?
+          return tool_result(config_errors_failure(result, app_id), { app_id: app_id }, is_error: true)
+        end
+
+        reports = Array(result.value)
+
+        tool_result(config_errors_report(reports), { app_id: app_id, count: reports.size, reports: reports })
+      end
+
+      def deployed_builds(arguments)
+        app_id = resolve_app_id(arguments)
+        return tool_result(Platform::NO_APP_ID, { app_id: nil }, is_error: true) unless app_id
+
+        result = Platform.get("/api/v1/apps/#{app_id}/builds/latest?platform=all")
+        return tool_result(result.error, { app_id: app_id }, is_error: true) unless result.ok?
+
+        builds = result.value.is_a?(Hash) ? result.value : {}
+
+        tool_result(deployed_builds_report(builds), {
+          app_id: app_id,
+          gem_version: RubyNative::VERSION,
+          platforms: builds.transform_values do |state|
+            state.is_a?(Hash) ? state.merge("inert_signals" => inert_signals(state["gem_version"])) : state
+          end
+        })
+      end
+
+      def build_status(arguments)
+        build_id = arguments["build_id"]
+        unless build_id.is_a?(Integer) || build_id.to_s.match?(/\A\d+\z/)
+          raise ToolFailure, "`build_id` is required and has to be a number."
+        end
+
+        app_id = resolve_app_id(arguments)
+        return tool_result(Platform::NO_APP_ID, { app_id: nil }, is_error: true) unless app_id
+
+        result = Platform.get("/api/v1/apps/#{app_id}/builds/#{build_id}")
+        unless result.ok?
+          return tool_result(result.error, { app_id: app_id, build_id: build_id }, is_error: true)
+        end
+
+        build = result.value.is_a?(Hash) ? result.value : {}
+
+        tool_result(build_status_report(build), build.merge("app_id" => app_id))
+      end
+
       # --- Rendering ---
+
+      def config_errors_report(reports)
+        if reports.empty?
+          return "No config errors reported in the last 48 hours. Only a device running a build reports here, so " \
+                 "this says nothing about config you have not deployed yet."
+        end
+
+        lines = [ "#{reports.size} config #{reports.size == 1 ? "error" : "errors"} reported by devices in the " \
+                  "last 48 hours, newest first.", "" ]
+
+        reports.each do |report|
+          lines << "#{report["error_type"]} — #{report["headline"]}"
+          lines << "  #{report["error_description"]}" unless report["error_description"].to_s.strip.empty?
+          lines << "  #{devices_line(report)}"
+          lines << "  first seen #{report["first_seen_at"]}, last seen #{report["last_seen_at"]}"
+
+          detail = report["error_detail"].to_s.strip
+          lines << "  #{truncate(detail, DETAIL_LIMIT).gsub("\n", "\n  ")}" unless detail.empty?
+          lines << ""
+        end
+
+        lines.join("\n").strip
+      end
+
+      def devices_line(report)
+        os = [ report["os_name"], report["os_version"] ].map(&:to_s).reject(&:empty?).join(" ")
+        version = report["app_version"].to_s
+        build = report["build_number"].to_s
+        app = build.empty? ? version : "#{version} (#{build})".strip
+
+        [ os, report["device_model"].to_s, app.empty? ? "" : "app #{app}" ].reject(&:empty?).join(" · ")
+      end
+
+      def deployed_builds_report(builds)
+        return "#{Platform::HOST} has no build information for this app." if builds.empty?
+
+        lines = [ "This project is on ruby_native #{RubyNative::VERSION}.", "" ]
+
+        builds.each do |platform, state|
+          label = platform == "ios" ? "iOS" : platform.to_s.capitalize
+
+          unless state.is_a?(Hash)
+            lines << "#{label} — no information."
+            next
+          end
+
+          unless state["deployable"]
+            lines << "#{label} — not set up for deploys yet."
+            next
+          end
+
+          built = state["gem_version"]
+          if built.to_s.empty?
+            lines << "#{label} — set up to deploy, but nothing has been built yet."
+            next
+          end
+
+          lines << "#{label} — build #{state["number"]} (#{state["version"]}), #{state["status"]}, " \
+                   "made with ruby_native #{built}."
+          lines.concat(skew_lines(built))
+        end
+
+        lines.join("\n").strip
+      end
+
+      # The point of the whole tool: a signal the shipped binary predates is
+      # inert on the phone in someone's hand, and says nothing about it there
+      # or anywhere else.
+      def skew_lines(built)
+        inert = inert_signals(built)
+        return [ "  Nothing in the signal vocabulary is newer than that build." ] if inert.empty?
+
+        shown = inert.first(SIGNAL_PREVIEW)
+        listed = shown.join(", ")
+        remaining = inert.size - shown.size
+        listed += ", and #{remaining} more" if remaining.positive?
+
+        [
+          "  #{inert.size} #{inert.size == 1 ? "signal is" : "signals are"} newer than that build, so they do " \
+          "nothing on the app your users have, with no error anywhere: #{listed}.",
+          "  Deploy on #{RubyNative::VERSION} to use them."
+        ]
+      end
+
+      def inert_signals(built)
+        return [] if built.to_s.empty?
+
+        deployed = Gem::Version.new(built.to_s.delete_prefix("v"))
+
+        Signals.names.select do |name|
+          since = Signals.since(name)
+          since && Gem::Version.new(since) > deployed
+        end
+      rescue ArgumentError
+        # gem_version reaches the API as unvalidated CLI input, so it may not
+        # be a version at all. No comparison beats a wrong one.
+        []
+      end
+
+      def build_status_report(build)
+        return "No build information came back." if build.empty?
+
+        label = build["platform"] == "ios" ? "iOS" : build["platform"].to_s.capitalize
+        lines = [ "#{label} build #{build["number"]} (#{build["version"]}) — #{build["status"]}." ]
+
+        if build["gem_version"].to_s != ""
+          lines << "Made with ruby_native #{build["gem_version"]} on Ruby Native #{build["native_version"]}."
+        end
+        lines << "Error: #{build["error_message"]}" unless build["error_message"].to_s.strip.empty?
+        lines << build["notice"] unless build["notice"].to_s.strip.empty?
+
+        lines.join("\n")
+      end
+
 
       def signal_list
         rows = Signals.names.map do |name|
@@ -350,6 +589,36 @@ module RubyNative
         yield
       ensure
         $stdout = original
+      end
+
+      # Two different 404s: the app is not on this account, or the server is an
+      # older deploy that has no such route. The apps index exists on every
+      # version, so asking it settles which one this is.
+      def config_errors_failure(result, app_id)
+        return result.error unless result.not_found?
+
+        case Platform.app?(app_id)
+        when true
+          "#{Platform::HOST} does not serve config error reports yet -- that endpoint ships in a later release. " \
+            "Every local tool here still works."
+        when false
+          "No app #{app_id.inspect} on this account. Check `ruby_native.app_id` in #{Platform::CONFIG_PATH}, " \
+            "or pass `app_id`."
+        else
+          result.error
+        end
+      end
+
+      def resolve_app_id(arguments)
+        app_id = arguments["app_id"]
+        raise ToolFailure, "`app_id` has to be a string." unless app_id.nil? || app_id.is_a?(String)
+
+        app_id = Platform.app_id if app_id.to_s.strip.empty?
+        app_id.to_s.strip.empty? ? nil : app_id
+      end
+
+      def truncate(text, limit)
+        text.length > limit ? "#{text[0, limit].rstrip}…" : text
       end
 
       def string_list(value, name)
