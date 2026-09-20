@@ -292,29 +292,25 @@ class McpTest < Minitest::Test
     assert_equal detail, result.dig("structuredContent", "reports").first["error_detail"]
   end
 
-  # Two different 404s, and telling a developer the wrong one sends them
-  # looking in the wrong place.
-  def test_config_errors_tells_an_old_server_apart_from_a_missing_app
-    missing_route = with_result(not_found, app_lookup: true) do
-      call("config_errors", "app_id" => "app_1")
+  # A bare "returned 404" sends a developer to the network tab; naming the
+  # app sends them to the line that is actually wrong.
+  def test_an_app_this_account_cannot_see_is_named_rather_than_numbered
+    %w[config_errors deployed_builds].each do |tool|
+      result = with_result(not_found) { call(tool, "app_id" => "app_1") }
+
+      assert result["isError"], tool
+      assert_match "No app \"app_1\" on this account", text(result), tool
+      assert_match "ruby_native.app_id", text(result), tool
     end
-
-    assert missing_route["isError"]
-    assert_match "does not serve config error reports yet", text(missing_route)
-
-    missing_app = with_result(not_found, app_lookup: false) do
-      call("config_errors", "app_id" => "app_1")
-    end
-
-    assert missing_app["isError"]
-    assert_match "No app \"app_1\" on this account", text(missing_app)
   end
 
-  def test_config_errors_falls_back_to_the_raw_failure_when_it_cannot_tell
-    result = with_result(not_found, app_lookup: nil) { call("config_errors", "app_id" => "app_1") }
+  # Both halves of the path can be the missing one and the API does not say
+  # which, so the message cannot claim either.
+  def test_a_missing_build_names_the_build_and_the_app
+    result = with_result(not_found) { call("build_status", "app_id" => "app_1", "build_id" => 9) }
 
     assert result["isError"]
-    assert_match "404", text(result)
+    assert_match "No build 9 in app \"app_1\" on this account.", text(result)
   end
 
   def test_config_errors_passes_an_unreachable_server_through_as_an_answer
@@ -455,18 +451,12 @@ class McpTest < Minitest::Test
 
   # The stub's `self` is the Platform class, so anything a test needs from its
   # own scope has to be built before the stub goes in.
-  def with_result(result, app_lookup: :unstubbed, &block)
-    with_get(->(_path) { result }, app_lookup: app_lookup, &block)
+  def with_result(result, &block)
+    with_get(->(_path) { result }, &block)
   end
 
-  def with_get(get, app_lookup: :unstubbed, &block)
-    platform = RubyNative::CLI::Mcp::Platform
-
-    with_stub(platform, :get, get) do
-      next block.call if app_lookup == :unstubbed
-
-      with_stub(platform, :app?, ->(_app_id) { app_lookup }, &block)
-    end
+  def with_get(get, &block)
+    with_stub(RubyNative::CLI::Mcp::Platform, :get, get, &block)
   end
 
   def with_stub(receiver, name, replacement)

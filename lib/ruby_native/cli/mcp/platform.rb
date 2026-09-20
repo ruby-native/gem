@@ -55,15 +55,6 @@ module RubyNative
           Result.new(error: "Could not reach #{HOST}: #{error.class}: #{error.message}")
         end
 
-        # Whether the account can see this app at all, which is what tells a
-        # 404 on a missing route apart from a 404 on a missing app.
-        def self.app?(app_id)
-          result = get("/api/v1/apps")
-          return nil unless result.ok?
-
-          Array(result.value).any? { |app| app["public_id"] == app_id }
-        end
-
         # app_id lives in the file the validator reads, and that file can carry
         # ERB, so tags are stubbed out the same way before parsing. A file that
         # will not parse means no app_id, which reads as "link this app".

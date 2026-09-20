@@ -330,7 +330,7 @@ module RubyNative
 
         result = Platform.get("/api/v1/apps/#{app_id}/config_error_reports")
         unless result.ok?
-          return tool_result(config_errors_failure(result, app_id), { app_id: app_id }, is_error: true)
+          return tool_result(failure_for(result, app_id), { app_id: app_id }, is_error: true)
         end
 
         reports = Array(result.value)
@@ -343,7 +343,7 @@ module RubyNative
         return tool_result(Platform::NO_APP_ID, { app_id: nil }, is_error: true) unless app_id
 
         result = Platform.get("/api/v1/apps/#{app_id}/builds/latest?platform=all")
-        return tool_result(result.error, { app_id: app_id }, is_error: true) unless result.ok?
+        return tool_result(failure_for(result, app_id), { app_id: app_id }, is_error: true) unless result.ok?
 
         builds = result.value.is_a?(Hash) ? result.value : {}
 
@@ -367,7 +367,10 @@ module RubyNative
 
         result = Platform.get("/api/v1/apps/#{app_id}/builds/#{build_id}")
         unless result.ok?
-          return tool_result(result.error, { app_id: app_id, build_id: build_id }, is_error: true)
+          # Either half of the path can be the missing one, and the API does
+          # not say which.
+          message = result.not_found? ? "No build #{build_id} in app #{app_id.inspect} on this account." : result.error
+          return tool_result(message, { app_id: app_id, build_id: build_id }, is_error: true)
         end
 
         build = result.value.is_a?(Hash) ? result.value : {}
@@ -591,22 +594,13 @@ module RubyNative
         $stdout = original
       end
 
-      # Two different 404s: the app is not on this account, or the server is an
-      # older deploy that has no such route. The apps index exists on every
-      # version, so asking it settles which one this is.
-      def config_errors_failure(result, app_id)
+      # Every app-scoped route answers 404 the same way for an app the token
+      # cannot see, which is the only 404 these tools can provoke.
+      def failure_for(result, app_id)
         return result.error unless result.not_found?
 
-        case Platform.app?(app_id)
-        when true
-          "#{Platform::HOST} does not serve config error reports yet -- that endpoint ships in a later release. " \
-            "Every local tool here still works."
-        when false
-          "No app #{app_id.inspect} on this account. Check `ruby_native.app_id` in #{Platform::CONFIG_PATH}, " \
-            "or pass `app_id`."
-        else
-          result.error
-        end
+        "No app #{app_id.inspect} on this account. Check `ruby_native.app_id` in #{Platform::CONFIG_PATH}, " \
+          "or pass `app_id`."
       end
 
       def resolve_app_id(arguments)
