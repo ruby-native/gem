@@ -84,6 +84,49 @@ Building with Inertia instead of ERB? `@ruby-native/react` and `@ruby-native/vue
 
 Every docs page serves markdown: append `.md` to the URL or request `Accept: text/markdown`. For an index of everything, fetch [rubynative.com/llms.txt](https://rubynative.com/llms.txt), or [llms-full.txt](https://rubynative.com/llms-full.txt) for the complete docs as a single file.
 
+### MCP server
+
+Docs tell an agent what to write. They don't tell it whether what it wrote works, and Ruby Native's signals fail silently on purpose: an app that doesn't recognize a `data-native-*` attribute ignores it. A typo renders nothing, raises nothing, and logs nothing, so it survives right up until someone opens the build and notices the missing button.
+
+`ruby_native mcp` closes that loop. It speaks [MCP](https://modelcontextprotocol.io) over stdin and stdout. Three tools answer from your working copy, with no account involved:
+
+| Tool | Answers |
+|---|---|
+| `check_views` | Which signals in your templates are misspelled, duplicated, or newer than the installed gem |
+| `lookup_signals` | Every `data-native-*` attribute, the gem version it needs, and the helper that emits it |
+| `validate_config` | What in `config/ruby_native.yml` the apps reject outright, and what they quietly ignore |
+
+Three more read your account, using the token `ruby_native login` already stored:
+
+| Tool | Answers |
+|---|---|
+| `config_errors` | What real devices reported failing over the last 48 hours, with the decode error behind each one |
+| `deployed_builds` | The build your users can actually install, and which signals it's too old to understand |
+| `build_status` | Whether one build succeeded, and the error if it didn't |
+
+The pairs are the point. `validate_config` says what *will* fail to decode; `config_errors` says what did, on which devices. `check_views` compares your templates against the gem in your Gemfile; `deployed_builds` compares them against the binary in the store, which is usually the answer to "the attribute is right but nothing happens on my phone".
+
+Full reference at [rubynative.com/docs/cli](https://rubynative.com/docs/cli#mcp-server). Register it with any MCP client. For Claude Code:
+
+```bash
+claude mcp add ruby-native -- bundle exec ruby_native mcp
+```
+
+Or, in a client that takes JSON:
+
+```json
+{
+  "mcpServers": {
+    "ruby-native": {
+      "command": "bundle",
+      "args": ["exec", "ruby_native", "mcp"]
+    }
+  }
+}
+```
+
+Everything is read-only: nothing here deploys or writes. The first three never leave your machine; the second three send your CLI token to rubynative.com and read back. `check_views` needs the `herb` gem, same as `ruby_native check`.
+
 ## License
 
 MIT.
