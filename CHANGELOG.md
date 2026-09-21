@@ -8,8 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **`ruby_native mcp` hands your views, signals, and config to a coding agent.** An MCP server over stdio with three read-only tools: `check_views` reports the signals a build will silently ignore, `lookup_signals` answers what a `data-native-*` attribute is and which version it needs, and `validate_config` checks `config/ruby_native.yml` against what the apps actually decode. An agent writing markup it will never see rendered now gets the feedback the apps don't give it. See the README for how to register it.
-- **`ruby_native mcp` also answers for the app your users are running.** Three more tools, using the token `ruby_native login` already stored: `config_errors` reports what real devices failed to decode over the last 48 hours, `deployed_builds` names the signals the build in the store is too old to understand, and `build_status` follows one build. Still read-only: nothing deploys.
+- **`ruby_native mcp` hands your app to a coding agent.** A read-only MCP server over stdio. Three tools answer from your checkout: `check_views` reports the signals a build will silently ignore, `lookup_signals` answers what a `data-native-*` attribute is and which version it needs, and `validate_config` checks `config/ruby_native.yml` against what the apps actually decode. Three more use the token `ruby_native login` already stored: `config_errors` reports what real devices failed to load over the last 48 hours, `deployed_builds` names the signals the build in the store is too old to understand, and `build_status` follows one build. An agent writing markup it will never see rendered now gets the feedback the apps don't give it, and nothing deploys. [Docs](https://rubynative.com/docs/cli#mcp-server)
 
 ## [0.17.3] - 2026-09-10
 
