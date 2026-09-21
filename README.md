@@ -106,7 +106,7 @@ Three more read your account, using the token `ruby_native login` already stored
 
 The pairs are the point. `validate_config` says what *will* fail to decode; `config_errors` says what did, on which devices. `check_views` compares your templates against the gem in your Gemfile; `deployed_builds` compares them against the binary in the store, which is usually the answer to "the attribute is right but nothing happens on my phone".
 
-Register it with any MCP client. For Claude Code:
+Full reference at [rubynative.com/docs/cli](https://rubynative.com/docs/cli#mcp-server). Register it with any MCP client. For Claude Code:
 
 ```bash
 claude mcp add ruby-native -- bundle exec ruby_native mcp
