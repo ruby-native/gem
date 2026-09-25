@@ -21,12 +21,13 @@ module RubyNative
         case positional.first
         when "push" then finish(self.class.push(app_id))
         when "pull" then finish(self.class.pull(app_id))
-        when "publish" then finish(self.class.publish(app_id))
+        when "publish" then finish(self.class.publish(app_id, platform: @argv.include?("--android") ? "android" : "ios"))
         else
-          puts "Usage: ruby_native listing <push|pull|publish>"
-          puts "  push     Save #{PATH} to Ruby Native. Nothing reaches Apple."
-          puts "  pull     Write #{PATH} from what Ruby Native holds."
-          puts "  publish  Push, then send the listing to App Store Connect."
+          puts "Usage: ruby_native listing <push|pull|publish> [--android]"
+          puts "  push       Save #{PATH} to Ruby Native. Nothing reaches a store."
+          puts "  pull       Write #{PATH} from what Ruby Native holds."
+          puts "  publish    Push, then send the listing to App Store Connect."
+          puts "  --android  Send the title and descriptions to the Google Play listing instead."
           exit 1
         end
       end
@@ -58,11 +59,11 @@ module RubyNative
         success("Wrote #{PATH} from the listing Ruby Native holds.", result.value)
       end
 
-      def self.publish(app_id)
+      def self.publish(app_id, platform: "ios")
         pushed = push(app_id)
         return pushed unless pushed.ok
 
-        result = Mcp::Platform.post("/api/v1/apps/#{app_id}/listing/publish")
+        result = Mcp::Platform.post("/api/v1/apps/#{app_id}/listing/publish", platform == "android" ? { platform: "android" } : nil)
         return failure(result) unless result.ok?
 
         success(result.value["note"].to_s, result.value)

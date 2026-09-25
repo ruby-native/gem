@@ -58,7 +58,9 @@ module RubyNative
         lines << "Android: #{track_summary(android, store: "Google Play")}"
         lines << "Subscription: #{subscription_summary(subscription)}"
         lines << ""
-        lines.concat(next_lines(status))
+        lines.concat(next_lines(ios, "iOS"))
+        lines << ""
+        lines.concat(next_lines(android, "Android"))
 
         lines.join("\n")
       end
@@ -78,15 +80,29 @@ module RubyNative
         subscription["plan"] ? "#{subscription["plan"]}, active" : "active"
       end
 
-      def self.next_lines(status)
-        blockers = Array(status["blocked_by"])
-        act = status["next"].to_s
+      # One track at a time: the stores gate differently, and an app can be
+      # live on one and unbuilt on the other.
+      def self.next_lines(track, label)
+        blockers = Array(track["blocked_by"])
+        act = track["next"].to_s
+        android = label == "Android"
 
         if blockers.empty?
-          return [ act == "submit" ? "Nothing is in the way of submitting for review." : "Nothing is in the way of a build. Run `bundle exec ruby_native deploy`." ]
+          return [ case act
+                   when "submit" then "#{label}: nothing is in the way of submitting for review. Run `bundle exec ruby_native submit`."
+                   when "wait" then "#{label}: in App Store review. Nothing to do but wait; `ruby_native withdraw` takes it back out."
+                   when "release" then "#{label}: approved. Release it from App Store Connect."
+                   when "go_live" then "#{label}: everything Google Play needs is in place."
+                   else "#{label}: nothing is in the way of a build. Run `bundle exec ruby_native deploy#{" --android" if android}`."
+                   end ]
         end
 
-        [ "Before #{act == "submit" ? "submitting" : "building"}, #{blockers.size} #{blockers.size == 1 ? "thing needs" : "things need"} doing:", "" ] +
+        verb = case act
+               when "submit" then "submitting"
+               when "go_live" then "going live on Google Play"
+               else "building"
+               end
+        [ "#{label}: before #{verb}, #{blockers.size} #{blockers.size == 1 ? "thing needs" : "things need"} doing:", "" ] +
           blocker_lines(blockers)
       end
 

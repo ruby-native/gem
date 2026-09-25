@@ -11,7 +11,8 @@ class StatusTest < Minitest::Test
     assert_match "iOS: Setup complete · build 12 (1.0.0) ready · not on the App Store", report
     assert_match "Android: Play developer account · no build yet · not on Google Play", report
     assert_match "Subscription: Launch, active", report
-    assert_match "Before submitting, 2 things need doing:", report
+    assert_match "iOS: before submitting, 2 things need doing:", report
+    assert_match "Android: nothing is in the way of a build. Run `bundle exec ruby_native deploy --android`.", report
   end
 
   def test_report_says_who_clears_each_blocker_and_whether_we_can_see_it
@@ -23,10 +24,28 @@ class StatusTest < Minitest::Test
     assert_match "2. no_build (an agent can do this; Ruby Native sees it clear)", report
   end
 
-  def test_report_says_when_nothing_blocks_a_build
-    report = RubyNative::CLI::Status.report(status("next" => "build", "blocked_by" => []))
+  def test_report_walks_the_android_track_to_going_live
+    android = { "setup" => "Setup complete", "latest_build" => { "number" => 3, "version" => "1.0.0", "status" => "success" }, "live" => false,
+                "next" => "go_live", "blocked_by" => [ { "id" => "play_promotion", "who" => "human", "verifiable" => true, "why" => "Yours.", "url" => "https://play.google.com/console", "steps" => [ "Promote." ] } ] }
+    report = RubyNative::CLI::Status.report(status("android" => android))
 
-    assert_match "Nothing is in the way of a build. Run `bundle exec ruby_native deploy`.", report
+    assert_match "Android: Setup complete · build 3 (1.0.0) success · not on Google Play", report
+    assert_match "Android: before going live on Google Play, 1 thing needs doing:", report
+    assert_match "1. play_promotion (a person does this; Ruby Native sees it clear)", report
+  end
+
+  def test_report_says_when_nothing_blocks_a_build
+    report = RubyNative::CLI::Status.report(status("ios" => { "setup" => "Setup complete", "next" => "build", "blocked_by" => [] }))
+
+    assert_match "iOS: nothing is in the way of a build. Run `bundle exec ruby_native deploy`.", report
+  end
+
+  def test_report_names_the_review_states_in_plain_words
+    waiting = RubyNative::CLI::Status.report(status("ios" => { "next" => "wait", "blocked_by" => [] }))
+    approved = RubyNative::CLI::Status.report(status("ios" => { "next" => "release", "blocked_by" => [] }))
+
+    assert_match "iOS: in App Store review.", waiting
+    assert_match "iOS: approved. Release it from App Store Connect.", approved
   end
 
   def test_report_names_a_paused_subscription
@@ -36,7 +55,7 @@ class StatusTest < Minitest::Test
   end
 
   def test_report_survives_an_empty_answer
-    assert_match "Nothing is in the way of a build.", RubyNative::CLI::Status.report({})
+    assert_match "iOS: nothing is in the way of a build.", RubyNative::CLI::Status.report({})
   end
 
   def test_run_without_a_linked_app_says_how_to_link_one
@@ -59,18 +78,18 @@ class StatusTest < Minitest::Test
       "dashboard_url" => "https://rubynative.com/apps/1",
       "subscription" => { "active" => true, "past_due" => false, "plan" => "Launch" },
       "ios" => { "setup" => "Setup complete", "live" => false,
-                 "latest_build" => { "number" => 12, "version" => "1.0.0", "status" => "ready" } },
-      "android" => { "setup" => "Play developer account", "latest_build" => nil, "live" => false },
-      "next" => "submit",
-      "blocked_by" => [
-        { "id" => "app_privacy", "who" => "human", "verifiable" => false,
-          "why" => "Apple publishes no API for the App Privacy questionnaire.",
-          "url" => "https://appstoreconnect.apple.com/apps/1/distribution/privacy",
-          "steps" => [ "Open the app and click App Privacy." ] },
-        { "id" => "no_build", "who" => "agent", "verifiable" => true,
-          "why" => "Nothing has been built yet.", "url" => "https://rubynative.com/apps/1/builds",
-          "steps" => [ "Run `bundle exec ruby_native deploy`." ] }
-      ]
+                 "latest_build" => { "number" => 12, "version" => "1.0.0", "status" => "ready" },
+                 "next" => "submit",
+                 "blocked_by" => [
+                   { "id" => "app_privacy", "who" => "human", "verifiable" => false,
+                     "why" => "Apple publishes no API for the App Privacy questionnaire.",
+                     "url" => "https://appstoreconnect.apple.com/apps/1/distribution/privacy",
+                     "steps" => [ "Open the app and click App Privacy." ] },
+                   { "id" => "no_build", "who" => "agent", "verifiable" => true,
+                     "why" => "Nothing has been built yet.", "url" => "https://rubynative.com/apps/1/builds",
+                     "steps" => [ "Run `bundle exec ruby_native deploy`." ] }
+                 ] },
+      "android" => { "setup" => "Play developer account", "latest_build" => nil, "live" => false, "next" => "build", "blocked_by" => [] }
     }.merge(overrides)
   end
 end

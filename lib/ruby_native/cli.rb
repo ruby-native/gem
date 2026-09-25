@@ -84,7 +84,8 @@ module RubyNative
       puts "    --if-needed        Skip when this gem version is already built"
       puts "    --skip-check       Deploy without checking your views for broken signals"
       puts "  icon set PATH Set the app icon, a 1024x1024 PNG (ships with the next deploy)"
-      puts "  listing       push, pull, or publish the App Store listing in config/ruby_native_listing.yml"
+      puts "  listing       push, pull, or publish the store listing in config/ruby_native_listing.yml"
+      puts "    publish --android  Send the title and descriptions to Google Play instead of Apple"
       puts "  login         Authenticate with Ruby Native"
       puts "  logout        Remove stored credentials"
       puts "  mcp           Serve the check, signal, config, and status tools to a coding agent over MCP"
@@ -100,9 +101,11 @@ module RubyNative
       puts "  status        Where the app is, what is next, and what is in the way"
       puts "  submit        Show exactly what would go to App Store review, then ask before sending it"
       puts "    --yes              Skip the question"
+      puts "    --android          Show what stands between the app and Google Play, and the promotion steps"
       puts "  testers       List the TestFlight testers"
       puts "    add EMAIL          Invite a team member to TestFlight"
-      puts "  withdraw      Take the app back out of the review queue. Works until Apple approves it"
+      puts "    --android          The Play Console steps instead; Play keeps its own list"
+      puts "  withdraw      Take the app back out of the App Store review queue. Works until Apple approves it"
     end
   end
 end

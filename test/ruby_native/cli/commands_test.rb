@@ -219,6 +219,45 @@ class CommandsTest < Minitest::Test
     end
   end
 
+  def test_listing_publish_android_sends_the_platform
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        File.write("config/ruby_native_listing.yml", "name: Trailhead\nsubtitle: Maps\n")
+        posted = nil
+        pushed = ok("changed" => [], "missing" => [])
+        published = ok("note" => "The title and descriptions are on the Play Console listing (en-US).")
+        outcome = with_patch(pushed) do
+          with_stub(Platform, :post, ->(_path, json = nil) { posted = json; published }) { RubyNative::CLI::Listing.publish("app_1", platform: "android") }
+        end
+
+        assert_equal({ platform: "android" }, posted)
+        assert_match "Play Console listing", outcome.text
+      end
+    end
+  end
+
+  def test_testers_android_asks_for_the_play_hand_off
+    asked = nil
+    refusal = Platform::Result.new(error: "Google Play keeps its internal tester list in Play Console.", status: 422,
+      body: { "blocked_by" => [ { "id" => "play_testers", "who" => "human", "verifiable" => false, "why" => "Console only.", "url" => "https://play.google.com/console", "steps" => [ "Create email list." ] } ] })
+    outcome = with_stub(Platform, :get, ->(path) { asked = path; refusal }) { RubyNative::CLI::Testers.list("app_1", platform: "android") }
+
+    assert_equal "/api/v1/apps/app_1/testers?platform=android", asked
+    refute outcome.ok
+    assert_match "1. play_testers (a person does this; Ruby Native cannot see it", outcome.text
+    assert_match "1. Create email list.", outcome.text
+  end
+
+  def test_withdraw_android_asks_the_platform_route
+    asked = nil
+    refusal = Platform::Result.new(error: "Google Play releases are managed in Play Console.", status: 409, body: {})
+    outcome = with_stub(Platform, :request, ->(_klass, path, **) { asked = path; refusal }) { RubyNative::CLI::Submit.withdraw("app_1", platform: "android") }
+
+    assert_equal "/api/v1/apps/app_1/submission?platform=android", asked
+    assert_match "Play Console", outcome.text
+  end
+
   # --- demo account ---
 
   def test_demo_account_set_sends_only_what_was_given

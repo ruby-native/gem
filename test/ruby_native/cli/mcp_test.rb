@@ -368,18 +368,32 @@ class McpTest < Minitest::Test
     result = with_result(ok(app_status)) { call("status", "app_id" => "app_1") }
 
     assert_match "Trailhead (app_1) · https://trailhead.app", text(result)
-    assert_match "Before building, 1 thing needs doing:", text(result)
+    assert_match "iOS: before building, 1 thing needs doing:", text(result)
     assert_match "1. subscription (a person does this; Ruby Native sees it clear)", text(result)
     assert_match "https://rubynative.com/apps/1/plans", text(result)
-    assert_equal "build", result.dig("structuredContent", "next")
-    assert_equal "subscription", result.dig("structuredContent", "blocked_by", 0, "id")
+    assert_equal "build", result.dig("structuredContent", "ios", "next")
+    assert_equal "subscription", result.dig("structuredContent", "ios", "blocked_by", 0, "id")
     refute result["isError"]
   end
 
   def test_status_says_when_nothing_is_in_the_way
-    result = with_result(ok(app_status("blocked_by" => []))) { call("status", "app_id" => "app_1") }
+    result = with_result(ok(app_status("ios" => { "setup" => "Setup complete", "next" => "build", "blocked_by" => [] }))) { call("status", "app_id" => "app_1") }
 
-    assert_match "Nothing is in the way of a build.", text(result)
+    assert_match "iOS: nothing is in the way of a build.", text(result)
+  end
+
+  def test_submit_for_android_previews_the_go_live_list_and_never_sends
+    sent = nil
+    answer = ok("submitted" => false, "platform" => "android", "summary" => "Everything Google Play needs is in place.",
+      "blocked_by" => [ { "id" => "play_promotion", "who" => "human", "verifiable" => true, "why" => "Yours.", "url" => "https://play.google.com/console", "steps" => [ "Promote release, then Production." ] } ])
+    result = with_stub(RubyNative::CLI::Mcp::Platform, :post, ->(_path, json = nil) { sent = json; answer }) do
+      call("submit", "platform" => "android", "confirmation_token" => "ignored", "app_id" => "app_1")
+    end
+
+    assert_equal({ platform: "android" }, sent)
+    assert_match "Everything Google Play needs is in place.", text(result)
+    assert_match "1. play_promotion (a person does this; Ruby Native sees it clear)", text(result)
+    refute result["isError"]
   end
 
   def test_status_reads_the_app_endpoint
@@ -401,15 +415,14 @@ class McpTest < Minitest::Test
       "public_id" => "app_1", "name" => "Trailhead", "url" => "https://trailhead.app",
       "dashboard_url" => "https://rubynative.com/apps/1",
       "subscription" => { "active" => false, "past_due" => false, "plan" => nil },
-      "ios" => { "setup" => "Setup complete", "latest_build" => nil, "live" => false },
-      "android" => { "setup" => "Play developer account", "latest_build" => nil, "live" => false },
-      "next" => "build",
-      "blocked_by" => [
-        { "id" => "subscription", "who" => "human", "verifiable" => true,
-          "why" => "Builds start once the app has a subscription, and checkout is a step only a person can take.",
-          "url" => "https://rubynative.com/apps/1/plans",
-          "steps" => [ "Choose a plan and check out." ] }
-      ]
+      "ios" => { "setup" => "Setup complete", "latest_build" => nil, "live" => false, "next" => "build",
+                 "blocked_by" => [
+                   { "id" => "subscription", "who" => "human", "verifiable" => true,
+                     "why" => "Builds start once the app has a subscription, and checkout is a step only a person can take.",
+                     "url" => "https://rubynative.com/apps/1/plans",
+                     "steps" => [ "Choose a plan and check out." ] }
+                 ] },
+      "android" => { "setup" => "Play developer account", "latest_build" => nil, "live" => false, "next" => "build", "blocked_by" => [] }
     }.merge(overrides)
   end
 

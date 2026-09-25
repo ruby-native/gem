@@ -11,6 +11,10 @@ module RubyNative
         ensure_authenticated!
         app_id = app_id!
 
+        # Play has no submit of ours: the answer is the go-live list with the
+        # promotion steps, and nothing to confirm.
+        return finish(self.class.preview(app_id, platform: "android")) if @argv.include?("--android")
+
         preview = self.class.preview(app_id)
         return finish(preview) unless preview.ok
 
@@ -29,11 +33,16 @@ module RubyNative
         finish(self.class.submit(app_id, preview.data["confirmation_token"]))
       end
 
-      def self.preview(app_id)
-        result = Mcp::Platform.post("/api/v1/apps/#{app_id}/submission")
+      def self.preview(app_id, platform: "ios")
+        result = Mcp::Platform.post("/api/v1/apps/#{app_id}/submission", platform == "android" ? { platform: "android" } : nil)
         return failure(result) unless result.ok?
 
-        success(result.value["summary"].to_s, result.value)
+        text = result.value["summary"].to_s
+        blockers = result.value["blocked_by"]
+        if platform == "android" && blockers.is_a?(Array) && blockers.any?
+          text += "\n\n" + Status.blocker_lines(blockers).join("\n")
+        end
+        success(text, result.value)
       end
 
       def self.submit(app_id, confirmation_token)
@@ -45,8 +54,8 @@ module RubyNative
         success(result.value["note"].to_s, result.value)
       end
 
-      def self.withdraw(app_id)
-        result = Mcp::Platform.request(Net::HTTP::Delete, "/api/v1/apps/#{app_id}/submission")
+      def self.withdraw(app_id, platform: "ios")
+        result = Mcp::Platform.request(Net::HTTP::Delete, "/api/v1/apps/#{app_id}/submission#{"?platform=android" if platform == "android"}")
         return failure(result) unless result.ok?
 
         success(result.value["note"].to_s, result.value)
@@ -56,7 +65,7 @@ module RubyNative
     class Withdraw < Command
       def run
         ensure_authenticated!
-        finish(Submit.withdraw(app_id!))
+        finish(Submit.withdraw(app_id!, platform: @argv.include?("--android") ? "android" : "ios"))
       end
     end
   end

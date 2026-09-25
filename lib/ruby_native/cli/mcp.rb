@@ -168,8 +168,8 @@ module RubyNative
         },
         {
           name: "status",
-          description: "Report where the app is on the way to the App Store and what is in the way: setup, " \
-                       "subscription, the latest build, store state, and a `blocked_by` list for the next act. " \
+          description: "Report where the app is on the way to the App Store and Google Play and what is in the way: " \
+                       "setup, subscription, the latest build, store state, and a `blocked_by` list per track for its next act. " \
                        "Each blocker says who clears it. `who: human` means stop and hand the person the steps: " \
                        "paying, creating the app record, or answering a questionnaire Apple gives us no API for. " \
                        "Call this first, and again after the person says they have done a step. Reaches " \
@@ -207,10 +207,12 @@ module RubyNative
         {
           name: "testers_list",
           description: "List the internal TestFlight testers on the app and whether each has accepted the invite. " \
-                       "Reaches rubynative.com and needs `ruby_native login`.",
+                       "With platform android, Google Play keeps its list in Play Console, so the answer is the hand-off " \
+                       "with the steps. Reaches rubynative.com and needs `ruby_native login`.",
           inputSchema: {
             type: "object",
             properties: {
+              platform: { type: "string", enum: [ "ios", "android" ], description: "Defaults to ios." },
               app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
             },
             additionalProperties: false
@@ -226,6 +228,7 @@ module RubyNative
             type: "object",
             properties: {
               email: { type: "string", description: "The Apple ID email the person uses for App Store Connect." },
+              platform: { type: "string", enum: [ "ios", "android" ], description: "Defaults to ios." },
               app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
             },
             required: [ "email" ],
@@ -348,12 +351,15 @@ module RubyNative
                        "NOTHING: it returns the exact listing, build, and checklist that would go to Apple, as a " \
                        "summary written to be read aloud, plus a token that expires in ten minutes. Show the person " \
                        "that summary and get their explicit yes before calling again with the token. Only then does " \
-                       "it submit. Until Apple approves, `withdraw` takes it back out of the queue. Reaches " \
-                       "rubynative.com and needs `ruby_native login`.",
+                       "it submit. Until Apple approves, `withdraw` takes it back out of the queue. With platform " \
+                       "android nothing is ever sent: Ruby Native never promotes to production, so the answer is the " \
+                       "go-live list with the Play Console promotion steps last. Reaches rubynative.com and needs " \
+                       "`ruby_native login`.",
           inputSchema: {
             type: "object",
             properties: {
               confirmation_token: { type: "string", description: "The token from the previous call, after the person said yes." },
+              platform: { type: "string", enum: [ "ios", "android" ], description: "Defaults to ios." },
               app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
             },
             additionalProperties: false
@@ -368,6 +374,7 @@ module RubyNative
           inputSchema: {
             type: "object",
             properties: {
+              platform: { type: "string", enum: [ "ios", "android" ], description: "Defaults to ios." },
               app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
             },
             additionalProperties: false
@@ -492,8 +499,8 @@ module RubyNative
           when "build_status" then build_status(arguments)
           when "status" then status(arguments)
           when "permissions_set" then with_app(arguments) { |app_id| Permissions.set(app_id, arguments.slice("camera", "microphone", "photos")) }
-          when "testers_list" then with_app(arguments) { |app_id| Testers.list(app_id) }
-          when "testers_add" then with_app(arguments) { |app_id| Testers.add(app_id, string!(arguments, "email")) }
+          when "testers_list" then with_app(arguments) { |app_id| Testers.list(app_id, platform: arguments["platform"] || "ios") }
+          when "testers_add" then with_app(arguments) { |app_id| Testers.add(app_id, string!(arguments, "email"), platform: arguments["platform"] || "ios") }
           when "icon_set" then with_app(arguments) { |app_id| Icon.set(app_id, string!(arguments, "path")) }
           when "screenshots_setup" then with_app(arguments) { |app_id| Screenshots.setup(app_id, paths: string_list(arguments["paths"], "paths") || [], rotate_key: arguments["rotate_key"] == true) }
           when "screenshots_capture" then with_app(arguments) { |app_id| Screenshots.capture(app_id, platform: arguments["platform"] || "ios") }
@@ -501,9 +508,14 @@ module RubyNative
           when "submit"
             with_app(arguments) do |app_id|
               token = arguments["confirmation_token"]
-              token.to_s.strip.empty? ? Submit.preview(app_id) : Submit.submit(app_id, token.to_s.strip)
+              platform = arguments["platform"] || "ios"
+              if platform == "android" || token.to_s.strip.empty?
+                Submit.preview(app_id, platform: platform)
+              else
+                Submit.submit(app_id, token.to_s.strip)
+              end
             end
-          when "withdraw" then with_app(arguments) { |app_id| Submit.withdraw(app_id) }
+          when "withdraw" then with_app(arguments) { |app_id| Submit.withdraw(app_id, platform: arguments["platform"] || "ios") }
           when "listing_push" then with_app(arguments) { |app_id| Listing.push(app_id) }
           when "listing_pull" then with_app(arguments) { |app_id| Listing.pull(app_id) }
           when "demo_account_set"
