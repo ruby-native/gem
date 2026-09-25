@@ -36,6 +36,12 @@ class CliTest < Minitest::Test
     assert_match(/^  status /, out)
   end
 
+  def test_usage_lists_the_staging_commands
+    out, _err = capture_io { RubyNative::CLI.start([]) }
+
+    %w[icon permissions screenshots testers].each { |command| assert_match(/^  #{command} /, out) }
+  end
+
   # Customers should never see a raw backtrace; a one-line report with the
   # class and message is enough to file an issue with.
   def test_unexpected_errors_exit_1_with_the_class_and_message

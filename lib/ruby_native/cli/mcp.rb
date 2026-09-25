@@ -2,7 +2,11 @@ require "json"
 require "ruby_native/cli/check"
 require "ruby_native/cli/mcp/config_validator"
 require "ruby_native/cli/mcp/platform"
+require "ruby_native/cli/icon"
+require "ruby_native/cli/permissions"
+require "ruby_native/cli/screenshots"
 require "ruby_native/cli/status"
+require "ruby_native/cli/testers"
 require "ruby_native/signals"
 require "ruby_native/version"
 
@@ -178,6 +182,114 @@ module RubyNative
             additionalProperties: false
           },
           annotations: { title: "App status", readOnlyHint: true, openWorldHint: true }
+        },
+        {
+          name: "permissions_set",
+          description: "Set the sentence iOS shows when the app first asks for the camera, the microphone, or the " \
+                       "photo library. Say what the app does with it, in the user's words. These land in Info.plist, " \
+                       "so a change ships with the next `ruby_native deploy`, not the next Rails deploy. Send only " \
+                       "the ones to change; an empty string removes one. Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              camera: { type: "string", description: "Why the app uses the camera, for example \"To scan tickets at the door.\"" },
+              microphone: { type: "string", description: "Why the app uses the microphone." },
+              photos: { type: "string", description: "Why the app reads the photo library." },
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Set permission strings", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
+        },
+        {
+          name: "testers_list",
+          description: "List the internal TestFlight testers on the app and whether each has accepted the invite. " \
+                       "Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "List testers", readOnlyHint: true, openWorldHint: true }
+        },
+        {
+          name: "testers_add",
+          description: "Invite an App Store Connect team member to TestFlight for this app. Apple emails them the " \
+                       "invite; only they can accept it. Someone not on the team is refused with what to do. Reaches " \
+                       "rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              email: { type: "string", description: "The Apple ID email the person uses for App Store Connect." },
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            required: [ "email" ],
+            additionalProperties: false
+          },
+          annotations: { title: "Add a tester", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
+        },
+        {
+          name: "icon_set",
+          description: "Upload the app icon: a 1024x1024 PNG with no transparency, from a path in this project. It " \
+                       "ships with the next `ruby_native deploy`. Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              path: { type: "string", description: "Path to the PNG, relative to the app root." },
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            required: [ "path" ],
+            additionalProperties: false
+          },
+          annotations: { title: "Set the app icon", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
+        },
+        {
+          name: "screenshots_setup",
+          description: "Set up App Store screenshots, which rubynative.com captures against the deployed site: " \
+                       "generates the screenshot key when the app has none (returned once, with where to put it in " \
+                       "the app's Rails credentials and initializer) and sets the 3 to 10 pages to capture. Deploy " \
+                       "the site after adding the key, then call screenshots_capture. Reaches rubynative.com and " \
+                       "needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              paths: { type: "array", items: { type: "string" }, description: "3 to 10 absolute paths that show the app off, for example [\"/\", \"/inbox\", \"/settings\"]." },
+              rotate_key: { type: "boolean", description: "Replace an existing key. The old one stops working." },
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Set up screenshots", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
+        },
+        {
+          name: "screenshots_capture",
+          description: "Start a screenshot capture of the deployed site on a phone. Takes about five minutes; follow " \
+                       "it with screenshots_list. Publishing the result to the store is a click on the dashboard, not " \
+                       "a tool. Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              platform: { type: "string", enum: [ "ios", "android" ], description: "Defaults to ios." },
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Capture screenshots", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true }
+        },
+        {
+          name: "screenshots_list",
+          description: "Report the screenshot setup (key, pages) and the latest capture per platform. Reaches " \
+                       "rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "List screenshots", readOnlyHint: true, openWorldHint: true }
         }
       ].freeze
 
@@ -296,6 +408,13 @@ module RubyNative
           when "deployed_builds" then deployed_builds(arguments)
           when "build_status" then build_status(arguments)
           when "status" then status(arguments)
+          when "permissions_set" then with_app(arguments) { |app_id| Permissions.set(app_id, arguments.slice("camera", "microphone", "photos")) }
+          when "testers_list" then with_app(arguments) { |app_id| Testers.list(app_id) }
+          when "testers_add" then with_app(arguments) { |app_id| Testers.add(app_id, string!(arguments, "email")) }
+          when "icon_set" then with_app(arguments) { |app_id| Icon.set(app_id, string!(arguments, "path")) }
+          when "screenshots_setup" then with_app(arguments) { |app_id| Screenshots.setup(app_id, paths: string_list(arguments["paths"], "paths") || [], rotate_key: arguments["rotate_key"] == true) }
+          when "screenshots_capture" then with_app(arguments) { |app_id| Screenshots.capture(app_id, platform: arguments["platform"] || "ios") }
+          when "screenshots_list" then with_app(arguments) { |app_id| Screenshots.list(app_id) }
           else raise ToolFailure, "Unknown tool: #{name.inspect}. Call tools/list for the ones this server has."
           end
         end
@@ -439,6 +558,23 @@ module RubyNative
         status = result.value.is_a?(Hash) ? result.value : {}
 
         tool_result(Status.report(status), status)
+      end
+
+      # The CLI commands do the work; a tool is the same verb answered in the
+      # protocol's shape.
+      def with_app(arguments)
+        app_id = resolve_app_id(arguments)
+        return tool_result(Platform::NO_APP_ID, { app_id: nil }, is_error: true) unless app_id
+
+        outcome = yield(app_id)
+        tool_result(outcome.text, outcome.data, is_error: !outcome.ok)
+      end
+
+      def string!(arguments, name)
+        value = arguments[name]
+        raise ToolFailure, "`#{name}` is required and has to be a string." unless value.is_a?(String) && !value.strip.empty?
+
+        value.strip
       end
 
       # --- Rendering ---

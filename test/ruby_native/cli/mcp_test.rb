@@ -40,15 +40,22 @@ class McpTest < Minitest::Test
     assert_empty exchange(%({"jsonrpc":"2.0","method":"notifications/initialized"}))
   end
 
-  def test_tools_list_names_every_tool_as_read_only
+  READ_TOOLS = %w[build_status check_views config_errors deployed_builds lookup_signals screenshots_list status testers_list validate_config].freeze
+  WRITE_TOOLS = %w[icon_set permissions_set screenshots_capture screenshots_setup testers_add].freeze
+
+  def test_tools_list_names_every_tool_and_says_which_ones_write
     tools = request("tools/list")["result"]["tools"]
 
-    assert_equal %w[build_status check_views config_errors deployed_builds lookup_signals status validate_config],
-      tools.map { |tool| tool["name"] }.sort
+    assert_equal (READ_TOOLS + WRITE_TOOLS).sort, tools.map { |tool| tool["name"] }.sort
     tools.each do |tool|
-      assert tool.dig("annotations", "readOnlyHint"), "#{tool["name"]} should be marked read-only"
+      expected = READ_TOOLS.include?(tool["name"])
+      assert_equal expected, tool.dig("annotations", "readOnlyHint"), "#{tool["name"]} readOnlyHint"
       refute_empty tool["description"].to_s
       assert_equal "object", tool.dig("inputSchema", "type")
+    end
+    WRITE_TOOLS.each do |name|
+      tool = tools.find { |t| t["name"] == name }
+      refute tool.dig("annotations", "destructiveHint"), "#{name} stages data with rubynative.com and destroys nothing"
     end
   end
 
@@ -60,7 +67,7 @@ class McpTest < Minitest::Test
     %w[check_views lookup_signals validate_config].each do |name|
       refute tools[name].dig("annotations", "openWorldHint"), "#{name} answers locally"
     end
-    %w[config_errors deployed_builds build_status status].each do |name|
+    (READ_TOOLS + WRITE_TOOLS - %w[check_views lookup_signals validate_config]).each do |name|
       assert tools[name].dig("annotations", "openWorldHint"), "#{name} reaches rubynative.com"
       assert_match "ruby_native login", tools[name]["description"]
     end
@@ -401,6 +408,69 @@ class McpTest < Minitest::Test
           "steps" => [ "Choose a plan and check out." ] }
       ]
     }.merge(overrides)
+  end
+
+  # --- write tools ---
+
+  def test_permissions_set_patches_only_what_was_sent_and_says_a_build_ships_it
+    sent = nil
+    answer = ok("permissions" => { "camera" => "To scan tickets" }, "changed" => [ "camera" ], "rebuild_required" => true, "note" => "Ships with the next `ruby_native deploy`.")
+    result = with_stub(RubyNative::CLI::Mcp::Platform, :patch, ->(_path, json) { sent = json; answer }) do
+      call("permissions_set", "camera" => "To scan tickets", "app_id" => "app_1")
+    end
+
+    assert_equal({ permissions: { "camera" => "To scan tickets" } }, sent)
+    assert_match "camera      To scan tickets", text(result)
+    assert_match "Changed: camera. Ships with the next `ruby_native deploy`.", text(result)
+    refute result["isError"]
+  end
+
+  def test_a_refused_write_comes_back_with_the_blockers
+    refusal = RubyNative::CLI::Mcp::Platform::Result.new(error: "Testers live in App Store Connect, which this app cannot reach yet.", status: 422,
+      body: { "blocked_by" => [ { "id" => "app_record", "who" => "human", "verifiable" => true, "why" => "No endpoint.", "url" => "https://appstoreconnect.apple.com/apps", "steps" => [ "Create it." ] } ] })
+    result = with_stub(RubyNative::CLI::Mcp::Platform, :post, ->(*) { refusal }) do
+      call("testers_add", "email" => "qa@example.com", "app_id" => "app_1")
+    end
+
+    assert result["isError"]
+    assert_match "1. app_record (a person does this; Ruby Native sees it clear)", text(result)
+    assert_equal "app_record", result.dig("structuredContent", "blocked_by", 0, "id")
+  end
+
+  def test_testers_add_requires_an_email
+    response = exchange(tool_call(1, "testers_add", { "app_id" => "app_1" })).first
+
+    assert_equal RubyNative::CLI::Mcp::INVALID_PARAMS, response.dig("error", "code")
+    assert_match "`email` is required", response.dig("error", "message")
+  end
+
+  def test_icon_set_refuses_a_missing_file_before_uploading
+    result = in_app { call("icon_set", "path" => "app/assets/icon.png", "app_id" => "app_1") }
+
+    assert result["isError"]
+    assert_match "No file at app/assets/icon.png.", text(result)
+  end
+
+  def test_screenshots_setup_generates_the_key_and_sets_the_paths
+    calls = []
+    current = ok("key_configured" => false, "paths" => [])
+    key = ok("screenshot_key" => "abc123", "rotated" => false)
+    updated = ok("paths" => [ "/", "/inbox", "/settings" ], "key_configured" => true)
+    with_stub(RubyNative::CLI::Mcp::Platform, :get, ->(path) { calls << [ :get, path ]; current }) do
+      with_stub(RubyNative::CLI::Mcp::Platform, :post, ->(path, *) { calls << [ :post, path ]; key }) do
+        with_stub(RubyNative::CLI::Mcp::Platform, :patch, ->(path, json) { calls << [ :patch, path, json ]; updated }) do
+          result = call("screenshots_setup", "paths" => [ "/", "/inbox", "/settings" ], "app_id" => "app_1")
+
+          assert_match "Generated the screenshot key.", text(result)
+          assert_match "  abc123", text(result)
+          assert_match "screenshot_key: <the key above>", text(result)
+          assert_match "Pages to capture: /, /inbox, /settings", text(result)
+          assert_equal "abc123", result.dig("structuredContent", "screenshot_key")
+        end
+      end
+    end
+
+    assert_equal [ :get, :post, :patch ], calls.map(&:first)
   end
 
   # --- deployed_builds ---

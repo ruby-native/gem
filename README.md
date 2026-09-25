@@ -128,7 +128,7 @@ Or, in a client that takes JSON:
 }
 ```
 
-Everything is read-only: nothing here deploys or writes. The first three never leave your machine; the other four send your CLI token to rubynative.com and read back. `check_views` needs the `herb` gem, same as `ruby_native check`.
+Five more stage things with Ruby Native and reach Apple only on a build or a click on the dashboard: `permissions_set`, `testers_add`, `icon_set`, `screenshots_setup`, and `screenshots_capture`, each the same as its CLI command. Nothing here deploys or submits. The first three tools never leave your machine; the rest send your CLI token to rubynative.com. `check_views` needs the `herb` gem, same as `ruby_native check`.
 
 ## License
 

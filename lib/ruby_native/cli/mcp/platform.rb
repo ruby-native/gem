@@ -8,25 +8,31 @@ require "ruby_native/cli/mcp/config_validator"
 module RubyNative
   class CLI
     class Mcp
-      # The read-only slice of the Ruby Native API the server needs, using the
-      # token `ruby_native login` already stored.
+      # The slice of the Ruby Native API the CLI and the MCP server share,
+      # using the token `ruby_native login` already stored.
       #
-      # Nothing here raises. Every failure comes back as a Result the tools
-      # turn into something a model can act on -- "run ruby_native login",
-      # "this server does not serve that yet" -- because an agent that gets an
-      # exception learns nothing it can fix, and a server that cannot be
-      # reached is an answer rather than a crash.
+      # Nothing here raises. Every failure comes back as a Result the callers
+      # turn into something a person or a model can act on -- "run ruby_native
+      # login", "this app is blocked by these things" -- because an agent that
+      # gets an exception learns nothing it can fix, and a server that cannot
+      # be reached is an answer rather than a crash.
       class Platform
         HOST = ENV.fetch("RUBY_NATIVE_HOST", "https://rubynative.com")
         CONFIG_PATH = "config/ruby_native.yml".freeze
         TIMEOUT = 10
+        # Icons and captures take longer than a status read.
+        WRITE_TIMEOUT = 60
 
         NOT_LOGGED_IN = "Not logged in to Ruby Native. Run `ruby_native login` on this machine, " \
                         "or set RUBY_NATIVE_TOKEN.".freeze
         NO_APP_ID = "No app is linked to this project. Run `ruby_native deploy` once to link it, which writes " \
                     "`ruby_native.app_id` into #{CONFIG_PATH}, or pass `app_id` to this tool.".freeze
 
-        Result = Struct.new(:value, :error, :status, keyword_init: true) do
+        # `body` is the parsed error response, when there was one: the API
+        # explains a refusal with `blocked_by` (the blockers contract) or
+        # `errors` (a validation failure), and both are worth more than the
+        # status code.
+        Result = Struct.new(:value, :error, :status, :body, keyword_init: true) do
           def ok?
             error.nil?
           end
@@ -34,19 +40,52 @@ module RubyNative
           def not_found?
             status == 404
           end
+
+          def blocked_by
+            list = body.is_a?(Hash) ? body["blocked_by"] : nil
+            list.is_a?(Array) ? list : []
+          end
+
+          def field_errors
+            errors = body.is_a?(Hash) ? body["errors"] : nil
+            errors.is_a?(Hash) ? errors : {}
+          end
         end
 
         def self.get(path)
+          request(Net::HTTP::Get, path)
+        end
+
+        def self.patch(path, json)
+          request(Net::HTTP::Patch, path, json: json, timeout: WRITE_TIMEOUT)
+        end
+
+        def self.post(path, json = nil)
+          request(Net::HTTP::Post, path, json: json, timeout: WRITE_TIMEOUT)
+        end
+
+        def self.put_file(path, field:, file:, content_type:)
+          request(Net::HTTP::Put, path, timeout: WRITE_TIMEOUT) do |req|
+            req.set_form([ [ field, File.open(file, "rb"), { filename: File.basename(file), content_type: content_type } ] ], "multipart/form-data")
+          end
+        end
+
+        def self.request(klass, path, json: nil, timeout: TIMEOUT)
           token = Credentials.token
           return Result.new(error: NOT_LOGGED_IN) unless token
 
           uri = URI("#{HOST}#{path}")
-          request = Net::HTTP::Get.new(uri)
-          request["Authorization"] = "Token #{token}"
+          req = klass.new(uri)
+          req["Authorization"] = "Token #{token}"
+          if json
+            req["Content-Type"] = "application/json"
+            req.body = JSON.generate(json)
+          end
+          yield req if block_given?
 
           response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: uri.scheme == "https",
-            open_timeout: TIMEOUT, read_timeout: TIMEOUT) do |http|
-            http.request(request)
+            open_timeout: TIMEOUT, read_timeout: timeout) do |http|
+            http.request(req)
           end
 
           interpret(response)
@@ -82,19 +121,18 @@ module RubyNative
           when Net::HTTPNotFound
             Result.new(error: "#{HOST} returned 404.", status: 404)
           else
-            Result.new(error: "#{HOST} returned #{response.code}#{api_error(response)}.", status: response.code.to_i)
+            parsed = parse(body_of(response))
+            message = parsed.is_a?(Hash) && parsed["error"] ? parsed["error"] : "#{HOST} returned #{response.code}."
+            Result.new(error: message, status: response.code.to_i, body: parsed)
           end
         rescue JSON::ParserError
           Result.new(error: "#{HOST} returned a response that is not JSON.", status: response.code.to_i)
         end
 
-        # The API reports its own failures as {"error": "..."}, which says more
-        # than the status code does.
-        def self.api_error(response)
-          message = JSON.parse(body_of(response))["error"]
-          message ? ": #{message}" : ""
+        def self.parse(body)
+          JSON.parse(body)
         rescue JSON::ParserError, TypeError
-          ""
+          nil
         end
 
         # A body that was never read raises instead of coming back empty, and a
@@ -106,7 +144,7 @@ module RubyNative
         rescue IOError
           ""
         end
-        private_class_method :interpret, :api_error, :body_of
+        private_class_method :interpret, :parse, :body_of
       end
     end
   end
