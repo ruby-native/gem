@@ -54,7 +54,7 @@ module RubyNative
         lines << "#{status["name"]} (#{status["public_id"]}) · #{status["url"]}"
         lines << "Dashboard: #{status["dashboard_url"]}" if status["dashboard_url"]
         lines << ""
-        lines << "iOS: #{track_summary(ios, store: "App Store")}"
+        lines << "iOS: #{track_summary(ios, store: "the App Store")}"
         lines << "Android: #{track_summary(android, store: "Google Play")}"
         lines << "Subscription: #{subscription_summary(subscription)}"
         lines << ""
@@ -67,7 +67,7 @@ module RubyNative
         parts = [ track["setup"] ]
         build = track["latest_build"]
         parts << (build ? "build #{build["number"]} (#{build["version"]}) #{build["status"]}" : "no build yet")
-        parts << (track["live"] ? "live on the #{store}" : "not on the #{store}")
+        parts << (track["live"] ? "live on #{store}" : "not on #{store}")
         parts.compact.join(" · ")
       end
 

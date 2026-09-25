@@ -9,7 +9,7 @@ class StatusTest < Minitest::Test
     assert_match "Trailhead (app_1) · https://trailhead.app", report
     assert_match "Dashboard: https://rubynative.com/apps/1", report
     assert_match "iOS: Setup complete · build 12 (1.0.0) ready · not on the App Store", report
-    assert_match "Android: Play developer account · no build yet · not on the Google Play", report
+    assert_match "Android: Play developer account · no build yet · not on Google Play", report
     assert_match "Subscription: Launch, active", report
     assert_match "Before submitting, 2 things need doing:", report
   end
