@@ -189,9 +189,11 @@ module RubyNative
         {
           name: "permissions_set",
           description: "Set the sentence iOS shows when the app first asks for the camera, the microphone, or the " \
-                       "photo library. Say what the app does with it, in the user's words. These land in Info.plist, " \
-                       "so a change ships with the next `ruby_native deploy`, not the next Rails deploy. Send only " \
-                       "the ones to change; an empty string removes one. Reaches rubynative.com and needs `ruby_native login`.",
+                       "photo library. Say what the app does with it, in the user's words. The same three strings decide " \
+                       "which permissions the Android manifest declares, so setting one turns the feature on for both " \
+                       "stores. They land in Info.plist and the manifest, so a change ships with the next " \
+                       "`ruby_native deploy`, not the next Rails deploy. Send only the ones to change; an empty string " \
+                       "removes one. Reaches rubynative.com and needs `ruby_native login`.",
           inputSchema: {
             type: "object",
             properties: {
