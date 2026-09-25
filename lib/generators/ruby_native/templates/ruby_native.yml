@@ -93,12 +93,11 @@ appearance:
 tabs:
   # Icons are SF Symbols on iOS and Material Icons on Android.
   # https://rubynative.com/docs/icons
-  - title: Home
-    path: /
-    icon: house
-  - title: Profile
-    path: /profile
-    icon: person
+<% @tabs.each do |tab| -%>
+  - title: <%= tab[:title] %>
+    path: <%= tab[:path] %>
+    icon: <%= tab[:icon] %>
+<% end -%>
 
   # Per-tab options (add to any tab above):
   #

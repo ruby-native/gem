@@ -247,9 +247,36 @@ module RubyNative
         {
           protocolVersion: PROTOCOL_VERSIONS.include?(requested) ? requested : PROTOCOL_VERSION,
           capabilities: { tools: {} },
-          serverInfo: { name: "ruby_native", version: RubyNative::VERSION }
+          serverInfo: { name: "ruby_native", version: RubyNative::VERSION },
+          instructions: INSTRUCTIONS
         }
       end
+
+      # What a client hands the model about this server. "Set up Ruby Native in
+      # this app" has to be answerable from here plus the docs, so the setup
+      # steps and the rules of the road are stated once, in the handshake.
+      INSTRUCTIONS = <<~TEXT.strip
+        Ruby Native turns this Rails app into an iOS and Android app. The native shell loads the site
+        in web views and reads `data-native-*` attributes (signals) from the HTML to render native
+        tabs, buttons, forms, and more. `config/ruby_native.yml` configures the shell and is fetched
+        by the app on every launch, so config changes ship with a Rails deploy and need no rebuild.
+
+        Setting up: (1) `config/ruby_native.yml` exists; edit tabs so every path is one the app routes.
+        (2) In the layout <head>, add `<%= stylesheet_link_tag :ruby_native %>` and put
+        `viewport-fit=cover` in the viewport meta tag. (3) In the layout <body>, add
+        `<%= native_tabs_tag %>` and `<%= native_identity_tag(current_user&.id) %>`.
+        (4) Run `validate_config` and `check_views`, then `bundle exec ruby_native preview` to see it
+        on a phone. Full docs: https://rubynative.com/llms.txt (index) and llms-full.txt (everything).
+
+        Signals fail silently: an attribute the app does not know is ignored with no error anywhere.
+        Call `lookup_signals` before writing one and `check_views` after editing any view.
+
+        `status` reports where the app is on the way to the store and a `blocked_by` list. A blocker
+        whose `who` is `human` is a step only a person can take (pay, create the App Store Connect
+        record, answer a questionnaire Apple has no API for). Stop, show them the steps and the URL,
+        and read `status` again when they say it is done. Never claim a `verifiable: false` blocker is
+        cleared: only the person can, on the dashboard.
+      TEXT
 
       def call(params)
         name = params["name"]

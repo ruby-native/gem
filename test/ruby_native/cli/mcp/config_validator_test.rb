@@ -1,4 +1,5 @@
 require "minitest/autorun"
+require "erb"
 require "fileutils"
 require "tmpdir"
 require "ruby_native/cli/mcp/config_validator"
@@ -25,8 +26,10 @@ class ConfigValidatorTest < Minitest::Test
   # file it has not touched yet.
   def test_the_file_the_install_generator_writes_passes
     template = File.expand_path("../../../../lib/generators/ruby_native/templates/ruby_native.yml", __dir__)
+    @tabs = [ { title: "Home", path: "/", icon: "house" }, { title: "Profile", path: "/profile", icon: "person" } ]
+    written = ERB.new(File.read(template), trim_mode: "-").result(binding)
 
-    assert_empty validate(File.read(template))
+    assert_empty validate(written)
   end
 
   def test_a_missing_file_says_how_to_make_one

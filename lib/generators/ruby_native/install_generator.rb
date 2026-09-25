@@ -5,7 +5,44 @@ module RubyNative
 
       desc "Creates a Ruby Native config file at config/ruby_native.yml"
 
+      # The tab bar only appears with two or more tabs (the shell hides it
+      # otherwise), and a tab pointing at a path the app does not route 404s
+      # on first launch. Both failures land in the first five minutes, so tabs
+      # come from the app's own routes, and only from routes that exist.
+      MAX_TABS = 4
+
+      # Route segments that are never a tab: auth, framework, and Ruby Native's
+      # own mounts.
+      SKIPPED_SEGMENTS = %w[
+        rails up cable native assets manifest service-worker pwa admin api webhooks
+        session sessions sign_in sign_up signin signup login logout password passwords
+        registration registrations users auth oauth
+      ].freeze
+
+      TAB_ICONS = {
+        "" => "house",
+        "home" => "house",
+        "dashboard" => "house",
+        "profile" => "person",
+        "account" => "person",
+        "me" => "person",
+        "settings" => "gear",
+        "preferences" => "gear",
+        "inbox" => "envelope",
+        "messages" => "envelope",
+        "notifications" => "bell",
+        "search" => "magnifyingglass",
+        "calendar" => "calendar",
+        "events" => "calendar",
+        "orders" => "shippingbox",
+        "favorites" => "star",
+        "bookmarks" => "star"
+      }.freeze
+
+      DEFAULT_ICON = "list.bullet".freeze
+
       def copy_config
+        @tabs = proposed_tabs
         template "ruby_native.yml", "config/ruby_native.yml"
       end
 
@@ -41,23 +78,72 @@ module RubyNative
 
       def print_next_steps
         say ""
-        say "Ruby Native installed! Next steps:", :green
+        say "Ruby Native installed.", :green
         say ""
-        say "  1. Edit config/ruby_native.yml with your app name, colors, and tabs"
-        say "  2. Add to your layout <head>:"
-        say "       <%= stylesheet_link_tag :ruby_native %>"
-        say "  3. Add viewport-fit=cover to your viewport meta tag:"
-        say "       <meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">"
-        say "  4. Add to your layout <body>:"
-        say "       <%= native_tabs_tag %>"
-        say "       <%= native_identity_tag(current_user&.id) %>"
-        say "  5. Preview on your device:"
-        say "       bundle exec ruby_native preview"
+        say "  Tabs, from your routes: #{@tabs.map { |tab| "#{tab[:path]} (#{tab[:title]})" }.join(", ")}"
+        if @tabs.size < 2
+          say "  The tab bar stays hidden until config/ruby_native.yml has a second tab.", :yellow
+        else
+          say "  Change them in config/ruby_native.yml."
+        end
+        say ""
+        say "Point your agent at it:", :green
+        say ""
+        say "    bundle exec ruby_native mcp install"
+        say ""
+        say "Then say: set up Ruby Native in this app"
+        say ""
+        say "Or by hand:"
+        say "  1. Add <%= stylesheet_link_tag :ruby_native %> to your layout <head>"
+        say "  2. Add viewport-fit=cover to your viewport meta tag"
+        say "  3. Add <%= native_tabs_tag %> and <%= native_identity_tag(current_user&.id) %> to your layout <body>"
+        say "  4. Preview on your phone: bundle exec ruby_native preview"
         say ""
         say "  Docs: https://rubynative.com/docs"
-        say "  AI agents: fetch https://rubynative.com/llms.txt for a docs index,"
-        say "  or https://rubynative.com/llms-full.txt for the full docs as plain text."
+        say "  Agents: https://rubynative.com/llms.txt for a docs index, llms-full.txt for all of it as plain text"
         say ""
+      end
+
+      private
+
+      def proposed_tabs
+        paths = routable_paths
+        paths = [ "/" ] if paths.empty?
+
+        paths.first(MAX_TABS).map do |path|
+          segment = path.delete_prefix("/")
+          { title: title_for(segment), path: path, icon: TAB_ICONS.fetch(segment, DEFAULT_ICON) }
+        end
+      end
+
+      # Static, single-segment GET routes, root first, in the order the routes
+      # file declares them. Anything with a parameter, a glob, or a second
+      # segment is a page you reach from a tab, not a tab.
+      def routable_paths
+        paths = Rails.application.routes.routes.filter_map do |route|
+          next if route.respond_to?(:internal) && route.internal
+          next unless route.verb.to_s.match?(/\bGET\b/)
+
+          path = route.path.spec.to_s.sub(/\(\.:format\)\z/, "")
+          next unless path.start_with?("/")
+          next if path.match?(/[:*]/)
+
+          segments = path.delete_prefix("/").split("/")
+          next if segments.size > 1
+          next if SKIPPED_SEGMENTS.include?(segments.first)
+
+          path
+        end.uniq
+
+        paths.partition { |path| path == "/" }.flatten
+      rescue StandardError
+        []
+      end
+
+      def title_for(segment)
+        return "Home" if segment.empty?
+
+        segment.tr("_-", "  ").split.map(&:capitalize).join(" ")
       end
     end
   end

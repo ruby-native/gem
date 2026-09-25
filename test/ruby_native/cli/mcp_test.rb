@@ -25,6 +25,17 @@ class McpTest < Minitest::Test
     assert_equal RubyNative::CLI::Mcp::PROTOCOL_VERSION, result["protocolVersion"]
   end
 
+  # A client hands these to the model, so "set up Ruby Native in this app" is
+  # answerable from the handshake plus the docs it points at.
+  def test_initialize_carries_instructions_for_the_model
+    instructions = request("initialize", { "protocolVersion" => "2025-06-18" })["result"]["instructions"]
+
+    assert_match "stylesheet_link_tag :ruby_native", instructions
+    assert_match "native_tabs_tag", instructions
+    assert_match "llms.txt", instructions
+    assert_match "`who` is `human`", instructions
+  end
+
   def test_a_notification_gets_no_reply
     assert_empty exchange(%({"jsonrpc":"2.0","method":"notifications/initialized"}))
   end

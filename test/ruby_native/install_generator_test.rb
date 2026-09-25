@@ -1,6 +1,7 @@
 require "test_helper"
 require "rails/generators/test_case"
 require "generators/ruby_native/install_generator"
+require "yaml"
 
 class RubyNative::Generators::InstallGeneratorTest < Rails::Generators::TestCase
   tests RubyNative::Generators::InstallGenerator
@@ -60,7 +61,94 @@ class RubyNative::Generators::InstallGeneratorTest < Rails::Generators::TestCase
     assert_file "config/ruby_native.yml"
   end
 
+  # --- Tabs from routes ---
+
+  def test_writes_tabs_for_the_routes_the_app_actually_has
+    with_routes do
+      root "pages#home"
+      get "/profile", to: "pages#profile"
+      get "/sign_in", to: "sessions#new"
+      get "/settings", to: "pages#settings"
+      resources :posts
+    end
+
+    output = run_generator
+
+    assert_file "config/ruby_native.yml" do |config|
+      tabs = YAML.safe_load(config)["tabs"]
+      assert_equal [ "/", "/profile", "/settings", "/posts" ], tabs.map { |tab| tab["path"] }
+      assert_equal [ "Home", "Profile", "Settings", "Posts" ], tabs.map { |tab| tab["title"] }
+      assert_equal [ "house", "person", "gear", "list.bullet" ], tabs.map { |tab| tab["icon"] }
+    end
+    assert_includes output, "Tabs, from your routes: / (Home), /profile (Profile), /settings (Settings), /posts (Posts)"
+    assert_includes output, "bundle exec ruby_native mcp install"
+    assert_includes output, "Then say: set up Ruby Native in this app"
+  end
+
+  def test_puts_root_first_and_skips_parameterized_and_nested_paths
+    with_routes do
+      get "/orders", to: "orders#index"
+      get "/orders/:id", to: "orders#show"
+      get "/account/billing", to: "billing#show"
+      get "/files/*path", to: "files#show"
+      root "pages#home"
+    end
+
+    run_generator
+
+    assert_file "config/ruby_native.yml" do |config|
+      assert_equal [ "/", "/orders" ], YAML.safe_load(config)["tabs"].map { |tab| tab["path"] }
+    end
+  end
+
+  def test_caps_the_tabs_and_gives_unknown_pages_a_neutral_icon
+    with_routes do
+      root "pages#home"
+      %w[alpha beta gamma delta epsilon].each { |name| get "/#{name}", to: "pages##{name}" }
+    end
+
+    run_generator
+
+    assert_file "config/ruby_native.yml" do |config|
+      tabs = YAML.safe_load(config)["tabs"]
+      assert_equal 4, tabs.size
+      assert_equal "list.bullet", tabs.last["icon"]
+      assert_equal "Gamma", tabs.last["title"]
+    end
+  end
+
+  # A tab that 404s is worse than no tab, and the shell hides the bar below
+  # two tabs, so the generator says so rather than inventing a page.
+  def test_writes_only_the_root_when_nothing_else_is_routable_and_says_the_bar_is_hidden
+    with_routes { root "pages#home" }
+
+    output = run_generator
+
+    assert_file "config/ruby_native.yml" do |config|
+      assert_equal [ "/" ], YAML.safe_load(config)["tabs"].map { |tab| tab["path"] }
+    end
+    assert_includes output, "The tab bar stays hidden until config/ruby_native.yml has a second tab."
+  end
+
+  def test_falls_back_to_the_root_when_routes_cannot_be_read
+    with_routes {}
+
+    run_generator
+
+    assert_file "config/ruby_native.yml" do |config|
+      assert_equal [ "/" ], YAML.safe_load(config)["tabs"].map { |tab| tab["path"] }
+    end
+  end
+
   private
+
+  def with_routes(&block)
+    Rails.application.routes.draw(&block)
+  end
+
+  def teardown
+    Rails.application.routes.draw {}
+  end
 
   def write_dev_config(contents)
     dir = File.join(destination_root, "config/environments")
