@@ -128,7 +128,7 @@ Or, in a client that takes JSON:
 }
 ```
 
-The rest stage things with Ruby Native and reach Apple only on a build or a click on the dashboard: `permissions_set`, `testers_add`, `icon_set`, `screenshots_setup`, `screenshots_capture`, `listing_push`, `listing_pull`, and `demo_account_set`, each the same as its CLI command. Nothing here deploys or submits. The first three tools never leave your machine; the rest send your CLI token to rubynative.com. `check_views` needs the `herb` gem, same as `ruby_native check`.
+The rest stage things with Ruby Native and reach Apple only on a build or a click on the dashboard: `permissions_set`, `testers_add`, `icon_set`, `screenshots_setup`, `screenshots_capture`, `listing_push`, `listing_pull`, and `demo_account_set`, each the same as its CLI command. `submit` is the one tool that reaches Apple on its own: it takes two calls with a token in between, so the agent has to show you what is going before it can send it, and `withdraw` takes it back out of the queue until Apple approves. The first three tools never leave your machine; the rest send your CLI token to rubynative.com. `check_views` needs the `herb` gem, same as `ruby_native check`.
 
 ## License
 

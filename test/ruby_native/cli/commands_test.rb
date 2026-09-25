@@ -6,6 +6,8 @@ require "ruby_native/cli/icon"
 require "ruby_native/cli/listing"
 require "ruby_native/cli/permissions"
 require "ruby_native/cli/screenshots"
+require "ruby_native/cli/submit"
+require "stringio"
 require "ruby_native/cli/testers"
 
 # The CLI verbs the MCP server wraps. Each is checked here at the seam the
@@ -228,6 +230,43 @@ class CommandsTest < Minitest::Test
 
     assert_equal({ demo_account: { name: "reviewer@example.com", required: true, password: "hunter2" } }, sent)
     assert_match "Demo account reviewer@example.com saved. It reaches App Store Connect when the listing is published.", outcome.text
+  end
+
+  # --- submit ---
+
+  def test_submit_asks_before_sending_and_stops_on_anything_but_yes
+    preview = ok("summary" => "Submit Trailhead 1.0 for review.", "confirmation_token" => "tok")
+    posts = []
+    with_stub(Platform, :app_id, ->(*) { "app_1" }) do
+      with_stub(RubyNative::CLI::Credentials, :token, ->(*) { "t" }) do
+        with_stub(Platform, :post, ->(_path, json = nil) { posts << json; preview }) do
+          $stdin = StringIO.new("no\n")
+          out, _err = capture_io { assert_raises(SystemExit) { RubyNative::CLI::Submit.new([]).run } }
+
+          assert_match "Submit Trailhead 1.0 for review.", out
+          assert_match "Not submitted.", out
+          assert_equal [ nil ], posts
+        ensure
+          $stdin = STDIN
+        end
+      end
+    end
+  end
+
+  def test_submit_with_yes_sends_the_token_from_the_preview
+    preview = ok("summary" => "Submit Trailhead 1.0 for review.", "confirmation_token" => "tok")
+    done = ok("note" => "Submitted for App Store review.")
+    posts = []
+    with_stub(Platform, :app_id, ->(*) { "app_1" }) do
+      with_stub(RubyNative::CLI::Credentials, :token, ->(*) { "t" }) do
+        with_stub(Platform, :post, ->(_path, json = nil) { posts << json; posts.size == 1 ? preview : done }) do
+          out, _err = capture_io { RubyNative::CLI::Submit.new([ "--yes" ]).run }
+
+          assert_match "Submitted for App Store review.", out
+          assert_equal [ nil, { confirmation_token: "tok" } ], posts
+        end
+      end
+    end
   end
 
   private

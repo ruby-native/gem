@@ -39,7 +39,7 @@ class CliTest < Minitest::Test
   def test_usage_lists_the_staging_commands
     out, _err = capture_io { RubyNative::CLI.start([]) }
 
-    %w[demo_account icon listing permissions screenshots testers].each { |command| assert_match(/^  #{command} /, out) }
+    %w[demo_account icon listing permissions screenshots submit testers withdraw].each { |command| assert_match(/^  #{command} /, out) }
   end
 
   # Customers should never see a raw backtrace; a one-line report with the

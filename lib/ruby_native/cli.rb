@@ -11,6 +11,7 @@ require "ruby_native/cli/permissions"
 require "ruby_native/cli/preview"
 require "ruby_native/cli/screenshots"
 require "ruby_native/cli/status"
+require "ruby_native/cli/submit"
 require "ruby_native/cli/testers"
 
 module RubyNative
@@ -34,6 +35,10 @@ module RubyNative
         end
       when "status"
         RubyNative::CLI::Status.new(argv).run
+      when "submit"
+        RubyNative::CLI::Submit.new(argv).run
+      when "withdraw"
+        RubyNative::CLI::Withdraw.new(argv).run
       when "logout"
         RubyNative::CLI::Credentials.clear
         puts "Logged out of Ruby Native."
@@ -93,8 +98,11 @@ module RubyNative
       puts "    setup              Generate the key, and set the pages with --paths=/a,/b,/c"
       puts "    capture            Capture App Store screenshots against the deployed site (--android for Play)"
       puts "  status        Where the app is, what is next, and what is in the way"
+      puts "  submit        Show exactly what would go to App Store review, then ask before sending it"
+      puts "    --yes              Skip the question"
       puts "  testers       List the TestFlight testers"
       puts "    add EMAIL          Invite a team member to TestFlight"
+      puts "  withdraw      Take the app back out of the review queue. Works until Apple approves it"
     end
   end
 end

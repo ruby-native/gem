@@ -41,7 +41,7 @@ class McpTest < Minitest::Test
   end
 
   READ_TOOLS = %w[build_status check_views config_errors deployed_builds lookup_signals screenshots_list status testers_list validate_config].freeze
-  WRITE_TOOLS = %w[demo_account_set icon_set listing_pull listing_push permissions_set screenshots_capture screenshots_setup testers_add].freeze
+  WRITE_TOOLS = %w[demo_account_set icon_set listing_pull listing_push permissions_set screenshots_capture screenshots_setup submit testers_add withdraw].freeze
 
   def test_tools_list_names_every_tool_and_says_which_ones_write
     tools = request("tools/list")["result"]["tools"]
@@ -53,11 +53,13 @@ class McpTest < Minitest::Test
       refute_empty tool["description"].to_s
       assert_equal "object", tool.dig("inputSchema", "type")
     end
-    (WRITE_TOOLS - %w[listing_pull]).each do |name|
+    (WRITE_TOOLS - %w[listing_pull submit]).each do |name|
       tool = tools.find { |t| t["name"] == name }
       refute tool.dig("annotations", "destructiveHint"), "#{name} stages data with rubynative.com and destroys nothing"
     end
     assert tools.find { |t| t["name"] == "listing_pull" }.dig("annotations", "destructiveHint"), "listing_pull overwrites a file"
+    assert tools.find { |t| t["name"] == "submit" }.dig("annotations", "destructiveHint"), "submit reaches Apple"
+    assert_match(/submits NOTHING/, tools.find { |t| t["name"] == "submit" }["description"])
   end
 
   # A client decides whether a call needs asking about partly on this, and
@@ -497,6 +499,43 @@ class McpTest < Minitest::Test
 
     assert result["isError"]
     assert_match "subtitle is 31 characters, the limit is 30", text(result)
+  end
+
+  # --- submit and withdraw ---
+
+  def test_submit_without_a_token_previews_and_submits_nothing
+    sent = nil
+    answer = ok("submitted" => false, "summary" => "Submit Trailhead 1.0 (build 42) for App Store review.", "confirmation_token" => "tok")
+    result = with_stub(RubyNative::CLI::Mcp::Platform, :post, ->(_path, json = nil) { sent = json; answer }) do
+      call("submit", "app_id" => "app_1")
+    end
+
+    assert_nil sent
+    assert_match "Submit Trailhead 1.0 (build 42) for App Store review.", text(result)
+    assert_equal "tok", result.dig("structuredContent", "confirmation_token")
+    refute result["isError"]
+  end
+
+  def test_submit_with_the_token_submits
+    sent = nil
+    answer = ok("submitted" => true, "note" => "Submitted for App Store review.")
+    result = with_stub(RubyNative::CLI::Mcp::Platform, :post, ->(_path, json = nil) { sent = json; answer }) do
+      call("submit", "confirmation_token" => "tok", "app_id" => "app_1")
+    end
+
+    assert_equal({ confirmation_token: "tok" }, sent)
+    assert_match "Submitted for App Store review.", text(result)
+  end
+
+  def test_withdraw_deletes_the_submission
+    asked = nil
+    answer = ok("withdrawn" => true, "note" => "Withdrawn from review.")
+    result = with_stub(RubyNative::CLI::Mcp::Platform, :request, ->(klass, path, **) { asked = [ klass, path ]; answer }) do
+      call("withdraw", "app_id" => "app_1")
+    end
+
+    assert_equal [ Net::HTTP::Delete, "/api/v1/apps/app_1/submission" ], asked
+    assert_match "Withdrawn from review.", text(result)
   end
 
   # --- deployed_builds ---

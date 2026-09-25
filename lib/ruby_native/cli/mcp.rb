@@ -8,6 +8,7 @@ require "ruby_native/cli/listing"
 require "ruby_native/cli/permissions"
 require "ruby_native/cli/screenshots"
 require "ruby_native/cli/status"
+require "ruby_native/cli/submit"
 require "ruby_native/cli/testers"
 require "ruby_native/signals"
 require "ruby_native/version"
@@ -340,6 +341,38 @@ module RubyNative
             additionalProperties: false
           },
           annotations: { title: "Set the demo account", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
+        },
+        {
+          name: "submit",
+          description: "Submit the app for App Store review, in two calls. Without `confirmation_token` it submits " \
+                       "NOTHING: it returns the exact listing, build, and checklist that would go to Apple, as a " \
+                       "summary written to be read aloud, plus a token that expires in ten minutes. Show the person " \
+                       "that summary and get their explicit yes before calling again with the token. Only then does " \
+                       "it submit. Until Apple approves, `withdraw` takes it back out of the queue. Reaches " \
+                       "rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              confirmation_token: { type: "string", description: "The token from the previous call, after the person said yes." },
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Submit for review", readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true }
+        },
+        {
+          name: "withdraw",
+          description: "Take the app back out of the App Store review queue. Works from submission until Apple " \
+                       "approves it; after release there is nothing to withdraw. Costs a place in the queue and " \
+                       "nothing else. Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Withdraw from review", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
         }
       ].freeze
 
@@ -465,6 +498,12 @@ module RubyNative
           when "screenshots_setup" then with_app(arguments) { |app_id| Screenshots.setup(app_id, paths: string_list(arguments["paths"], "paths") || [], rotate_key: arguments["rotate_key"] == true) }
           when "screenshots_capture" then with_app(arguments) { |app_id| Screenshots.capture(app_id, platform: arguments["platform"] || "ios") }
           when "screenshots_list" then with_app(arguments) { |app_id| Screenshots.list(app_id) }
+          when "submit"
+            with_app(arguments) do |app_id|
+              token = arguments["confirmation_token"]
+              token.to_s.strip.empty? ? Submit.preview(app_id) : Submit.submit(app_id, token.to_s.strip)
+            end
+          when "withdraw" then with_app(arguments) { |app_id| Submit.withdraw(app_id) }
           when "listing_push" then with_app(arguments) { |app_id| Listing.push(app_id) }
           when "listing_pull" then with_app(arguments) { |app_id| Listing.pull(app_id) }
           when "demo_account_set"
