@@ -1,7 +1,9 @@
 require "minitest/autorun"
 require "json"
 require "tmpdir"
+require "ruby_native/cli/demo_account"
 require "ruby_native/cli/icon"
+require "ruby_native/cli/listing"
 require "ruby_native/cli/permissions"
 require "ruby_native/cli/screenshots"
 require "ruby_native/cli/testers"
@@ -140,7 +142,97 @@ class CommandsTest < Minitest::Test
     assert_match "Publish them to the stores from https://rubynative.com/apps/1/screenshots.", outcome.text
   end
 
+  # --- listing ---
+
+  def test_listing_pull_writes_the_file_in_the_documented_order
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        listing = { "name" => "Trailhead", "description" => "Hikes.\nOffline.", "keywords" => "hiking,trail", "subtitle" => nil, "primary_category" => "Lifestyle", "promotional_text" => "Now: offline maps" }
+        outcome = with_get(ok("listing" => listing)) { RubyNative::CLI::Listing.pull("app_1") }
+
+        assert outcome.ok
+        written = File.read("config/ruby_native_listing.yml")
+        assert_equal <<~YAML, written
+          # App Store listing. `ruby_native listing push` saves it to Ruby Native;
+          # publishing to App Store Connect is a separate step.
+
+          name: Trailhead
+          primary_category: Lifestyle
+          keywords: hiking,trail
+          promotional_text: "Now: offline maps"
+          description: |-
+            Hikes.
+            Offline.
+        YAML
+        assert_equal listing.compact, YAML.safe_load(written).slice(*listing.keys)
+      end
+    end
+  end
+
+  def test_listing_push_interpolates_erb_and_reports_missing_file
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        outcome = RubyNative::CLI::Listing.push("app_1")
+        refute outcome.ok
+        assert_match "No config/ruby_native_listing.yml.", outcome.text
+
+        Dir.mkdir("config")
+        File.write("config/ruby_native_listing.yml", "name: <%= 'Trail' + 'head' %>\n")
+        sent = nil
+        answer = ok("changed" => [ "name" ], "missing" => [])
+        with_patch_capture(->(json) { sent = json; answer }) { RubyNative::CLI::Listing.push("app_1") }
+        assert_equal "Trailhead", sent[:listing]["name"]
+      end
+    end
+  end
+
+  def test_listing_publish_pushes_first_and_stops_when_the_push_fails
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        File.write("config/ruby_native_listing.yml", "name: #{"n" * 31}\n")
+        posted = false
+        empty = ok({})
+        outcome = with_stub(Platform, :post, ->(*) { posted = true; empty }) { RubyNative::CLI::Listing.publish("app_1") }
+
+        refute outcome.ok
+        refute posted
+      end
+    end
+  end
+
+  def test_listing_publish_relays_the_server_note
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        File.write("config/ruby_native_listing.yml", "name: Trailhead\n")
+        pushed = ok("changed" => [], "missing" => [])
+        published = ok("note" => "The listing is on App Store Connect for version 1.0.")
+        outcome = with_patch(pushed) { with_post(published) { RubyNative::CLI::Listing.publish("app_1") } }
+
+        assert outcome.ok
+        assert_equal "The listing is on App Store Connect for version 1.0.", outcome.text
+      end
+    end
+  end
+
+  # --- demo account ---
+
+  def test_demo_account_set_sends_only_what_was_given
+    sent = nil
+    answer = ok("demo_account" => { "name" => "reviewer@example.com", "password_set" => true })
+    outcome = with_patch_capture(->(json) { sent = json; answer }) do
+      RubyNative::CLI::DemoAccount.set("app_1", name: "reviewer@example.com", password: "hunter2")
+    end
+
+    assert_equal({ demo_account: { name: "reviewer@example.com", required: true, password: "hunter2" } }, sent)
+    assert_match "Demo account reviewer@example.com saved. It reaches App Store Connect when the listing is published.", outcome.text
+  end
+
   private
+
+  def with_patch_capture(capture, &block) = with_stub(Platform, :patch, ->(_path, json) { capture.call(json) }, &block)
 
   def ok(value)
     Platform::Result.new(value: value, status: 200)

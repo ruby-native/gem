@@ -2,7 +2,9 @@ require "json"
 require "ruby_native/cli/check"
 require "ruby_native/cli/mcp/config_validator"
 require "ruby_native/cli/mcp/platform"
+require "ruby_native/cli/demo_account"
 require "ruby_native/cli/icon"
+require "ruby_native/cli/listing"
 require "ruby_native/cli/permissions"
 require "ruby_native/cli/screenshots"
 require "ruby_native/cli/status"
@@ -290,6 +292,54 @@ module RubyNative
             additionalProperties: false
           },
           annotations: { title: "List screenshots", readOnlyHint: true, openWorldHint: true }
+        },
+        {
+          name: "listing_push",
+          description: "Save config/ruby_native_listing.yml to Ruby Native as the App Store listing draft. Write the " \
+                       "file first: name (30), subtitle (30), keywords (100, comma separated, no spaces), " \
+                       "promotional_text (170), description (4000), privacy_policy_url, primary_category and " \
+                       "secondary_category from Apple's list. Nothing reaches Apple: a person publishes it. " \
+                       "Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Push the listing", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
+        },
+        {
+          name: "listing_pull",
+          description: "Write config/ruby_native_listing.yml from the listing Ruby Native holds, so a draft made on " \
+                       "the dashboard can be edited in the repo. Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Pull the listing", readOnlyHint: false, destructiveHint: true, idempotentHint: true, openWorldHint: true }
+        },
+        {
+          name: "demo_account_set",
+          description: "Stage the sign-in App Review uses to get past the app's login: an account that exists on " \
+                       "the production site. It reaches App Store Connect when the listing is published. Keep it " \
+                       "out of the listing file, which is committed. Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "The username or email the reviewer signs in with." },
+              password: { type: "string", description: "Its password." },
+              notes: { type: "string", description: "Anything the reviewer needs to know to reach the app's features." },
+              required: { type: "boolean", description: "Whether the app needs a sign-in at all. Defaults to true." },
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            required: [ "name" ],
+            additionalProperties: false
+          },
+          annotations: { title: "Set the demo account", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
         }
       ].freeze
 
@@ -415,6 +465,13 @@ module RubyNative
           when "screenshots_setup" then with_app(arguments) { |app_id| Screenshots.setup(app_id, paths: string_list(arguments["paths"], "paths") || [], rotate_key: arguments["rotate_key"] == true) }
           when "screenshots_capture" then with_app(arguments) { |app_id| Screenshots.capture(app_id, platform: arguments["platform"] || "ios") }
           when "screenshots_list" then with_app(arguments) { |app_id| Screenshots.list(app_id) }
+          when "listing_push" then with_app(arguments) { |app_id| Listing.push(app_id) }
+          when "listing_pull" then with_app(arguments) { |app_id| Listing.pull(app_id) }
+          when "demo_account_set"
+            with_app(arguments) do |app_id|
+              DemoAccount.set(app_id, name: string!(arguments, "name"), password: arguments["password"], notes: arguments["notes"],
+                required: arguments.fetch("required", true) == true)
+            end
           else raise ToolFailure, "Unknown tool: #{name.inspect}. Call tools/list for the ones this server has."
           end
         end

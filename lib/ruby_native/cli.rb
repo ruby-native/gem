@@ -1,7 +1,9 @@
 require "ruby_native/cli/check"
 require "ruby_native/cli/credentials"
+require "ruby_native/cli/demo_account"
 require "ruby_native/cli/deploy"
 require "ruby_native/cli/icon"
+require "ruby_native/cli/listing"
 require "ruby_native/cli/login"
 require "ruby_native/cli/mcp"
 require "ruby_native/cli/mcp/install"
@@ -43,6 +45,10 @@ module RubyNative
         RubyNative::CLI::Testers.new(argv).run
       when "icon"
         RubyNative::CLI::Icon.new(argv).run
+      when "listing"
+        RubyNative::CLI::Listing.new(argv).run
+      when "demo_account"
+        RubyNative::CLI::DemoAccount.new(argv).run
       when nil
         print_usage
       else
@@ -65,6 +71,7 @@ module RubyNative
       puts "  check         Validate your views against the signal vocabulary"
       puts "    --deployed         Also compare against the build your users have"
       puts "    --paths=A,B        Directories to scan (default: app/views)"
+      puts "  demo_account  set --name=EMAIL --password=SECRET  Stage the reviewer's sign-in"
       puts "  deploy        Build every configured platform and wait for it to finish"
       puts "    --ios              Build iOS only"
       puts "    --android          Build Android only"
@@ -72,6 +79,7 @@ module RubyNative
       puts "    --if-needed        Skip when this gem version is already built"
       puts "    --skip-check       Deploy without checking your views for broken signals"
       puts "  icon set PATH Set the app icon, a 1024x1024 PNG (ships with the next deploy)"
+      puts "  listing       push, pull, or publish the App Store listing in config/ruby_native_listing.yml"
       puts "  login         Authenticate with Ruby Native"
       puts "  logout        Remove stored credentials"
       puts "  mcp           Serve the check, signal, config, and status tools to a coding agent over MCP"
