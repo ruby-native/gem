@@ -32,7 +32,7 @@ class McpTest < Minitest::Test
   def test_tools_list_names_every_tool_as_read_only
     tools = request("tools/list")["result"]["tools"]
 
-    assert_equal %w[build_status check_views config_errors deployed_builds lookup_signals validate_config],
+    assert_equal %w[build_status check_views config_errors deployed_builds lookup_signals status validate_config],
       tools.map { |tool| tool["name"] }.sort
     tools.each do |tool|
       assert tool.dig("annotations", "readOnlyHint"), "#{tool["name"]} should be marked read-only"
@@ -49,7 +49,7 @@ class McpTest < Minitest::Test
     %w[check_views lookup_signals validate_config].each do |name|
       refute tools[name].dig("annotations", "openWorldHint"), "#{name} answers locally"
     end
-    %w[config_errors deployed_builds build_status].each do |name|
+    %w[config_errors deployed_builds build_status status].each do |name|
       assert tools[name].dig("annotations", "openWorldHint"), "#{name} reaches rubynative.com"
       assert_match "ruby_native login", tools[name]["description"]
     end
@@ -339,6 +339,57 @@ class McpTest < Minitest::Test
 
     assert_equal "/api/v1/apps/app_fromfile/config_error_reports", asked
     assert_equal "app_fromfile", result.dig("structuredContent", "app_id")
+  end
+
+  # --- status ---
+
+  def test_status_reports_the_blockers_and_hands_back_the_whole_answer
+    result = with_result(ok(app_status)) { call("status", "app_id" => "app_1") }
+
+    assert_match "Trailhead (app_1) · https://trailhead.app", text(result)
+    assert_match "Before building, 1 thing needs doing:", text(result)
+    assert_match "1. subscription (a person does this; Ruby Native sees it clear)", text(result)
+    assert_match "https://rubynative.com/apps/1/plans", text(result)
+    assert_equal "build", result.dig("structuredContent", "next")
+    assert_equal "subscription", result.dig("structuredContent", "blocked_by", 0, "id")
+    refute result["isError"]
+  end
+
+  def test_status_says_when_nothing_is_in_the_way
+    result = with_result(ok(app_status("blocked_by" => []))) { call("status", "app_id" => "app_1") }
+
+    assert_match "Nothing is in the way of a build.", text(result)
+  end
+
+  def test_status_reads_the_app_endpoint
+    asked = nil
+    with_get(->(path) { asked = path; ok(app_status) }) { call("status", "app_id" => "app_1") }
+
+    assert_equal "/api/v1/apps/app_1", asked
+  end
+
+  def test_status_explains_a_404_as_an_app_the_token_cannot_see
+    result = with_result(not_found) { call("status", "app_id" => "app_9") }
+
+    assert result["isError"]
+    assert_match 'No app "app_9" on this account', text(result)
+  end
+
+  def app_status(overrides = {})
+    {
+      "public_id" => "app_1", "name" => "Trailhead", "url" => "https://trailhead.app",
+      "dashboard_url" => "https://rubynative.com/apps/1",
+      "subscription" => { "active" => false, "past_due" => false, "plan" => nil },
+      "ios" => { "setup" => "Setup complete", "latest_build" => nil, "live" => false },
+      "android" => { "setup" => "Play developer account", "latest_build" => nil, "live" => false },
+      "next" => "build",
+      "blocked_by" => [
+        { "id" => "subscription", "who" => "human", "verifiable" => true,
+          "why" => "Builds start once the app has a subscription, and checkout is a step only a person can take.",
+          "url" => "https://rubynative.com/apps/1/plans",
+          "steps" => [ "Choose a plan and check out." ] }
+      ]
+    }.merge(overrides)
   end
 
   # --- deployed_builds ---

@@ -27,6 +27,13 @@ class CliTest < Minitest::Test
     out, _err = capture_io { RubyNative::CLI.start([]) }
 
     assert_match(/^  mcp /, out)
+    assert_match(/^    install /, out)
+  end
+
+  def test_usage_lists_status
+    out, _err = capture_io { RubyNative::CLI.start([]) }
+
+    assert_match(/^  status /, out)
   end
 
   # Customers should never see a raw backtrace; a one-line report with the

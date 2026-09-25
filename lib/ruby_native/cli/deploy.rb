@@ -4,6 +4,7 @@ require "uri"
 require "openssl"
 require "ruby_native/cli/check"
 require "ruby_native/cli/credentials"
+require "ruby_native/cli/status"
 require "ruby_native/version"
 
 module RubyNative
@@ -244,6 +245,7 @@ module RubyNative
         when Net::HTTPUnprocessableEntity
           data = parse_json(response)
           puts "Cannot build: #{data&.dig("error") || "the server rejected the request (422)."}"
+          print_blockers(data)
           exit 1
         when Net::HTTPNotFound
           puts "The app linked in config/ruby_native.yml was not found on your account."
@@ -419,6 +421,16 @@ module RubyNative
 
       # Server-provided warnings (a lapsed payment, say) reach customers with
       # no gem release. Deduped, since every status poll repeats the string.
+      # A refusal names what is in the way and who clears it, the same list the
+      # dashboard shows. An older server sends only the sentence.
+      def print_blockers(data)
+        blockers = data.is_a?(Hash) ? data["blocked_by"] : nil
+        return unless blockers.is_a?(Array) && blockers.any?
+
+        puts ""
+        puts Status.blocker_lines(blockers)
+      end
+
       def print_notice(data)
         notice = data["notice"]
         return unless notice.is_a?(String) && !notice.strip.empty?

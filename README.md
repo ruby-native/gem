@@ -96,21 +96,24 @@ Docs tell an agent what to write. They don't tell it whether what it wrote works
 | `lookup_signals` | Every `data-native-*` attribute, the gem version it needs, and the helper that emits it |
 | `validate_config` | What in `config/ruby_native.yml` the apps reject outright, and what they quietly ignore |
 
-Three more read your account, using the token `ruby_native login` already stored:
+Four more read your account, using the token `ruby_native login` already stored:
 
 | Tool | Answers |
 |---|---|
+| `status` | Where the app is on the way to the App Store, and what is in the way, with who clears each thing |
 | `config_errors` | What real devices reported failing over the last 48 hours, with the decode error behind each one |
 | `deployed_builds` | The build your users can actually install, and which signals it's too old to understand |
 | `build_status` | Whether one build succeeded, and the error if it didn't |
 
 The pairs are the point. `validate_config` says what *will* fail to decode; `config_errors` says what did, on which devices. `check_views` compares your templates against the gem in your Gemfile; `deployed_builds` compares them against the binary in the store, which is usually the answer to "the attribute is right but nothing happens on my phone".
 
-Full reference at [rubynative.com/docs/cli](https://rubynative.com/docs/cli#mcp-server). Register it with any MCP client. For Claude Code:
+Full reference at [rubynative.com/docs/cli](https://rubynative.com/docs/cli#mcp-server). Register it in the project's `.mcp.json`, which Claude Code reads:
 
 ```bash
-claude mcp add ruby-native -- bundle exec ruby_native mcp
+bundle exec ruby_native mcp install
 ```
+
+Then say: set up Ruby Native in this app.
 
 Or, in a client that takes JSON:
 
@@ -125,7 +128,7 @@ Or, in a client that takes JSON:
 }
 ```
 
-Everything is read-only: nothing here deploys or writes. The first three never leave your machine; the second three send your CLI token to rubynative.com and read back. `check_views` needs the `herb` gem, same as `ruby_native check`.
+Everything is read-only: nothing here deploys or writes. The first three never leave your machine; the other four send your CLI token to rubynative.com and read back. `check_views` needs the `herb` gem, same as `ruby_native check`.
 
 ## License
 

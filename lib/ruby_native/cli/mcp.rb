@@ -2,6 +2,7 @@ require "json"
 require "ruby_native/cli/check"
 require "ruby_native/cli/mcp/config_validator"
 require "ruby_native/cli/mcp/platform"
+require "ruby_native/cli/status"
 require "ruby_native/signals"
 require "ruby_native/version"
 
@@ -157,6 +158,26 @@ module RubyNative
             additionalProperties: false
           },
           annotations: { title: "Build status", readOnlyHint: true, openWorldHint: true }
+        },
+        {
+          name: "status",
+          description: "Report where the app is on the way to the App Store and what is in the way: setup, " \
+                       "subscription, the latest build, store state, and a `blocked_by` list for the next act. " \
+                       "Each blocker says who clears it. `who: human` means stop and hand the person the steps: " \
+                       "paying, creating the app record, or answering a questionnaire Apple gives us no API for. " \
+                       "Call this first, and again after the person says they have done a step. Reaches " \
+                       "rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              app_id: {
+                type: "string",
+                description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml."
+              }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "App status", readOnlyHint: true, openWorldHint: true }
         }
       ].freeze
 
@@ -247,6 +268,7 @@ module RubyNative
           when "config_errors" then config_errors(arguments)
           when "deployed_builds" then deployed_builds(arguments)
           when "build_status" then build_status(arguments)
+          when "status" then status(arguments)
           else raise ToolFailure, "Unknown tool: #{name.inspect}. Call tools/list for the ones this server has."
           end
         end
@@ -376,6 +398,20 @@ module RubyNative
         build = result.value.is_a?(Hash) ? result.value : {}
 
         tool_result(build_status_report(build), build.merge("app_id" => app_id))
+      end
+
+      def status(arguments)
+        app_id = resolve_app_id(arguments)
+        return tool_result(Platform::NO_APP_ID, { app_id: nil }, is_error: true) unless app_id
+
+        result = Status.fetch(app_id)
+        unless result.ok?
+          return tool_result(Status.failure_message(result, app_id), { app_id: app_id }, is_error: true)
+        end
+
+        status = result.value.is_a?(Hash) ? result.value : {}
+
+        tool_result(Status.report(status), status)
       end
 
       # --- Rendering ---

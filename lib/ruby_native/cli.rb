@@ -3,7 +3,9 @@ require "ruby_native/cli/credentials"
 require "ruby_native/cli/deploy"
 require "ruby_native/cli/login"
 require "ruby_native/cli/mcp"
+require "ruby_native/cli/mcp/install"
 require "ruby_native/cli/preview"
+require "ruby_native/cli/status"
 
 module RubyNative
   class CLI
@@ -19,7 +21,13 @@ module RubyNative
       when "login"
         RubyNative::CLI::Login.new(argv).run
       when "mcp"
-        RubyNative::CLI::Mcp.new(argv).run
+        if argv.first == "install"
+          RubyNative::CLI::Mcp::Install.new(argv.drop(1)).run
+        else
+          RubyNative::CLI::Mcp.new(argv).run
+        end
+      when "status"
+        RubyNative::CLI::Status.new(argv).run
       when "logout"
         RubyNative::CLI::Credentials.clear
         puts "Logged out of Ruby Native."
@@ -57,10 +65,12 @@ module RubyNative
       puts "    --skip-check       Deploy without checking your views for broken signals"
       puts "  login         Authenticate with Ruby Native"
       puts "  logout        Remove stored credentials"
-      puts "  mcp           Serve the check, signal, and config tools to a coding agent over MCP"
+      puts "  mcp           Serve the check, signal, config, and status tools to a coding agent over MCP"
+      puts "    install            Register the server in .mcp.json for this project"
       puts "  preview       Start a tunnel and display a QR code"
       puts "    --port PORT        Rails server port (default: PORT or 3000)"
       puts "    --url URL          Tunnel to this URL instead of localhost"
+      puts "  status        Where the app is, what is next, and what is in the way"
     end
   end
 end

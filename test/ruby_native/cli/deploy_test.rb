@@ -476,6 +476,36 @@ class DeployTest < Minitest::Test
     assert_match(/already in progress/, out)
   end
 
+  def test_trigger_422_prints_every_blocker_with_its_steps
+    body = JSON.generate(
+      error: "App is not ready to build.",
+      blocked_by: [
+        { id: "app_record", who: "human", verifiable: true,
+          why: "Apple publishes no endpoint for creating an app record.",
+          url: "https://appstoreconnect.apple.com/apps",
+          steps: [ "Click the + button and select New App." ] }
+      ]
+    )
+    deploy = trigger_deploy(http_response(Net::HTTPUnprocessableEntity, "422", body: body))
+
+    out, _err = capture_io do
+      assert_raises(SystemExit) { deploy.send(:trigger_build, "app_123") }
+    end
+    assert_match(/Cannot build: App is not ready to build\./, out)
+    assert_match(/1\. app_record \(a person does this; Ruby Native sees it clear\)/, out)
+    assert_match(/https:\/\/appstoreconnect\.apple\.com\/apps/, out)
+    assert_match(/1\. Click the \+ button and select New App\./, out)
+  end
+
+  def test_trigger_422_from_an_older_server_prints_just_the_sentence
+    deploy = trigger_deploy(http_response(Net::HTTPUnprocessableEntity, "422", body: '{"error":"App is not ready to build."}'))
+
+    out, _err = capture_io do
+      assert_raises(SystemExit) { deploy.send(:trigger_build, "app_123") }
+    end
+    assert_equal "Triggering build...\nCannot build: App is not ready to build.\n", out
+  end
+
   # --- JSON guards ---
 
   def test_fetch_latest_build_tolerates_a_non_json_body

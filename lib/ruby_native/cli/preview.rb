@@ -335,7 +335,7 @@ module RubyNative
         puts ""
         puts "Like what you see? `ruby_native deploy` puts a real app on your phone for good."
         puts ""
-        puts "Free until you ship: #{DEPLOY_URL}"
+        puts "How it works: #{DEPLOY_URL}"
       end
 
       def trap_interrupt

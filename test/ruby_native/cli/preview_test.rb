@@ -361,7 +361,7 @@ class PreviewTest < Minitest::Test
     without_credentials do
       out, _err = capture_io { @preview.send(:print_farewell) }
       assert_match "Like what you see? `ruby_native deploy` puts a real app on your phone for good.", out
-      assert_match "Free until you ship: https://rubynative.com/deploy", out
+      assert_match "How it works: https://rubynative.com/deploy", out
     end
   end
 

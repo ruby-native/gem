@@ -8,7 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **`ruby_native mcp` hands your app to a coding agent.** A read-only MCP server over stdio. Three tools answer from your checkout: `check_views` reports the signals a build will silently ignore, `lookup_signals` answers what a `data-native-*` attribute is and which version it needs, and `validate_config` checks `config/ruby_native.yml` against what the apps actually decode. Three more use the token `ruby_native login` already stored: `config_errors` reports what real devices failed to load over the last 48 hours, `deployed_builds` names the signals the build in the store is too old to understand, and `build_status` follows one build. An agent writing markup it will never see rendered now gets the feedback the apps don't give it, and nothing deploys. [Docs](https://rubynative.com/docs/cli#mcp-server)
+- **`ruby_native mcp` hands your app to a coding agent.** A read-only MCP server over stdio. Three tools answer from your checkout: `check_views` reports the signals a build will silently ignore, `lookup_signals` answers what a `data-native-*` attribute is and which version it needs, and `validate_config` checks `config/ruby_native.yml` against what the apps actually decode. Four more use the token `ruby_native login` already stored: `status` says where the app is and what is in the way, `config_errors` reports what real devices failed to load over the last 48 hours, `deployed_builds` names the signals the build in the store is too old to understand, and `build_status` follows one build. An agent writing markup it will never see rendered now gets the feedback the apps don't give it, and nothing deploys. `ruby_native mcp install` registers the server in `.mcp.json`. [Docs](https://rubynative.com/docs/cli#mcp-server)
+- **`ruby_native status` tells you what stands between your app and its next build or submission.** Setup, subscription, the latest build, and store state, then a numbered list of blockers. Each one says who clears it, why only they can, where to go, and the steps, in the same words the dashboard uses. [Docs](https://rubynative.com/docs/cli#status)
+
+### Changed
+
+- **`deploy` explains a refusal.** When the server will not start a build, the CLI prints the same blocker list `status` does instead of one sentence pointing at the dashboard.
+- **`preview` no longer promises a free build on the way out.** Building needs a subscription now, and the farewell says where to read how it works.
 
 ## [0.17.3] - 2026-09-10
 
