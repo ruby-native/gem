@@ -18,7 +18,13 @@ Run the install generator:
 rails generate ruby_native:install
 ```
 
-This creates `config/ruby_native.yml`. Then:
+This creates `config/ruby_native.yml` with tabs taken from your routes. If you use a coding agent, hand it the rest here:
+
+```bash
+bundle exec ruby_native mcp install
+```
+
+Then say: set up Ruby Native in this app. It wires the layout, checks its own work, and later drafts the listing, captures screenshots, and submits for review, stopping only for the few clicks Apple keeps for a person. By hand, the same steps are:
 
 1. Edit the config with your colors and tabs (see below).
 2. Add the stylesheet and `viewport-fit=cover` to your layout `<head>`:
