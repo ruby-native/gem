@@ -7,6 +7,7 @@ require "ruby_native/cli/icon"
 require "ruby_native/cli/listing"
 require "ruby_native/cli/permissions"
 require "ruby_native/cli/screenshots"
+require "ruby_native/cli/link"
 require "ruby_native/cli/status"
 require "ruby_native/cli/submit"
 require "ruby_native/cli/testers"
@@ -165,6 +166,20 @@ module RubyNative
             additionalProperties: false
           },
           annotations: { title: "Build status", readOnlyHint: true, openWorldHint: true }
+        },
+        {
+          name: "link_app",
+          description: "Link this project to an app on rubynative.com by writing `ruby_native.app_id` into " \
+                       "config/ruby_native.yml. Call it when another tool answers that no app is linked. Without " \
+                       "`app_id` it links the account's only app, or lists the apps to choose from. Reaches " \
+                       "rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              app_id: { type: "string", description: "The app's public id, from the list this tool returns or the dashboard URL." }
+            }
+          },
+          annotations: { title: "Link app", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
         },
         {
           name: "status",
@@ -500,6 +515,9 @@ module RubyNative
           when "deployed_builds" then deployed_builds(arguments)
           when "build_status" then build_status(arguments)
           when "status" then status(arguments)
+          when "link_app"
+            outcome = Link.link(arguments["app_id"].to_s.strip.empty? ? nil : arguments["app_id"].to_s.strip)
+            tool_result(outcome.text, outcome.data, is_error: !outcome.ok)
           when "permissions_set" then with_app(arguments) { |app_id| Permissions.set(app_id, arguments.slice("camera", "microphone", "photos")) }
           when "testers_list" then with_app(arguments) { |app_id| Testers.list(app_id, platform: arguments["platform"] || "ios") }
           when "testers_add" then with_app(arguments) { |app_id| Testers.add(app_id, string!(arguments, "email"), platform: arguments["platform"] || "ios") }

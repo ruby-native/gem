@@ -41,7 +41,7 @@ class McpTest < Minitest::Test
   end
 
   READ_TOOLS = %w[build_status check_views config_errors deployed_builds lookup_signals screenshots_list status testers_list validate_config].freeze
-  WRITE_TOOLS = %w[demo_account_set icon_set listing_pull listing_push permissions_set screenshots_capture screenshots_setup submit testers_add withdraw].freeze
+  WRITE_TOOLS = %w[demo_account_set icon_set link_app listing_pull listing_push permissions_set screenshots_capture screenshots_setup submit testers_add withdraw].freeze
 
   def test_tools_list_names_every_tool_and_says_which_ones_write
     tools = request("tools/list")["result"]["tools"]

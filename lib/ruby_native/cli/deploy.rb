@@ -4,6 +4,7 @@ require "uri"
 require "openssl"
 require "ruby_native/cli/check"
 require "ruby_native/cli/credentials"
+require "ruby_native/cli/mcp/platform"
 require "ruby_native/cli/status"
 require "ruby_native/version"
 
@@ -35,6 +36,7 @@ module RubyNative
         @if_needed = argv.include?("--if-needed")
         @skip_check = argv.include?("--skip-check")
         @platform = parse_platform(argv)
+        @app_flag = argv.find { |arg| arg.start_with?("--app=") }&.split("=", 2)&.last
       end
 
       def run
@@ -146,7 +148,7 @@ module RubyNative
       end
 
       def resolve_app_id!
-        app_id = @config.dig(:ruby_native, :app_id)
+        app_id = (@app_flag unless @app_flag.to_s.strip.empty?) || @config.dig(:ruby_native, :app_id)
         app_id = link_app unless app_id
         unless app_id
           puts "No app selected. Run `ruby_native deploy` again."
@@ -550,16 +552,7 @@ module RubyNative
       end
 
       def write_app_id_to_config(app_id)
-        raw = File.read(CONFIG_PATH)
-
-        if raw.match?(/^ruby_native:/)
-          raw = raw.gsub(/^(ruby_native:\s*\n)/, "\\1  app_id: #{app_id}\n")
-        else
-          raw = raw.rstrip + "\n\nruby_native:\n  app_id: #{app_id}\n"
-        end
-
-        File.write(CONFIG_PATH, raw)
-
+        Mcp::Platform.write_app_id(app_id, CONFIG_PATH)
         @config = read_config
       end
 

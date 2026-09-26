@@ -3,6 +3,7 @@ require "ruby_native/cli/credentials"
 require "ruby_native/cli/demo_account"
 require "ruby_native/cli/deploy"
 require "ruby_native/cli/icon"
+require "ruby_native/cli/link"
 require "ruby_native/cli/listing"
 require "ruby_native/cli/login"
 require "ruby_native/cli/mcp"
@@ -35,6 +36,8 @@ module RubyNative
         end
       when "status"
         RubyNative::CLI::Status.new(argv).run
+      when "link"
+        RubyNative::CLI::Link.new(argv).run
       when "submit"
         RubyNative::CLI::Submit.new(argv).run
       when "withdraw"
@@ -73,6 +76,7 @@ module RubyNative
       puts ""
       puts "Commands:"
       puts "  Every command that talks to rubynative.com reads the app from config/ruby_native.yml, or takes --app=ID."
+      puts "  link [APP_ID]  Link this project to an app on your account (writes ruby_native.app_id)"
       puts "  check         Validate your views against the signal vocabulary"
       puts "    --deployed         Also compare against the build your users have"
       puts "    --paths=A,B        Directories to scan (default: app/views)"

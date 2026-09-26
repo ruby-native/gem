@@ -97,6 +97,18 @@ module RubyNative
         # app_id lives in the file the validator reads, and that file can carry
         # ERB, so tags are stubbed out the same way before parsing. A file that
         # will not parse means no app_id, which reads as "link this app".
+        # Adds `ruby_native: app_id:` to the config, or fills it in under an
+        # existing `ruby_native:` key, and leaves everything else as written.
+        def self.write_app_id(app_id, path = CONFIG_PATH)
+          raw = File.exist?(path) ? File.read(path) : ""
+          raw = if raw.match?(/^ruby_native:\s*\n(\s+app_id:.*\n)?/)
+            raw.sub(/^(ruby_native:\s*\n)(\s+app_id:.*\n)?/, "\\1  app_id: #{app_id}\n")
+          else
+            raw.rstrip + "\n\nruby_native:\n  app_id: #{app_id}\n"
+          end
+          File.write(path, raw)
+        end
+
         def self.app_id(path = CONFIG_PATH)
           return nil unless File.exist?(path)
 

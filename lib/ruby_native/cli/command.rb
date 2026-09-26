@@ -49,7 +49,13 @@ module RubyNative
 
       def self.failure(result)
         lines = [ result.error ]
-        result.field_errors.each { |field, messages| Array(messages).each { |message| lines << "  #{field} #{message}" } }
+        result.field_errors.each do |field, messages|
+          Array(messages).each do |message|
+            next if result.error.to_s.downcase.include?(message.to_s.downcase)
+
+            lines << "  #{field} #{message}"
+          end
+        end
         if result.blocked_by.any?
           lines << ""
           lines.concat(Status.blocker_lines(result.blocked_by))

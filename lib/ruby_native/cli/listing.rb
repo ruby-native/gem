@@ -77,8 +77,9 @@ module RubyNative
         data = YAML.safe_load(ERB.new(File.read(PATH, encoding: "UTF-8")).result, aliases: true)
         return Outcome.new(ok: false, text: "#{PATH} has to be a YAML mapping of listing fields.", data: {}) unless data.is_a?(Hash)
 
-        listing = data.slice(*FIELDS).transform_values { |value| value.nil? ? nil : value.to_s.strip }
-        listing
+        # An empty line from the template is a field not written yet, not a
+        # request to blank it.
+        data.slice(*FIELDS).compact.transform_values { |value| value.to_s.strip }
       rescue Psych::SyntaxError => error
         Outcome.new(ok: false, text: "#{PATH} is not valid YAML: #{error.message}", data: {})
       end
@@ -90,11 +91,17 @@ module RubyNative
         end
       end
 
+      # Every field is written, empty ones with their limit, so a pull on an
+      # app with no listing yet is a template rather than a file of comments
+      # that push then refuses.
       def self.render(listing)
         lines = [ "# App Store listing. `ruby_native listing push` saves it to Ruby Native;", "# publishing to App Store Connect is a separate step.", "" ]
         FIELDS.each do |field|
           value = listing[field]
-          next if value.nil? || value.to_s.empty?
+          if value.nil? || value.to_s.empty?
+            lines << "#{field}:#{" # up to #{LIMITS[field]} characters" if LIMITS[field]}"
+            next
+          end
 
           if field == "description"
             lines << "description: |-"

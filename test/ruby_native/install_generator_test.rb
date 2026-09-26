@@ -85,6 +85,21 @@ class RubyNative::Generators::InstallGeneratorTest < Rails::Generators::TestCase
     assert_includes output, "Then say: set up Ruby Native in this app"
   end
 
+  def test_skips_the_routes_a_library_draws_into_the_app
+    with_routes do
+      get "/recede_historical_location", to: "turbo/native/navigation#recede"
+      get "/resume_historical_location", to: "turbo/native/navigation#resume"
+      get "/manifest", to: "rails/pwa#manifest"
+      get "/inbox", to: "pages#inbox"
+    end
+
+    run_generator
+
+    assert_file "config/ruby_native.yml" do |config|
+      assert_equal [ "/inbox" ], YAML.safe_load(config)["tabs"].map { |tab| tab["path"] }
+    end
+  end
+
   def test_puts_root_first_and_skips_parameterized_and_nested_paths
     with_routes do
       get "/orders", to: "orders#index"

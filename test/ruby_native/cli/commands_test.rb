@@ -42,13 +42,47 @@ class CommandsTest < Minitest::Test
     assert_match "Nothing changed.", outcome.text
   end
 
-  def test_a_validation_failure_lists_the_field_errors
+  def test_a_validation_failure_lists_the_field_errors_the_headline_does_not_already_state
     refusal = Platform::Result.new(error: "Camera usage description cannot contain line breaks", status: 422,
-      body: { "errors" => { "camera_usage_description" => [ "cannot contain line breaks" ] } })
+      body: { "errors" => { "camera_usage_description" => [ "cannot contain line breaks" ], "photo_library_usage_description" => [ "is too long" ] } })
     outcome = with_patch(refusal) { RubyNative::CLI::Permissions.set("app_1", "camera" => "a\nb") }
 
     refute outcome.ok
-    assert_match "  camera_usage_description cannot contain line breaks", outcome.text
+    assert_equal 1, outcome.text.scan("cannot contain line breaks").size
+    assert_match "  photo_library_usage_description is too long", outcome.text
+  end
+
+  # --- link ---
+
+  def test_link_writes_the_only_app_on_the_account
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        FileUtils.mkdir_p("config")
+        File.write("config/ruby_native.yml", "app:\n  mode: normal\n")
+        outcome = with_get(ok([ { "public_id" => "app_1", "name" => "Trailhead", "url" => "https://trailhead.app" } ])) { RubyNative::CLI::Link.link }
+
+        assert outcome.ok
+        assert_match "Linked to Trailhead (app_1)", outcome.text
+        assert_equal "app_1", Platform.app_id("config/ruby_native.yml")
+      end
+    end
+  end
+
+  def test_link_lists_the_apps_when_there_are_several_and_none_was_named
+    apps = [ { "public_id" => "app_1", "name" => "Trailhead" }, { "public_id" => "app_2", "name" => "Shelf" } ]
+    outcome = with_get(ok(apps)) { RubyNative::CLI::Link.link }
+
+    refute outcome.ok
+    assert_match "app_1  Trailhead", outcome.text
+    assert_match "app_2  Shelf", outcome.text
+    assert_equal apps, outcome.data["apps"]
+  end
+
+  def test_link_refuses_an_app_id_that_is_not_on_the_account
+    outcome = with_get(ok([ { "public_id" => "app_1", "name" => "Trailhead" } ])) { RubyNative::CLI::Link.link("app_9") }
+
+    refute outcome.ok
+    assert_match 'No app "app_9" on this account', outcome.text
   end
 
   # --- testers ---
@@ -146,6 +180,19 @@ class CommandsTest < Minitest::Test
 
   # --- listing ---
 
+  def test_listing_pull_on_an_empty_listing_writes_a_template_push_accepts
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        outcome = with_get(ok("listing" => {})) { RubyNative::CLI::Listing.pull("app_1") }
+
+        assert outcome.ok
+        assert_match "name: # up to 30 characters", File.read("config/ruby_native_listing.yml")
+        refute_kind_of RubyNative::CLI::Command::Outcome, RubyNative::CLI::Listing.read_file
+      end
+    end
+  end
+
   def test_listing_pull_writes_the_file_in_the_documented_order
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do
@@ -160,14 +207,17 @@ class CommandsTest < Minitest::Test
           # publishing to App Store Connect is a separate step.
 
           name: Trailhead
+          subtitle: # up to 30 characters
           primary_category: Lifestyle
+          secondary_category:
           keywords: hiking,trail
           promotional_text: "Now: offline maps"
+          privacy_policy_url:
           description: |-
             Hikes.
             Offline.
         YAML
-        assert_equal listing.compact, YAML.safe_load(written).slice(*listing.keys)
+        assert_equal listing.compact, YAML.safe_load(written).slice(*listing.keys).compact
       end
     end
   end

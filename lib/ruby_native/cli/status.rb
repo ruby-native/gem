@@ -12,7 +12,7 @@ module RubyNative
     # create the app record, answer a questionnaire Apple gives us no API for).
     class Status
       def initialize(argv = [])
-        @app_id = argv.find { |arg| !arg.start_with?("--") }
+        @app_id = argv.find { |arg| arg.start_with?("--app=") }&.split("=", 2)&.last || argv.find { |arg| !arg.start_with?("--") }
       end
 
       def run

@@ -116,6 +116,12 @@ module RubyNative
         end
       end
 
+      # Routes a library draws into the app for its own use. Turbo's
+      # historical-location routes and the PWA manifest are GET, static, and
+      # one segment, so without this a fresh app's tabs were three Turbo
+      # internals.
+      LIBRARY_CONTROLLERS = %r{\A(turbo|rails|active_storage|action_mailbox|action_cable|action_text)/}
+
       # Static, single-segment GET routes, root first, in the order the routes
       # file declares them. Anything with a parameter, a glob, or a second
       # segment is a page you reach from a tab, not a tab.
@@ -123,6 +129,7 @@ module RubyNative
         paths = Rails.application.routes.routes.filter_map do |route|
           next if route.respond_to?(:internal) && route.internal
           next unless route.verb.to_s.match?(/\bGET\b/)
+          next if route.defaults[:controller].to_s.match?(LIBRARY_CONTROLLERS)
 
           path = route.path.spec.to_s.sub(/\(\.:format\)\z/, "")
           next unless path.start_with?("/")
