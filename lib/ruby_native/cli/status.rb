@@ -15,11 +15,23 @@ module RubyNative
         @app_id = argv.find { |arg| arg.start_with?("--app=") }&.split("=", 2)&.last || argv.find { |arg| !arg.start_with?("--") }
       end
 
+      # What the layout has to carry before the app looks like one. Read as
+      # substrings across every layout, so a helper split over lines or moved
+      # into a partial the layout renders is missed: the report says "missing"
+      # and the person can see it is not. Wrong the safe way round.
+      LAYOUT_GLOB = "app/views/layouts/**/*.html.erb".freeze
+      MARKERS = {
+        "stylesheet_link_tag :ruby_native" => "the Ruby Native stylesheet",
+        "viewport-fit=cover" => "viewport-fit=cover",
+        "native_tabs_tag" => "native_tabs_tag",
+        "native_identity_tag" => "native_identity_tag"
+      }.freeze
+
       def run
         app_id = @app_id || Mcp::Platform.app_id
-        if app_id.to_s.strip.empty?
-          puts Mcp::Platform::NO_APP_ID
-          exit 1
+        if app_id.to_s.strip.empty? || Credentials.token.nil?
+          puts self.class.local_report
+          return
         end
 
         result = self.class.fetch(app_id)
@@ -40,6 +52,52 @@ module RubyNative
 
         "No app #{app_id.inspect} on this account. Check `ruby_native.app_id` in #{Mcp::Platform::CONFIG_PATH}, " \
           "or pass an app id."
+      end
+
+      # --- Before an app is linked ---
+
+      # Everything `status` can know without the API: the file the generator
+      # writes, the four things the first native pass puts in the layout, and
+      # whether login and link have happened. The next step follows from which
+      # of those is missing first.
+      def self.local
+        layouts = Dir.glob(LAYOUT_GLOB).sort.map { |path| File.read(path) }.join("\n")
+
+        {
+          "local" => true,
+          "gem_version" => RubyNative::VERSION,
+          "config" => File.exist?(Mcp::Platform::CONFIG_PATH),
+          "layout" => MARKERS.keys.to_h { |marker| [ marker, layouts.include?(marker) ] },
+          "app_id" => Mcp::Platform.app_id,
+          "logged_in" => !Credentials.token.nil?
+        }
+      end
+
+      def self.local_report(local = self.local)
+        missing = local["layout"].reject { |_, present| present }.keys.map { |marker| MARKERS[marker] }
+
+        lines = [ "Ruby Native #{local["gem_version"]}, before an app is linked.", "" ]
+        lines << "  #{Mcp::Platform::CONFIG_PATH}: #{local["config"] ? "present" : "missing"}"
+        lines << "  Layout: #{missing.empty? ? "has the first native pass" : "missing #{missing.join(", ")}"}"
+        lines << "  Login: #{local["logged_in"] ? "stored" : "none"}"
+        lines << "  Linked app: #{local["app_id"] || "none"}"
+        lines << ""
+        lines << "Next: #{local_next(local, missing)}"
+        lines.join("\n")
+      end
+
+      def self.local_next(local, missing)
+        if !local["config"]
+          "run `bin/rails generate ruby_native:install`."
+        elsif missing.any?
+          "the first native pass, the seven changes in the `ship` prompt (`ruby_native ship` prints it). " \
+            "Then `bundle exec ruby_native preview` to see it on a phone."
+        elsif !local["logged_in"]
+          "create the app at #{Mcp::Platform::HOST}/apps/new (a name, the site's URL, and an account if you have none), " \
+            "then `ruby_native login` and `ruby_native link`."
+        else
+          "run `ruby_native link` to pick the app on your account."
+        end
       end
 
       # --- Rendering ---

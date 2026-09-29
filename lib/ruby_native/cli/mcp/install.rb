@@ -29,7 +29,12 @@ module RubyNative
           puts "Other clients take the same entry:"
           puts JSON.pretty_generate("mcpServers" => { NAME => SERVER })
           puts ""
-          puts "Then say: set up Ruby Native in this app"
+          puts "Then, in your agent:"
+          puts ""
+          puts "    /mcp__#{NAME}__ship"
+          puts ""
+          puts "It walks every step to the App Store and Google Play and stops at the ones only you can take."
+          puts "No prompt support in your agent? Paste the output of: bundle exec ruby_native ship"
         end
 
         private

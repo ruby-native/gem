@@ -11,6 +11,7 @@ require "ruby_native/cli/mcp/install"
 require "ruby_native/cli/permissions"
 require "ruby_native/cli/preview"
 require "ruby_native/cli/screenshots"
+require "ruby_native/cli/ship"
 require "ruby_native/cli/status"
 require "ruby_native/cli/submit"
 require "ruby_native/cli/testers"
@@ -36,6 +37,8 @@ module RubyNative
         end
       when "status"
         RubyNative::CLI::Status.new(argv).run
+      when "ship"
+        RubyNative::CLI::Ship.new(argv).run
       when "link"
         RubyNative::CLI::Link.new(argv).run
       when "submit"
@@ -102,7 +105,8 @@ module RubyNative
       puts "  screenshots   Show the screenshot setup and the latest captures"
       puts "    setup              Generate the key, and set the pages with --paths=/a,/b,/c"
       puts "    capture            Capture App Store screenshots against the deployed site (--android for Play)"
-      puts "  status        Where the app is, what is next, and what is in the way"
+      puts "  ship          Print the prompt that walks an agent to the App Store and Google Play (the MCP server has it as /mcp__ruby-native__ship)"
+      puts "  status        Where the app is, what is next, and what is in the way. Works before login, from this checkout"
       puts "  submit        Show exactly what would go to App Store review, then ask before sending it"
       puts "    --yes              Skip the question"
       puts "    --android          Show what stands between the app and Google Play, and the promotion steps"

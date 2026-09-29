@@ -623,6 +623,61 @@ class McpTest < Minitest::Test
     assert_match "TestFlight only", text(result)
   end
 
+  # --- prompts ---
+
+  def test_initialize_announces_prompts_and_points_at_ship
+    result = request("initialize", { "protocolVersion" => "2025-06-18" })["result"]
+
+    assert result["capabilities"].key?("prompts")
+    assert_match "`ship` prompt", result["instructions"]
+  end
+
+  def test_prompts_list_has_ship
+    prompts = request("prompts/list")["result"]["prompts"]
+
+    assert_equal [ "ship" ], prompts.map { |prompt| prompt["name"] }
+    refute_empty prompts.first["description"]
+  end
+
+  def test_prompts_get_returns_the_ship_prompt_as_a_user_message
+    result = request("prompts/get", { "name" => "ship" })["result"]
+    message = result["messages"].first
+
+    assert_equal "user", message["role"]
+    assert_equal "text", message.dig("content", "type")
+    text = message.dig("content", "text")
+    assert_match "native-hidden", text
+    assert_match "`status` is the map", text
+    assert_match "/apps/new", text
+    assert_match "`verifiable: false`", text
+    assert_equal text, RubyNative::CLI::Mcp::Prompts::SHIP
+  end
+
+  def test_prompts_get_rejects_an_unknown_prompt
+    reply = request("prompts/get", { "name" => "launch" })
+
+    assert_equal RubyNative::CLI::Mcp::INVALID_PARAMS, reply.dig("error", "code")
+    assert_match "Unknown prompt", reply.dig("error", "message")
+  end
+
+  # The first thing an agent asks on a fresh clone has an answer before there
+  # is an account, and it is the same report the CLI prints.
+  def test_status_answers_from_the_checkout_before_login
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        write_config("tabs: []\n")
+        result = with_stub(RubyNative::CLI::Credentials, :token, -> { nil }) { call("status") }
+
+        refute result["isError"]
+        assert_match "before an app is linked", text(result)
+        assert_match "config/ruby_native.yml: present", text(result)
+        assert_match "Next: the first native pass", text(result)
+        assert_equal true, result.dig("structuredContent", "local")
+        assert_equal false, result.dig("structuredContent", "logged_in")
+      end
+    end
+  end
+
   private
 
   def report(**overrides)

@@ -87,13 +87,7 @@ module RubyNative
           say "  Change them in config/ruby_native.yml."
         end
         say ""
-        say "Point your agent at it:", :green
-        say ""
-        say "    bundle exec ruby_native mcp install"
-        say ""
-        say "Then say: set up Ruby Native in this app"
-        say ""
-        say "Or by hand:"
+        say "By hand:"
         say "  1. Add <%= stylesheet_link_tag :ruby_native %> to your layout <head>"
         say "  2. Add viewport-fit=cover to your viewport meta tag"
         say "  3. Add <%= native_tabs_tag %> and <%= native_identity_tag(current_user&.id) %> to your layout <body>"
@@ -101,6 +95,12 @@ module RubyNative
         say ""
         say "  Docs: https://rubynative.com/docs"
         say "  Agents: https://rubynative.com/llms.txt for a docs index, llms-full.txt for all of it as plain text"
+        say ""
+        say "Or hand it to your agent:", :green
+        say ""
+        say "    bundle exec ruby_native mcp install"
+        say ""
+        say "Then, in your agent: /mcp__ruby-native__ship"
         say ""
       end
 

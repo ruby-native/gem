@@ -2,6 +2,8 @@ require "json"
 require "ruby_native/cli/check"
 require "ruby_native/cli/mcp/config_validator"
 require "ruby_native/cli/mcp/platform"
+require "ruby_native/cli/mcp/prompts"
+require "ruby_native/cli/credentials"
 require "ruby_native/cli/demo_account"
 require "ruby_native/cli/icon"
 require "ruby_native/cli/listing"
@@ -187,8 +189,9 @@ module RubyNative
                        "setup, subscription, the latest build, store state, and a `blocked_by` list per track for its next act. " \
                        "Each blocker says who clears it. `who: human` means stop and hand the person the steps: " \
                        "paying, creating the app record, or answering a questionnaire Apple gives us no API for. " \
-                       "Call this first, and again after the person says they have done a step. Reaches " \
-                       "rubynative.com and needs `ruby_native login`.",
+                       "Call this first, and again after the person says they have done a step. Before " \
+                       "`ruby_native login` or a linked app it answers from this checkout instead: the config, the " \
+                       "first native pass, and what to do next. Otherwise reaches rubynative.com.",
           inputSchema: {
             type: "object",
             properties: {
@@ -455,6 +458,8 @@ module RubyNative
         when "initialize" then initialize_result(params)
         when "tools/list" then { tools: TOOLS }
         when "tools/call" then call(params)
+        when "prompts/list" then { prompts: Prompts::LIST }
+        when "prompts/get" then prompt(params)
         when "ping" then {}
         else raise UnknownMethod, "Unknown method: #{method.inspect}."
         end
@@ -465,10 +470,15 @@ module RubyNative
 
         {
           protocolVersion: PROTOCOL_VERSIONS.include?(requested) ? requested : PROTOCOL_VERSION,
-          capabilities: { tools: {} },
+          capabilities: { tools: {}, prompts: {} },
           serverInfo: { name: "ruby_native", version: RubyNative::VERSION },
           instructions: INSTRUCTIONS
         }
+      end
+
+      def prompt(params)
+        name = params["name"]
+        Prompts.get(name) or raise ToolFailure, "Unknown prompt: #{name.inspect}. Call prompts/list for the ones this server has."
       end
 
       # What a client hands the model about this server. "Set up Ruby Native in
@@ -494,7 +504,12 @@ module RubyNative
         whose `who` is `human` is a step only a person can take (pay, create the App Store Connect
         record, answer a questionnaire Apple has no API for). Stop, show them the steps and the URL,
         and read `status` again when they say it is done. Never claim a `verifiable: false` blocker is
-        cleared: only the person can, on the dashboard.
+        cleared: only the person can, on the dashboard. Before login or a linked app, `status`
+        answers from this checkout and says what comes next.
+
+        The `ship` prompt is the whole way to the stores in one command: install, the first native
+        pass, the account, then every store step in order, stopping at the ones only a person can
+        take. Start there when asked to ship, set up, or get the app into the stores.
       TEXT
 
       def call(params)
@@ -674,9 +689,15 @@ module RubyNative
         tool_result(build_status_report(build), build.merge("app_id" => app_id))
       end
 
+      # Before there is anything to fetch, the answer is what this checkout
+      # shows: the same report `ruby_native status` prints, so the first thing
+      # an agent asks has an answer even on a fresh clone with no account.
       def status(arguments)
         app_id = resolve_app_id(arguments)
-        return tool_result(Platform::NO_APP_ID, { app_id: nil }, is_error: true) unless app_id
+        if app_id.nil? || Credentials.token.nil?
+          local = Status.local
+          return tool_result(Status.local_report(local), local)
+        end
 
         result = Status.fetch(app_id)
         unless result.ok?

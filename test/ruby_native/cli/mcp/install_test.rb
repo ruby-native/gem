@@ -11,7 +11,8 @@ class McpInstallTest < Minitest::Test
       config = JSON.parse(File.read(".mcp.json"))
       assert_equal({ "command" => "bundle", "args" => %w[exec ruby_native mcp] }, config.dig("mcpServers", "ruby-native"))
       assert_match "Added the ruby-native server to .mcp.json.", out
-      assert_match "Then say: set up Ruby Native in this app", out
+      assert_match "/mcp__ruby-native__ship", out
+      assert_match "bundle exec ruby_native ship", out
     end
   end
 

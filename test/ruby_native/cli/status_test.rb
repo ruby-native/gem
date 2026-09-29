@@ -58,16 +58,35 @@ class StatusTest < Minitest::Test
     assert_match "iOS: nothing is in the way of a build.", RubyNative::CLI::Status.report({})
   end
 
-  def test_run_without_a_linked_app_says_how_to_link_one
+  def test_run_without_a_linked_app_reports_the_checkout_and_the_next_step
     original = RubyNative::CLI::Mcp::Platform.method(:app_id)
     RubyNative::CLI::Mcp::Platform.define_singleton_method(:app_id) { |*| nil }
 
-    out, _err = capture_io do
-      assert_raises(SystemExit) { RubyNative::CLI::Status.new([]).run }
-    end
-    assert_match "No app is linked to this project.", out
+    out, _err = capture_io { RubyNative::CLI::Status.new([]).run }
+
+    assert_match "before an app is linked", out
+    assert_match "Linked app: none", out
+    assert_match "Next: ", out
   ensure
     RubyNative::CLI::Mcp::Platform.define_singleton_method(:app_id, original)
+  end
+
+  # Each line of the local report is one thing missing, and the next step is
+  # the first of them.
+  def test_local_report_names_the_first_missing_thing_as_the_next_step
+    local = { "gem_version" => "1.0", "config" => true, "logged_in" => false, "app_id" => nil,
+              "layout" => { "stylesheet_link_tag :ruby_native" => true, "viewport-fit=cover" => false, "native_tabs_tag" => true, "native_identity_tag" => false } }
+    report = RubyNative::CLI::Status.local_report(local)
+
+    assert_match "config/ruby_native.yml: present", report
+    assert_match "Layout: missing viewport-fit=cover, native_identity_tag", report
+    assert_match "Next: the first native pass", report
+
+    done = local.merge("layout" => local["layout"].transform_values { true })
+    assert_match "Next: create the app at", RubyNative::CLI::Status.local_report(done)
+    assert_match "/apps/new", RubyNative::CLI::Status.local_report(done)
+    assert_match "Next: run `ruby_native link`", RubyNative::CLI::Status.local_report(done.merge("logged_in" => true))
+    assert_match "Next: run `bin/rails generate ruby_native:install`", RubyNative::CLI::Status.local_report(local.merge("config" => false))
   end
 
   private

@@ -82,7 +82,8 @@ class RubyNative::Generators::InstallGeneratorTest < Rails::Generators::TestCase
     end
     assert_includes output, "Tabs, from your routes: / (Home), /profile (Profile), /settings (Settings), /posts (Posts)"
     assert_includes output, "bundle exec ruby_native mcp install"
-    assert_includes output, "Then say: set up Ruby Native in this app"
+    assert_includes output, "Then, in your agent: /mcp__ruby-native__ship"
+    assert output.index("bundle exec ruby_native preview") < output.index("mcp install"), "the agent hand-off is the last thing printed"
   end
 
   def test_skips_the_routes_a_library_draws_into_the_app
