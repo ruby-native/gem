@@ -104,6 +104,10 @@ module RubyNative
           neither track has started, ask which store first. Apple's enrolment is the longest wait,
           so suggest starting it now and doing the rest while it runs.
 
+          The App Store Connect key is the one secret you handle, and only by its path: the person
+          mints it in App Store Connect and downloads the .p8; you pass the path, the key ID, the
+          issuer ID and the Team ID to `apple_key_set`, and never open the file.
+
           Take the first blocker on the track they are working:
 
           - `who: agent`: do it. The steps name the tool or the command. Deploys are
@@ -111,8 +115,9 @@ module RubyNative
             build with `build_status`.
           - `who: human`: show the person the `why`, the `url` and the `steps` exactly as given,
             then stop. When they say it is done, read `status` again. A blocker with
-            `verifiable: false` can only be marked done on the dashboard, so never claim it is
-            cleared.
+            `verifiable: false` is a questionnaire nobody can see: it clears only on the person's
+            word, on the dashboard or as a `confirmations` entry on `submit`, and only after they
+            have said, in their words, that it is done.
 
           When nothing blocks the act: `build` is a deploy. `submit` is the `submit` tool, twice:
           the first call returns the summary and a token; show the summary, get an explicit yes,

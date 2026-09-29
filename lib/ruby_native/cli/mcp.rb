@@ -1,4 +1,5 @@
 require "json"
+require "ruby_native/cli/apple"
 require "ruby_native/cli/check"
 require "ruby_native/cli/mcp/config_validator"
 require "ruby_native/cli/mcp/platform"
@@ -205,6 +206,28 @@ module RubyNative
           annotations: { title: "App status", readOnlyHint: true, openWorldHint: true }
         },
         {
+          name: "apple_key_set",
+          description: "Hand over the App Store Connect key the person minted: the path to the .p8 they downloaded, " \
+                       "plus the key ID, the issuer ID, and the Team ID. Only a person can make the key (a Team key with " \
+                       "the Admin role, under Users and Access > Integrations); ask them for the path, never read the " \
+                       "file yourself. Ruby Native checks it against Apple and this waits up to half a minute for the " \
+                       "answer; if it is still checking, read `status` again shortly. Reaches rubynative.com and needs " \
+                       "`ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              path: { type: "string", description: "Path to the .p8 file, relative to the app root or absolute." },
+              key_id: { type: "string", description: "The key ID shown next to the key in App Store Connect." },
+              issuer_id: { type: "string", description: "The issuer ID shown above the keys list." },
+              team_id: { type: "string", description: "The Team ID from developer.apple.com/account." },
+              app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
+            },
+            required: [ "path", "key_id", "issuer_id", "team_id" ],
+            additionalProperties: false
+          },
+          annotations: { title: "Set the App Store Connect key", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
+        },
+        {
           name: "permissions_set",
           description: "Set the sentence iOS shows when the app first asks for the camera, the microphone, or the " \
                        "photo library. Say what the app does with it, in the user's words. The same three strings decide " \
@@ -379,6 +402,11 @@ module RubyNative
             type: "object",
             properties: {
               confirmation_token: { type: "string", description: "The token from the previous call, after the person said yes." },
+              confirmations: {
+                type: "array",
+                items: { type: "string", enum: [ "app_privacy", "age_rating", "play_content" ] },
+                description: "Questionnaires the person says they have completed in App Store Connect or Play Console. Send one only after they say so, in their words; never infer it."
+              },
               platform: { type: "string", enum: [ "ios", "android" ], description: "Defaults to ios." },
               app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
             },
@@ -533,6 +561,11 @@ module RubyNative
           when "link_app"
             outcome = Link.link(arguments["app_id"].to_s.strip.empty? ? nil : arguments["app_id"].to_s.strip)
             tool_result(outcome.text, outcome.data, is_error: !outcome.ok)
+          when "apple_key_set"
+            with_app(arguments) do |app_id|
+              Apple.set_key(app_id, path: string!(arguments, "path"), key_id: string!(arguments, "key_id"),
+                issuer_id: string!(arguments, "issuer_id"), team_id: string!(arguments, "team_id"), wait: 30)
+            end
           when "permissions_set" then with_app(arguments) { |app_id| Permissions.set(app_id, arguments.slice("camera", "microphone", "photos")) }
           when "testers_list" then with_app(arguments) { |app_id| Testers.list(app_id, platform: arguments["platform"] || "ios") }
           when "testers_add" then with_app(arguments) { |app_id| Testers.add(app_id, string!(arguments, "email"), platform: arguments["platform"] || "ios") }
@@ -544,8 +577,9 @@ module RubyNative
             with_app(arguments) do |app_id|
               token = arguments["confirmation_token"]
               platform = arguments["platform"] || "ios"
+              confirmations = string_list(arguments["confirmations"], "confirmations") || []
               if platform == "android" || token.to_s.strip.empty?
-                Submit.preview(app_id, platform: platform)
+                Submit.preview(app_id, platform: platform, confirmations: confirmations)
               else
                 Submit.submit(app_id, token.to_s.strip)
               end

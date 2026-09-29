@@ -1,3 +1,4 @@
+require "ruby_native/cli/apple"
 require "ruby_native/cli/check"
 require "ruby_native/cli/credentials"
 require "ruby_native/cli/demo_account"
@@ -21,6 +22,8 @@ module RubyNative
     def self.start(argv)
       command = argv.shift
       case command
+      when "apple"
+        RubyNative::CLI::Apple.new(argv).run
       when "check"
         RubyNative::CLI::Check.new(argv).run
       when "deploy"
@@ -80,6 +83,8 @@ module RubyNative
       puts "Commands:"
       puts "  Every command that talks to rubynative.com reads the app from config/ruby_native.yml, or takes --app=ID."
       puts "  link [APP_ID]  Link this project to an app on your account (writes ruby_native.app_id)"
+      puts "  apple key PATH --key-id=KEY --issuer-id=ISSUER --team-id=TEAM"
+      puts "                Hand over the App Store Connect key (.p8) and wait for Apple to accept it"
       puts "  check         Validate your views against the signal vocabulary"
       puts "    --deployed         Also compare against the build your users have"
       puts "    --paths=A,B        Directories to scan (default: app/views)"
@@ -109,6 +114,7 @@ module RubyNative
       puts "  status        Where the app is, what is next, and what is in the way. Works before login, from this checkout"
       puts "  submit        Show exactly what would go to App Store review, then ask before sending it"
       puts "    --yes              Skip the question"
+      puts "    --confirm=NAME     Say a questionnaire is done: app_privacy, age_rating, or play_content"
       puts "    --android          Show what stands between the app and Google Play, and the promotion steps"
       puts "  testers       List the TestFlight testers"
       puts "    add EMAIL          Invite a team member to TestFlight"

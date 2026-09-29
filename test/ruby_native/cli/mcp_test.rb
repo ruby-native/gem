@@ -41,7 +41,7 @@ class McpTest < Minitest::Test
   end
 
   READ_TOOLS = %w[build_status check_views config_errors deployed_builds lookup_signals screenshots_list status testers_list validate_config].freeze
-  WRITE_TOOLS = %w[demo_account_set icon_set link_app listing_pull listing_push permissions_set screenshots_capture screenshots_setup submit testers_add withdraw].freeze
+  WRITE_TOOLS = %w[apple_key_set demo_account_set icon_set link_app listing_pull listing_push permissions_set screenshots_capture screenshots_setup submit testers_add withdraw].freeze
 
   def test_tools_list_names_every_tool_and_says_which_ones_write
     tools = request("tools/list")["result"]["tools"]
@@ -515,6 +515,38 @@ class McpTest < Minitest::Test
   end
 
   # --- submit and withdraw ---
+
+  def test_submit_carries_the_confirmations_the_person_gave
+    sent = nil
+    answer = ok("submitted" => false, "summary" => "Submit.", "confirmation_token" => "tok")
+    with_stub(RubyNative::CLI::Mcp::Platform, :post, ->(_path, json = nil) { sent = json; answer }) do
+      call("submit", "app_id" => "app_1", "confirmations" => [ "app_privacy" ])
+    end
+
+    assert_equal({ confirm: [ "app_privacy" ] }, sent)
+  end
+
+  def test_apple_key_set_sends_the_file_and_waits_for_apple
+    Dir.mktmpdir do |dir|
+      path = File.join(dir, "AuthKey.p8")
+      File.write(path, "-----BEGIN PRIVATE KEY-----\nabc\n-----END PRIVATE KEY-----\n")
+      patched = nil
+      checking = ok("state" => "checking")
+      passed = ok("state" => "passed", "validated" => true)
+      states = [ checking, passed ]
+      result = with_stub(RubyNative::CLI::Mcp::Platform, :patch, ->(_path, json) { patched = json; checking }) do
+        with_stub(RubyNative::CLI::Mcp::Platform, :get, ->(_path) { states.shift || passed }) do
+          RubyNative::CLI::Apple.stub_const_sleep { call("apple_key_set", "app_id" => "app_1", "path" => path, "key_id" => "K1", "issuer_id" => "I1", "team_id" => "T1") }
+        end
+      end
+
+      assert_equal "K1", patched[:asc_key_id]
+      assert_equal "T1", patched[:team_id]
+      assert_match "PRIVATE KEY", patched[:asc_key]
+      assert_match "Key verified", text(result)
+      refute result["isError"]
+    end
+  end
 
   def test_submit_without_a_token_previews_and_submits_nothing
     sent = nil

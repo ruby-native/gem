@@ -11,11 +11,15 @@ module RubyNative
         ensure_authenticated!
         app_id = app_id!
 
+        # A questionnaire Apple or Google gives us no API for closes on the
+        # person's word, and the word can ride along: --confirm=app_privacy.
+        confirmations = @argv.select { |arg| arg.start_with?("--confirm=") }.map { |arg| arg.split("=", 2).last.to_s.strip }.reject(&:empty?)
+
         # Play has no submit of ours: the answer is the go-live list with the
         # promotion steps, and nothing to confirm.
-        return finish(self.class.preview(app_id, platform: "android")) if @argv.include?("--android")
+        return finish(self.class.preview(app_id, platform: "android", confirmations: confirmations)) if @argv.include?("--android")
 
-        preview = self.class.preview(app_id)
+        preview = self.class.preview(app_id, confirmations: confirmations)
         return finish(preview) unless preview.ok
 
         puts preview.text
@@ -33,8 +37,11 @@ module RubyNative
         finish(self.class.submit(app_id, preview.data["confirmation_token"]))
       end
 
-      def self.preview(app_id, platform: "ios")
-        result = Mcp::Platform.post("/api/v1/apps/#{app_id}/submission", platform == "android" ? { platform: "android" } : nil)
+      def self.preview(app_id, platform: "ios", confirmations: [])
+        body = {}
+        body[:platform] = "android" if platform == "android"
+        body[:confirm] = confirmations if confirmations.any?
+        result = Mcp::Platform.post("/api/v1/apps/#{app_id}/submission", body.empty? ? nil : body)
         return failure(result) unless result.ok?
 
         text = result.value["summary"].to_s
