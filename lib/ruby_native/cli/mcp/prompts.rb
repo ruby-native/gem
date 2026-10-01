@@ -101,7 +101,7 @@ module RubyNative
           ## 4. The stores
 
           Read `status`. Each track, iOS and Android, has a `next` act and a `blocked_by` list. If
-          neither track has started, ask which store first. Apple's enrolment is the longest wait,
+          neither track has started, ask which store first. Apple's enrollment is the longest wait,
           so suggest starting it now and doing the rest while it runs.
 
           The App Store Connect key is the one secret you handle, and only by its path: the person
