@@ -1,0 +1,33 @@
+#!/usr/bin/env ruby
+# Regenerates the icon name lists the config validator checks against.
+#
+#   script/icon_names [path/to/SF Symbols.app] [path/to/native]
+#
+# SF Symbols: every name with the iOS version that added it, from the SF
+# Symbols app's own metadata. Names only, never glyphs or search keywords.
+# Material Symbols: copied from native, which bundles the matching font.
+
+require "json"
+
+app = ARGV[0] || "/Applications/SF Symbols.app"
+native = ARGV[1] || File.expand_path("../../native", __dir__)
+out = File.expand_path("../lib/ruby_native/icons", __dir__)
+
+def plist(path)
+  JSON.parse(IO.popen(["plutil", "-convert", "json", "-o", "-", path], &:read))
+end
+
+metadata = "#{app}/Contents/Resources/Metadata"
+availability = plist("#{metadata}/name_availability.plist")
+releases = availability["year_to_release"].transform_values { |platforms| platforms["iOS"] }
+symbols = availability["symbols"].transform_values { |year| releases.fetch(year) }
+
+# Renamed symbols keep resolving under their old name.
+plist("#{metadata}/legacy_aliases.strings").each do |old_name, new_name|
+  symbols[old_name] ||= symbols[new_name] if symbols[new_name]
+end
+
+File.write("#{out}/sf_symbols.tsv", symbols.sort.map { |name, ios| "#{name}\t#{ios}\n" }.join)
+File.write("#{out}/material_symbols.txt", File.read("#{native}/packages/android/RubyNative/core/src/main/assets/material_symbols.txt"))
+
+puts "#{symbols.size} SF Symbols, #{File.readlines("#{out}/material_symbols.txt").size} Material Symbols"

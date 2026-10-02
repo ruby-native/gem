@@ -168,6 +168,51 @@ class ConfigValidatorTest < Minitest::Test
     YAML
   end
 
+  def test_a_misspelled_icon_draws_a_placeholder_on_both_platforms
+    offenses = validate("tabs:\n  - title: Home\n    path: /\n    icon: hosue\n")
+
+    assert_equal 2, offenses.size
+    assert offenses.all? { |o| o.severity == :warning && o.key == "tabs[0].icon" && o.line == 4 }
+    assert_match "isn't an SF Symbol", offenses[0].message
+    assert_match "isn't a Material Symbol", offenses[1].message
+  end
+
+  def test_an_sf_symbol_in_the_shared_icon_is_pointed_at_icons
+    offense = sole(validate("tabs:\n  - title: Coffee\n    path: /\n    icon: cup.and.saucer\n"))
+
+    assert_match "Android draws a placeholder", offense.message
+    assert_match "`icons.ios`", offense.message
+  end
+
+  def test_a_material_symbol_in_the_ios_slot_is_named
+    offense = sole(validate(<<~YAML))
+      tabs:
+        - title: More
+          path: /
+          icons:
+            ios: more_horiz
+            android: more_horiz
+    YAML
+
+    assert_equal "tabs[0].icons.ios", offense.key
+    assert_equal 5, offense.line
+    assert_match "isn't an SF Symbol", offense.message
+  end
+
+  def test_a_symbol_newer_than_the_ios_floor_is_a_warning
+    offense = sole(validate(<<~YAML))
+      tabs:
+        - title: Books
+          path: /
+          icons:
+            ios: apple.books.pages
+            android: book
+    YAML
+
+    assert_match "needs iOS 26.0", offense.message
+    assert_match "older devices draw a placeholder", offense.message
+  end
+
   def test_a_tab_without_a_path_fails_the_whole_config
     offense = validate("tabs:\n  - title: Home\n    icon: house\n").first
 
@@ -229,7 +274,7 @@ class ConfigValidatorTest < Minitest::Test
           auto_route: false
         - title: Orders
           path: /orders
-          icon: bag
+          icon: person
           auto_route: ["/orders/"]
     YAML
   end
@@ -336,6 +381,11 @@ class ConfigValidatorTest < Minitest::Test
   end
 
   private
+
+  def sole(offenses)
+    assert_equal 1, offenses.size, offenses.map(&:message).join("\n")
+    offenses.first
+  end
 
   def validate(yaml)
     in_app do
