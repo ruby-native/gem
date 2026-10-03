@@ -11,7 +11,10 @@ module RubyNative
     # same act as pressing the button.
     class Listing < Command
       PATH = "config/ruby_native_listing.yml".freeze
-      FIELDS = %w[name subtitle primary_category secondary_category keywords promotional_text privacy_policy_url copyright description].freeze
+      FIELDS = %w[
+        name subtitle primary_category secondary_category keywords promotional_text privacy_policy_url copyright
+        review_contact_first_name review_contact_last_name review_contact_email review_contact_phone description
+      ].freeze
       LIMITS = { "name" => 30, "subtitle" => 30, "keywords" => 100, "promotional_text" => 170, "description" => 4000 }.freeze
 
       def run
@@ -99,7 +102,8 @@ module RubyNative
         FIELDS.each do |field|
           value = listing[field]
           if value.nil? || value.to_s.empty?
-            lines << "#{field}:#{" # up to #{LIMITS[field]} characters" if LIMITS[field]}"
+            hint = LIMITS[field] ? " # up to #{LIMITS[field]} characters" : (" # \"+1 503 555 0100\", quoted" if field == "review_contact_phone")
+            lines << "#{field}:#{hint}"
             next
           end
 
@@ -107,7 +111,8 @@ module RubyNative
             lines << "description: |-"
             value.to_s.each_line { |line| lines << "  #{line.rstrip}" }
           else
-            lines << "#{field}: #{value.to_s.include?(":") || value.to_s.start_with?("#") ? value.to_s.inspect : value}"
+            # YAML reads an unquoted +15035550100 as a number and drops the +.
+            lines << "#{field}: #{value.to_s.include?(":") || value.to_s.start_with?("#", "+") ? value.to_s.inspect : value}"
           end
         end
         lines.join("\n") + "\n"

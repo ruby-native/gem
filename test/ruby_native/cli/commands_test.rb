@@ -214,11 +214,27 @@ class CommandsTest < Minitest::Test
           promotional_text: "Now: offline maps"
           privacy_policy_url:
           copyright:
+          review_contact_first_name:
+          review_contact_last_name:
+          review_contact_email:
+          review_contact_phone: # "+1 503 555 0100", quoted
           description: |-
             Hikes.
             Offline.
         YAML
         assert_equal listing.compact, YAML.safe_load(written).slice(*listing.keys).compact
+      end
+    end
+  end
+
+  def test_listing_pull_quotes_a_phone_so_the_plus_survives
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        with_get(ok("listing" => { "review_contact_phone" => "+15035550100" })) { RubyNative::CLI::Listing.pull("app_1") }
+
+        assert_includes File.read("config/ruby_native_listing.yml"), %(review_contact_phone: "+15035550100")
+        assert_equal "+15035550100", YAML.safe_load(File.read("config/ruby_native_listing.yml"))["review_contact_phone"]
       end
     end
   end

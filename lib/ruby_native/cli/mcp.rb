@@ -345,8 +345,10 @@ module RubyNative
           description: "Save config/ruby_native_listing.yml to Ruby Native as the App Store listing draft. Write the " \
                        "file first: name (30), subtitle (30), keywords (100, comma separated, no spaces), " \
                        "promotional_text (170), description (4000), privacy_policy_url, primary_category and " \
-                       "secondary_category from Apple's list, and copyright (\"2026 Trailhead LLC\"). Nothing " \
-                       "reaches Apple: a person publishes it. " \
+                       "secondary_category from Apple's list, copyright (\"2026 Trailhead LLC\"), and who App Review " \
+                       "contacts: review_contact_first_name, review_contact_last_name, review_contact_email, and " \
+                       "review_contact_phone (\"+1 503 555 0100\", a + and the country code). Nothing reaches Apple: " \
+                       "a person publishes it. " \
                        "Reaches rubynative.com and needs `ruby_native login`.",
           inputSchema: {
             type: "object",
