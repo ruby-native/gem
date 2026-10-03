@@ -11,7 +11,7 @@ module RubyNative
     # same act as pressing the button.
     class Listing < Command
       PATH = "config/ruby_native_listing.yml".freeze
-      FIELDS = %w[name subtitle primary_category secondary_category keywords promotional_text privacy_policy_url description].freeze
+      FIELDS = %w[name subtitle primary_category secondary_category keywords promotional_text privacy_policy_url copyright description].freeze
       LIMITS = { "name" => 30, "subtitle" => 30, "keywords" => 100, "promotional_text" => 170, "description" => 4000 }.freeze
 
       def run

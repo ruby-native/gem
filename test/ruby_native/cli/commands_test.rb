@@ -213,6 +213,7 @@ class CommandsTest < Minitest::Test
           keywords: hiking,trail
           promotional_text: "Now: offline maps"
           privacy_policy_url:
+          copyright:
           description: |-
             Hikes.
             Offline.
