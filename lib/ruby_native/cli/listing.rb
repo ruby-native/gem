@@ -11,10 +11,8 @@ module RubyNative
     # same act as pressing the button.
     class Listing < Command
       PATH = "config/ruby_native_listing.yml".freeze
-      FIELDS = %w[
-        name subtitle primary_category secondary_category keywords promotional_text privacy_policy_url copyright
-        review_contact_first_name review_contact_last_name review_contact_email review_contact_phone description
-      ].freeze
+      FIELDS = %w[name subtitle primary_category secondary_category keywords promotional_text privacy_policy_url copyright description].freeze
+      CONTACT_FIELDS = %w[first_name last_name email phone].freeze
       LIMITS = { "name" => 30, "subtitle" => 30, "keywords" => 100, "promotional_text" => 170, "description" => 4000 }.freeze
 
       def run
@@ -42,7 +40,10 @@ module RubyNative
         problems = over_limits(listing)
         return Outcome.new(ok: false, text: (["#{PATH} has fields over Apple's limits:"] + problems).join("\n"), data: { "errors" => problems }) if problems.any?
 
-        result = Mcp::Platform.patch("/api/v1/apps/#{app_id}/listing", { listing: listing })
+        contact = listing.delete("review_contact")
+        body = { listing: listing }
+        body[:review_contact] = contact if contact&.any?
+        result = Mcp::Platform.patch("/api/v1/apps/#{app_id}/listing", body)
         return failure(result) unless result.ok?
 
         changed = Array(result.value["changed"])
@@ -57,7 +58,7 @@ module RubyNative
         result = Mcp::Platform.get("/api/v1/apps/#{app_id}/listing")
         return failure(result) unless result.ok?
 
-        listing = result.value["listing"] || {}
+        listing = (result.value["listing"] || {}).merge("review_contact" => result.value["review_contact"] || {})
         File.write(PATH, render(listing))
         success("Wrote #{PATH} from the listing Ruby Native holds.", result.value)
       end
@@ -82,7 +83,10 @@ module RubyNative
 
         # An empty line from the template is a field not written yet, not a
         # request to blank it.
-        data.slice(*FIELDS).compact.transform_values { |value| value.to_s.strip }
+        listing = data.slice(*FIELDS).compact.transform_values { |value| value.to_s.strip }
+        contact = data["review_contact"]
+        listing["review_contact"] = contact.slice(*CONTACT_FIELDS).compact.transform_values { |value| value.to_s.strip } if contact.is_a?(Hash)
+        listing
       rescue Psych::SyntaxError => error
         Outcome.new(ok: false, text: "#{PATH} is not valid YAML: #{error.message}", data: {})
       end
@@ -100,10 +104,10 @@ module RubyNative
       def self.render(listing)
         lines = [ "# App Store listing. `ruby_native listing push` saves it to Ruby Native;", "# publishing to App Store Connect is a separate step.", "" ]
         FIELDS.each do |field|
+          lines.concat(render_contact(listing["review_contact"] || {})) if field == "description"
           value = listing[field]
           if value.nil? || value.to_s.empty?
-            hint = LIMITS[field] ? " # up to #{LIMITS[field]} characters" : (" # \"+1 503 555 0100\", quoted" if field == "review_contact_phone")
-            lines << "#{field}:#{hint}"
+            lines << "#{field}:#{" # up to #{LIMITS[field]} characters" if LIMITS[field]}"
             next
           end
 
@@ -111,11 +115,28 @@ module RubyNative
             lines << "description: |-"
             value.to_s.each_line { |line| lines << "  #{line.rstrip}" }
           else
-            # YAML reads an unquoted +15035550100 as a number and drops the +.
-            lines << "#{field}: #{value.to_s.include?(":") || value.to_s.start_with?("#", "+") ? value.to_s.inspect : value}"
+            lines << "#{field}: #{scalar(value)}"
           end
         end
         lines.join("\n") + "\n"
+      end
+
+      def self.render_contact(contact)
+        lines = [ "review_contact: # who App Review contacts; never shown on the store" ]
+        CONTACT_FIELDS.each do |field|
+          value = contact[field]
+          lines << if value.nil? || value.to_s.empty?
+            "  #{field}:#{" # \"+1 503 555 0100\", quoted" if field == "phone"}"
+          else
+            "  #{field}: #{scalar(value)}"
+          end
+        end
+        lines
+      end
+
+      # YAML reads an unquoted +15035550100 as a number and drops the +.
+      def self.scalar(value)
+        value.to_s.include?(":") || value.to_s.start_with?("#", "+") ? value.to_s.inspect : value
       end
     end
   end

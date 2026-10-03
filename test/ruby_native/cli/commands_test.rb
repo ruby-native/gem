@@ -214,10 +214,11 @@ class CommandsTest < Minitest::Test
           promotional_text: "Now: offline maps"
           privacy_policy_url:
           copyright:
-          review_contact_first_name:
-          review_contact_last_name:
-          review_contact_email:
-          review_contact_phone: # "+1 503 555 0100", quoted
+          review_contact: # who App Review contacts; never shown on the store
+            first_name:
+            last_name:
+            email:
+            phone: # "+1 503 555 0100", quoted
           description: |-
             Hikes.
             Offline.
@@ -227,14 +228,34 @@ class CommandsTest < Minitest::Test
     end
   end
 
-  def test_listing_pull_quotes_a_phone_so_the_plus_survives
+  def test_listing_pull_nests_the_reviewer_contact_and_quotes_the_phone
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do
         Dir.mkdir("config")
-        with_get(ok("listing" => { "review_contact_phone" => "+15035550100" })) { RubyNative::CLI::Listing.pull("app_1") }
+        contact = { "first_name" => "Pat", "last_name" => "Reviewer", "email" => "pat@trailhead.app", "phone" => "+15035550100" }
+        with_get(ok("listing" => {}, "review_contact" => contact)) { RubyNative::CLI::Listing.pull("app_1") }
 
-        assert_includes File.read("config/ruby_native_listing.yml"), %(review_contact_phone: "+15035550100")
-        assert_equal "+15035550100", YAML.safe_load(File.read("config/ruby_native_listing.yml"))["review_contact_phone"]
+        written = File.read("config/ruby_native_listing.yml")
+        assert_includes written, %(  phone: "+15035550100")
+        assert_equal contact, YAML.safe_load(written)["review_contact"]
+      end
+    end
+  end
+
+  def test_listing_push_sends_the_reviewer_contact_nested_and_skips_an_empty_one
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        File.write("config/ruby_native_listing.yml", "name: Trailhead\nreview_contact:\n  first_name: Pat\n  phone: \"+1 503 555 0100\"\n  email:\n")
+        sent = nil
+        answer = ok("changed" => [], "missing" => [])
+        with_patch_capture(->(json) { sent = json; answer }) { RubyNative::CLI::Listing.push("app_1") }
+        assert_equal({ "first_name" => "Pat", "phone" => "+1 503 555 0100" }, sent[:review_contact])
+        refute sent[:listing].key?("review_contact")
+
+        File.write("config/ruby_native_listing.yml", "name: Trailhead\nreview_contact:\n  first_name:\n")
+        with_patch_capture(->(json) { sent = json; answer }) { RubyNative::CLI::Listing.push("app_1") }
+        refute sent.key?(:review_contact)
       end
     end
   end
