@@ -497,7 +497,7 @@ class McpTest < Minitest::Test
       with_stub(RubyNative::CLI::Mcp::Platform, :patch, ->(_path, json) { sent = json; answer }) { call("listing_push", "app_id" => "app_1") }
     end
 
-    assert_equal({ "name" => "Trailhead", "keywords" => "hiking, trail" }, sent[:listing])
+    assert_equal({ "name" => "Trailhead", "keywords" => "hiking, trail", "ios" => {}, "android" => {} }, sent[:listing])
     assert_match "Saved name, keywords.", text(result)
     assert_match "Still missing before it can be submitted: description.", text(result)
     assert_match "Nothing has reached Apple.", text(result)
@@ -511,7 +511,7 @@ class McpTest < Minitest::Test
     end
 
     assert result["isError"]
-    assert_match "subtitle is 31 characters, the limit is 30", text(result)
+    assert_match "subtitle is 31 characters, the limit on the App Store is 30", text(result)
   end
 
   # --- submit and withdraw ---

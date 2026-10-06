@@ -38,6 +38,29 @@ module RubyNative
         exit 1 unless outcome.ok
       end
 
+      PLATFORM_LABELS = { "ios" => "iOS", "android" => "Android" }.freeze
+
+      # Every store the app has started, unless --ios or --android names one.
+      # A server too old to say, or an app with neither started, means iOS.
+      def platforms!(app_id)
+        return [ "android" ] if @argv.include?("--android")
+        return [ "ios" ] if @argv.include?("--ios")
+
+        status = Status.fetch(app_id)
+        started = status.ok? ? Array(status.value["platforms"]) & PLATFORM_LABELS.keys : []
+        started.empty? ? [ "ios" ] : started
+      end
+
+      # One store prints as it always has; two get a heading each, and the
+      # command fails if either did.
+      def finish_each(platforms)
+        return finish(yield(platforms.first)) if platforms.one?
+
+        outcomes = platforms.map { |platform| [ platform, yield(platform) ] }
+        puts outcomes.map { |platform, outcome| "#{PLATFORM_LABELS[platform]}:\n#{outcome.text}" }.join("\n\n")
+        exit 1 unless outcomes.all? { |_, outcome| outcome.ok }
+      end
+
       def positional
         @argv.reject { |arg| arg.start_with?("--") }
       end

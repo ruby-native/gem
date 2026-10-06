@@ -8,18 +8,17 @@ module RubyNative
       def run
         ensure_authenticated!
         app_id = app_id!
-        platform = @argv.include?("--android") ? "android" : "ios"
 
         case positional.first
         when "add"
           email = positional[1]
           unless email
-            puts "Usage: ruby_native testers add <apple-id-email> [--android]"
+            puts "Usage: ruby_native testers add <email> [--ios|--android]"
             exit 1
           end
-          finish(self.class.add(app_id, email, platform: platform))
+          finish_each(platforms!(app_id)) { |platform| self.class.add(app_id, email, platform: platform) }
         when "list", nil
-          finish(self.class.list(app_id, platform: platform))
+          finish_each(platforms!(app_id)) { |platform| self.class.list(app_id, platform: platform) }
         else
           puts "Unknown testers command #{positional.first.inspect}. Use `add` or `list`."
           exit 1

@@ -14,13 +14,25 @@ module RubyNative
         # A questionnaire Apple or Google gives us no API for closes on the
         # person's word, and the word can ride along: --confirm=app_privacy.
         confirmations = @argv.select { |arg| arg.start_with?("--confirm=") }.map { |arg| arg.split("=", 2).last.to_s.strip }.reject(&:empty?)
+        platforms = platforms!(app_id)
 
         # Play has no submit of ours: the answer is the go-live list with the
-        # promotion steps, and nothing to confirm.
-        return finish(self.class.preview(app_id, platform: "android", confirmations: confirmations)) if @argv.include?("--android")
+        # promotion steps, and nothing to confirm. It prints first so the
+        # App Store question is the last thing on screen.
+        android = (self.class.preview(app_id, platform: "android", confirmations: confirmations) if platforms.include?("android"))
+        return finish(android) unless platforms.include?("ios")
 
+        if android
+          puts "Android:\n#{android.text}\n\niOS:"
+        end
+        ios = submit_ios(app_id, confirmations)
+        puts ios.text
+        exit 1 unless ios.ok && (android.nil? || android.ok)
+      end
+
+      def submit_ios(app_id, confirmations)
         preview = self.class.preview(app_id, confirmations: confirmations)
-        return finish(preview) unless preview.ok
+        return preview unless preview.ok
 
         puts preview.text
         puts ""
@@ -28,13 +40,10 @@ module RubyNative
         unless @argv.include?("--yes")
           print "Submit for review? Type yes to continue: "
           answer = $stdin.gets.to_s.strip.downcase
-          unless answer == "yes"
-            puts "Not submitted."
-            exit 1
-          end
+          return Outcome.new(ok: false, text: "Not submitted.", data: {}) unless answer == "yes"
         end
 
-        finish(self.class.submit(app_id, preview.data["confirmation_token"]))
+        self.class.submit(app_id, preview.data["confirmation_token"])
       end
 
       def self.preview(app_id, platform: "ios", confirmations: [])
@@ -72,7 +81,10 @@ module RubyNative
     class Withdraw < Command
       def run
         ensure_authenticated!
-        finish(Submit.withdraw(app_id!, platform: @argv.include?("--android") ? "android" : "ios"))
+        app_id = app_id!
+        # Play has no review queue to leave, so only --android asks it.
+        platforms = @argv.include?("--android") ? [ "android" ] : [ "ios" ]
+        finish_each(platforms) { |platform| Submit.withdraw(app_id, platform: platform) }
       end
     end
   end

@@ -111,7 +111,7 @@ module RubyNative
           Take the first blocker on the track they are working:
 
           - `who: agent`: do it. The steps name the tool or the command. Deploys are
-            `bundle exec ruby_native deploy` (`--android` for Google Play); run it and follow the
+            `bundle exec ruby_native deploy`, which builds every started store (`--ios` or `--android` for one); run it and follow the
             build with `build_status`.
           - `who: human`: show the person the `why`, the `url` and the `steps` exactly as given,
             then stop. When they say it is done, read `status` again. A blocker with

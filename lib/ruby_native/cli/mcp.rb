@@ -347,7 +347,9 @@ module RubyNative
                        "promotional_text (170), description (4000), privacy_policy_url, primary_category and " \
                        "secondary_category from Apple's list, copyright (\"2026 Trailhead LLC\"), and review_contact, " \
                        "who App Review contacts, with first_name, last_name, email, and phone (quoted, a + and the " \
-                       "country code: \"+1 503 555 0100\"). Nothing reaches Apple: a person publishes it. " \
+                       "country code: \"+1 503 555 0100\"). An ios: or android: block replaces name, subtitle, or " \
+                       "description for that store alone (Apple refuses a listing that mentions Android; Play's " \
+                       "subtitle, its short description, takes 80). Nothing reaches a store: a person publishes it. " \
                        "Reaches rubynative.com and needs `ruby_native login`.",
           inputSchema: {
             type: "object",

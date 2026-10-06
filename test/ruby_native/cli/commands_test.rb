@@ -222,6 +222,8 @@ class CommandsTest < Minitest::Test
           description: |-
             Hikes.
             Offline.
+
+          # ios: and android: replace name, subtitle, or description for one store.
         YAML
         assert_equal listing.compact, YAML.safe_load(written).slice(*listing.keys).compact
       end
@@ -289,6 +291,63 @@ class CommandsTest < Minitest::Test
         refute outcome.ok
         refute posted
       end
+    end
+  end
+
+  def test_listing_store_blocks_push_whole_and_pull_back
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        File.write("config/ruby_native_listing.yml", "name: Trailhead\nsubtitle: Trail maps, trip logs, and offline topo maps\nios:\n  subtitle: Trail maps and phone logs\nandroid:\n  name: Droidhead\n")
+        sent = nil
+        with_patch_capture(->(json) { sent = json; ok("changed" => [], "missing" => []) }) { RubyNative::CLI::Listing.push("app_1") }
+
+        assert_equal({ "subtitle" => "Trail maps and phone logs" }, sent[:listing]["ios"])
+        assert_equal({ "name" => "Droidhead" }, sent[:listing]["android"])
+
+        listing = { "name" => "Trailhead", "subtitle" => "Trail maps", "ios" => { "subtitle" => "Phone logs" }, "android" => { "name" => "Droidhead", "description" => "Hikes.\nOn Android." } }
+        with_get(ok("listing" => listing)) { RubyNative::CLI::Listing.pull("app_1") }
+        written = YAML.safe_load(File.read("config/ruby_native_listing.yml"))
+        assert_equal({ "subtitle" => "Phone logs" }, written["ios"])
+        assert_equal({ "name" => "Droidhead", "description" => "Hikes.\nOn Android." }, written["android"])
+      end
+    end
+  end
+
+  def test_listing_store_blocks_refuse_shared_fields_and_check_each_stores_limit
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        File.write("config/ruby_native_listing.yml", "name: Trailhead\nandroid:\n  keywords: droid\n")
+        outcome = RubyNative::CLI::Listing.push("app_1")
+        refute outcome.ok
+        assert_match "android: in config/ruby_native_listing.yml can only set name, subtitle, description; keywords is shared by every store.", outcome.text
+
+        File.write("config/ruby_native_listing.yml", "subtitle: #{"s" * 50}\nios:\n  subtitle: Short\nandroid:\n  subtitle: #{"s" * 81}\n")
+        outcome = RubyNative::CLI::Listing.push("app_1")
+        refute outcome.ok
+        assert_match "android.subtitle is 81 characters, the limit on Google Play is 80", outcome.text
+        refute_match "on the App Store", outcome.text
+      end
+    end
+  end
+
+  def test_platforms_default_to_the_started_stores_unless_a_flag_names_one
+    command = ->(argv) { RubyNative::CLI::Listing.new(argv) }
+    started = ok("platforms" => [ "ios", "android" ])
+
+    assert_equal %w[ios android], with_get(started) { command.([]).send(:platforms!, "app_1") }
+    assert_equal %w[android], with_get(started) { command.([ "--android" ]).send(:platforms!, "app_1") }
+    assert_equal %w[ios], with_get(started) { command.([ "--ios" ]).send(:platforms!, "app_1") }
+    assert_equal %w[ios], with_get(ok({})) { command.([]).send(:platforms!, "app_1") }, "an older server, or nothing started"
+  end
+
+  def test_two_stores_print_under_a_heading_each
+    outcomes = { "ios" => RubyNative::CLI::Command::Outcome.new(ok: true, text: "On App Store Connect.", data: {}),
+                 "android" => RubyNative::CLI::Command::Outcome.new(ok: true, text: "On Play Console.", data: {}) }
+
+    assert_output("iOS:\nOn App Store Connect.\n\nAndroid:\nOn Play Console.\n") do
+      RubyNative::CLI::Listing.new([]).send(:finish_each, %w[ios android]) { |platform| outcomes[platform] }
     end
   end
 

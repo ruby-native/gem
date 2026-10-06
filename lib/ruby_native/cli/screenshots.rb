@@ -16,7 +16,7 @@ module RubyNative
           paths = flag("paths").to_s.split(",").map(&:strip).reject(&:empty?)
           finish(self.class.setup(app_id, paths: paths, rotate_key: @argv.include?("--rotate-key")))
         when "capture"
-          finish(self.class.capture(app_id, platform: @argv.include?("--android") ? "android" : "ios"))
+          finish_each(platforms!(app_id)) { |platform| self.class.capture(app_id, platform: platform) }
         when "list", nil
           finish(self.class.list(app_id))
         else
