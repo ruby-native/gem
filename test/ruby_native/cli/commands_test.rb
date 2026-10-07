@@ -144,7 +144,7 @@ class CommandsTest < Minitest::Test
     posted = false
     empty = ok({})
     outcome = with_get(ok("key_configured" => true, "paths" => [ "/" ])) do
-      with_stub(Platform, :post, ->(*) { posted = true; empty }) { RubyNative::CLI::Screenshots.setup("app_1") }
+      with_stub(Platform, :post, ->(*) { posted = true; empty }) { RubyNative::CLI::Screenshots.setup("app_1", sign_in: true) }
     end
 
     refute posted
@@ -171,8 +171,8 @@ class CommandsTest < Minitest::Test
       RubyNative::CLI::Screenshots.list("app_1")
     end
 
-    assert_match "Key: set", outcome.text
-    assert_match "Pages: /, /inbox, /settings", outcome.text
+    assert_match "Sign-in key: set", outcome.text
+    assert_match "iOS pages: /, /inbox, /settings", outcome.text
     assert_match "iOS: capture 7 success, 3 screenshots, uploaded", outcome.text
     assert_match "Android: no capture yet", outcome.text
     assert_match "Publish them to the stores from https://rubynative.com/apps/1/screenshots.", outcome.text

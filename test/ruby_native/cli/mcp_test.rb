@@ -475,12 +475,12 @@ class McpTest < Minitest::Test
     with_stub(RubyNative::CLI::Mcp::Platform, :get, ->(path) { calls << [ :get, path ]; current }) do
       with_stub(RubyNative::CLI::Mcp::Platform, :post, ->(path, *) { calls << [ :post, path ]; key }) do
         with_stub(RubyNative::CLI::Mcp::Platform, :patch, ->(path, json) { calls << [ :patch, path, json ]; updated }) do
-          result = call("screenshots_setup", "paths" => [ "/", "/inbox", "/settings" ], "app_id" => "app_1")
+          result = call("screenshots_setup", "paths" => [ "/", "/inbox", "/settings" ], "sign_in" => true, "app_id" => "app_1")
 
           assert_match "Generated the screenshot key.", text(result)
           assert_match "  abc123", text(result)
           assert_match "screenshot_key: <the key above>", text(result)
-          assert_match "Pages to capture: /, /inbox, /settings", text(result)
+          assert_match "Pages to capture for iOS and Android: /, /inbox, /settings", text(result)
           assert_equal "abc123", result.dig("structuredContent", "screenshot_key")
         end
       end

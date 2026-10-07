@@ -2,10 +2,10 @@ require "ruby_native/cli/command"
 
 module RubyNative
   class CLI
-    # App Store screenshots, captured by rubynative.com against the deployed
-    # site. Setup is the key the site checks and the pages to visit; a capture
-    # is a job to follow. Publishing them to the store stays a click on the
-    # dashboard.
+    # Store screenshots, captured by rubynative.com against the deployed site.
+    # Each store has its own pages; the key, one per app, is only for pages
+    # behind a sign-in. A capture is a job to follow. Publishing them to the
+    # store stays a click on the dashboard.
     class Screenshots < Command
       def run
         ensure_authenticated!
@@ -14,7 +14,8 @@ module RubyNative
         case positional.first
         when "setup"
           paths = flag("paths").to_s.split(",").map(&:strip).reject(&:empty?)
-          finish(self.class.setup(app_id, paths: paths, rotate_key: @argv.include?("--rotate-key")))
+          finish(self.class.setup(app_id, paths: paths, platforms: (platforms!(app_id) if paths.any?),
+            sign_in: @argv.include?("--sign-in"), rotate_key: @argv.include?("--rotate-key")))
         when "capture"
           finish_each(platforms!(app_id)) { |platform| self.class.capture(app_id, platform: platform) }
         when "list", nil
@@ -25,15 +26,16 @@ module RubyNative
         end
       end
 
-      # Generates the key when the app has none (or when asked), then sets the
-      # paths when given. The key comes back once, with where to put it.
-      def self.setup(app_id, paths: [], rotate_key: false)
+      # Sets each store's pages when given (no platforms sets both). The key is
+      # only for pages behind a sign-in: generated with sign_in when there is
+      # none, or replaced with rotate_key. It comes back once, with where to put it.
+      def self.setup(app_id, paths: [], platforms: nil, sign_in: false, rotate_key: false)
         current = Mcp::Platform.get("/api/v1/apps/#{app_id}/screenshots")
         return failure(current) unless current.ok?
 
         lines = []
         data = current.value.dup
-        if rotate_key || !current.value["key_configured"]
+        if rotate_key || (sign_in && !current.value["key_configured"])
           key = Mcp::Platform.post("/api/v1/apps/#{app_id}/screenshots/key")
           return failure(key) unless key.ok?
 
@@ -51,16 +53,19 @@ module RubyNative
           lines << "  # config/initializers/ruby_native.rb"
           lines << "  RubyNative.configure { |c| c.screenshot_key = Rails.application.credentials.ruby_native.screenshot_key }"
           lines << ""
-        else
+        elsif sign_in
           lines << "The screenshot key is already set. Pass --rotate-key to replace it."
         end
 
         if paths.any?
-          updated = Mcp::Platform.patch("/api/v1/apps/#{app_id}/screenshots", { paths: paths })
-          return failure(updated) unless updated.ok?
+          (platforms || [ nil ]).each do |platform|
+            updated = Mcp::Platform.patch("/api/v1/apps/#{app_id}/screenshots", platform ? { paths: paths, platform: platform } : { paths: paths })
+            return failure(updated) unless updated.ok?
 
-          data = updated.value.merge(data.slice("screenshot_key"))
-          lines << "Pages to capture: #{paths.join(", ")}"
+            data = updated.value.merge(data.slice("screenshot_key"))
+          end
+          stores = (platforms || %w[ios android]).map { |platform| PLATFORM_LABELS[platform] }.join(" and ")
+          lines << "Pages to capture for #{stores}: #{paths.join(", ")}"
         elsif Array(current.value["paths"]).empty?
           lines << "No pages to capture yet. Run this again with --paths /,/inbox,/settings (3 to 10 pages)."
         end
@@ -83,9 +88,12 @@ module RubyNative
 
         value = result.value
         lines = []
-        lines << "Key: #{value["key_configured"] ? "set" : "not set (run `ruby_native screenshots setup`)"}"
-        paths = Array(value["paths"])
-        lines << "Pages: #{paths.empty? ? "none yet" : paths.join(", ")}"
+        lines << "Sign-in key: #{value["key_configured"] ? "set" : "not set (only pages behind a sign-in need one: `ruby_native screenshots setup --sign-in`)"}"
+        pages = value["pages"] || { "ios" => value["paths"] }
+        pages.each do |platform, paths|
+          paths = Array(paths)
+          lines << "#{PLATFORM_LABELS.fetch(platform, platform)} pages: #{paths.empty? ? "none yet" : paths.join(", ")}"
+        end
         (value["captures"] || {}).each do |platform, capture|
           label = platform == "ios" ? "iOS" : "Android"
           if capture.nil?

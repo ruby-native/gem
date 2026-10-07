@@ -296,15 +296,17 @@ module RubyNative
         },
         {
           name: "screenshots_setup",
-          description: "Set up App Store screenshots, which rubynative.com captures against the deployed site: " \
-                       "generates the screenshot key when the app has none (returned once, with where to put it in " \
-                       "the app's Rails credentials and initializer) and sets the 3 to 10 pages to capture. Deploy " \
-                       "the site after adding the key, then call screenshots_capture. Reaches rubynative.com and " \
-                       "needs `ruby_native login`.",
+          description: "Set up store screenshots, which rubynative.com captures against the deployed site: sets " \
+                       "the 3 to 10 pages to capture, for one store or both. Only pages behind a sign-in need the " \
+                       "screenshot key: pass sign_in to generate it (returned once, with where to put it in the app's " \
+                       "Rails credentials and initializer) and deploy the site before capturing. Then call " \
+                       "screenshots_capture. Reaches rubynative.com and needs `ruby_native login`.",
           inputSchema: {
             type: "object",
             properties: {
               paths: { type: "array", items: { type: "string" }, description: "3 to 10 absolute paths that show the app off, for example [\"/\", \"/inbox\", \"/settings\"]." },
+              platform: { type: "string", enum: [ "ios", "android" ], description: "The store the pages are for. Omit to set both." },
+              sign_in: { type: "boolean", description: "The pages need a signed-in user: generate the key if there is none." },
               rotate_key: { type: "boolean", description: "Replace an existing key. The old one stops working." },
               app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }
             },
@@ -574,7 +576,7 @@ module RubyNative
           when "testers_list" then with_app(arguments) { |app_id| Testers.list(app_id, platform: arguments["platform"] || "ios") }
           when "testers_add" then with_app(arguments) { |app_id| Testers.add(app_id, string!(arguments, "email"), platform: arguments["platform"] || "ios") }
           when "icon_set" then with_app(arguments) { |app_id| Icon.set(app_id, string!(arguments, "path")) }
-          when "screenshots_setup" then with_app(arguments) { |app_id| Screenshots.setup(app_id, paths: string_list(arguments["paths"], "paths") || [], rotate_key: arguments["rotate_key"] == true) }
+          when "screenshots_setup" then with_app(arguments) { |app_id| Screenshots.setup(app_id, paths: string_list(arguments["paths"], "paths") || [], platforms: (arguments["platform"] ? [ arguments["platform"] ] : nil), sign_in: arguments["sign_in"] == true, rotate_key: arguments["rotate_key"] == true) }
           when "screenshots_capture" then with_app(arguments) { |app_id| Screenshots.capture(app_id, platform: arguments["platform"] || "ios") }
           when "screenshots_list" then with_app(arguments) { |app_id| Screenshots.list(app_id) }
           when "submit"
