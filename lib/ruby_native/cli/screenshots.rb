@@ -4,8 +4,8 @@ module RubyNative
   class CLI
     # Store screenshots, captured by rubynative.com against the deployed site.
     # Each store has its own pages; the key, one per app, is only for pages
-    # behind a sign-in. A capture is a job to follow. Publishing them to the
-    # store stays a click on the dashboard.
+    # behind a sign-in. A capture is a job to follow. They reach the store
+    # with the listing: `listing publish`, or the dashboard.
     class Screenshots < Command
       def run
         ensure_authenticated!
