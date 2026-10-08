@@ -19,9 +19,10 @@ module RubyNative
         DEFAULT_PATH = "config/ruby_native.yml".freeze
 
         # The whole top-level vocabulary. `app`, `appearance`, `tabs`, `auth`,
-        # `errors`, and `analytics` are decoded on device; `ios`, `android`, and
-        # `linked_paths` are served as universal-link metadata by the engine;
-        # `ruby_native` holds the app_id `deploy` writes.
+        # `errors`, `analytics`, and `android.firebase` are decoded on device;
+        # `ios`, the rest of `android`, and `linked_paths` are served as
+        # universal-link metadata by the engine; `ruby_native` holds the app_id
+        # `deploy` writes.
         TOP_LEVEL_KEYS = %w[app appearance tabs auth errors analytics ios android linked_paths ruby_native].freeze
         APP_KEYS = %w[name mode entry_path].freeze
         # `android` is the per-platform chrome block, read only by the Android app.
@@ -29,6 +30,9 @@ module RubyNative
         NAVBAR_KEYS = %w[logo background_color foreground_color status_bar].freeze
         SPLASH_KEYS = %w[enabled spinner_color status_bar].freeze
         TAB_KEYS = %w[title titles path icon icons key eager search badge auto_route].freeze
+        ANDROID_KEYS = %w[package cert_fingerprint firebase].freeze
+        FIREBASE_KEYS = %w[app_id api_key project_id sender_id].freeze
+        PUSH_DOCS = "https://rubynative.com/docs/android/push-notifications".freeze
 
         MODES = %w[normal advanced].freeze
         THEMES = %w[auto light dark].freeze
@@ -103,7 +107,7 @@ module RubyNative
           check_analytics(config)
           check_linked_paths(config["linked_paths"])
           check_identifiers(config["ios"], "ios", %w[bundle_id team_id], "/.well-known/apple-app-site-association")
-          check_identifiers(config["android"], "android", %w[package cert_fingerprint], "/.well-known/assetlinks.json")
+          check_android(config["android"])
 
           @offenses
         end
@@ -359,6 +363,33 @@ module RubyNative
           return if missing.empty?
 
           warning(key, "`#{key}` is missing #{missing.map { |field| "`#{field}`" }.join(" and ")}. Your app serves #{endpoint} only once both are set, so universal links and shared passwords stay off until then.")
+        end
+
+        def check_android(android)
+          return if android.nil?
+          return error("android", "`android` has to be a mapping.") unless android.is_a?(Hash)
+
+          unknown_keys(android, ANDROID_KEYS, "android")
+          if android.key?("package") || android.key?("cert_fingerprint")
+            check_identifiers(android, "android", %w[package cert_fingerprint], "/.well-known/assetlinks.json")
+          end
+          check_firebase(android["firebase"])
+        end
+
+        def check_firebase(firebase)
+          return if firebase.nil?
+          return warning("android.firebase", "`android.firebase` has to be a mapping with #{FIREBASE_KEYS.join(", ")}. Until it is, push stays off on Android. #{PUSH_DOCS}") unless firebase.is_a?(Hash)
+
+          unknown_keys(firebase, FIREBASE_KEYS, "android.firebase")
+          missing = FIREBASE_KEYS.select { |field| firebase[field].to_s.strip.empty? }
+          if missing.any?
+            warning("android.firebase", "`android.firebase` is missing #{missing.map { |field| "`#{field}`" }.join(" and ")}. The app needs all four to start Firebase, so push stays off on Android until then. #{PUSH_DOCS}")
+          end
+
+          app_id = firebase["app_id"]
+          if app_id.is_a?(String) && !app_id.empty? && !sentinel?(app_id) && !app_id.include?(":android:")
+            warning("android.firebase.app_id", "`android.firebase.app_id` is #{app_id.inspect}, which is not an Android app id. Copy `mobilesdk_app_id` from google-services.json; it looks like 1:1234567890:android:abc123.")
+          end
         end
 
         # --- Value checks ---

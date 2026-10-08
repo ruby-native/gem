@@ -64,6 +64,7 @@ module RubyNative
     backfill_error_icons
     warn_on_duplicate_tab_keys
     normalize_analytics
+    normalize_firebase
   end
 
   # config/ruby_native.yml is rendered as ERB before it is parsed, so a
@@ -286,5 +287,13 @@ module RubyNative
 
     Rails.logger.warn("[RubyNative] analytics in config/ruby_native.yml must be true or false; ignoring it.")
     self.config.delete(:analytics)
+  end
+
+  # An unquoted sender id parses as an Integer, and the Android app decodes these as strings only.
+  def self.normalize_firebase
+    firebase = self.config.dig(:android, :firebase)
+    return unless firebase.is_a?(Hash)
+
+    firebase.transform_values! { |value| value.nil? ? value : value.to_s }
   end
 end

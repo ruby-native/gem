@@ -354,6 +354,35 @@ class ConfigValidatorTest < Minitest::Test
     assert_empty validate("ios:\n  bundle_id: com.example.app\n  team_id: ABCD123456\n")
   end
 
+  def test_android_firebase_alone_passes_without_the_app_link_keys
+    assert_empty validate(<<~YAML)
+      android:
+        firebase:
+          app_id: "1:1234567890:android:abc123"
+          api_key: AIzaExample
+          project_id: example
+          sender_id: "1234567890"
+    YAML
+  end
+
+  def test_android_firebase_missing_a_value_keeps_push_off
+    offense = sole(validate("android:\n  firebase:\n    app_id: \"1:1:android:a\"\n    api_key: AIzaExample\n    project_id: example\n"))
+
+    assert_equal :warning, offense.severity
+    assert_match "`sender_id`", offense.message
+    assert_match "push stays off", offense.message
+  end
+
+  def test_an_ios_app_id_under_android_firebase_is_a_warning
+    offense = sole(validate("android:\n  firebase:\n    app_id: \"1:1:ios:a\"\n    api_key: k\n    project_id: p\n    sender_id: \"1\"\n"))
+
+    assert_equal "android.firebase.app_id", offense.key
+  end
+
+  def test_half_configured_app_links_still_name_the_endpoint
+    assert_match "assetlinks.json", sole(validate("android:\n  package: com.example.app\n")).message
+  end
+
   # --- ERB ---
 
   # The file is rendered as ERB before Rails parses it, and a navbar logo is

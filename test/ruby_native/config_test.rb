@@ -53,6 +53,13 @@ class RubyNative::ConfigTest < Minitest::Test
     end
   end
 
+  def test_android_firebase_values_are_served_as_strings
+    with_config(app: {}, tabs: [], android: { firebase: { app_id: "1:1:android:a", sender_id: 1234567890 } }) do
+      RubyNative.load_config
+      assert_equal "1234567890", RubyNative.config_as_json.dig(:android, :firebase, :sender_id)
+    end
+  end
+
   def test_linked_paths_stay_absent_when_unconfigured
     with_config(app: {}, tabs: []) do
       RubyNative.load_config
