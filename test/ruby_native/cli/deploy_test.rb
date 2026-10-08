@@ -63,6 +63,13 @@ class DeployTest < Minitest::Test
     assert_equal "ios", RubyNative::CLI::Deploy.new(["--ios"]).send(:requested_platform)
   end
 
+  def test_build_payload_names_the_version_when_given
+    payload = RubyNative::CLI::Deploy.new(["--ios", "--version=1.1"]).send(:build_payload)
+    assert_equal "1.1", payload[:version]
+
+    assert_nil RubyNative::CLI::Deploy.new(["--ios"]).send(:build_payload)[:version]
+  end
+
   def test_skip_when_every_deployable_platform_is_current
     deploy = all_platform_deploy(
       "ios" => { "deployable" => true, "gem_version" => "99.0.0" },

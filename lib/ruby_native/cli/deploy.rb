@@ -37,6 +37,7 @@ module RubyNative
         @skip_check = argv.include?("--skip-check")
         @platform = parse_platform(argv)
         @app_flag = argv.find { |arg| arg.start_with?("--app=") }&.split("=", 2)&.last
+        @version = argv.find { |arg| arg.start_with?("--version=") }&.split("=", 2)&.last
       end
 
       def run
@@ -497,6 +498,7 @@ module RubyNative
       def build_payload
         payload = { gem_version: RubyNative::VERSION }
         payload[:platform] = @platform unless @platform == "ios"
+        payload[:version] = @version if @version && !@version.empty?
         payload
       end
 

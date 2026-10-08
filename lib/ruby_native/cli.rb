@@ -94,6 +94,7 @@ module RubyNative
       puts "    --android          Build Android only"
       puts "    --platform=NAME    Build for ios, android, or all"
       puts "    --if-needed        Skip when this gem version is already built"
+      puts "    --version=1.1      The App Store version to build (default: the next patch once live)"
       puts "    --skip-check       Deploy without checking your views for broken signals"
       puts "  icon set PATH Set the app icon, a 1024x1024 PNG (ships with the next deploy)"
       puts "  listing       push, pull, or publish the store listing in config/ruby_native_listing.yml"

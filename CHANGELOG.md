@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`deploy --version=1.1` names the version.** Once a version is live, Apple closes it, and a deploy of a live app moves to the next patch on its own. Pass `--version` to pick one.
 - **One command ships the app: `ship`.** The MCP server now publishes a prompt, so an agent with prompt support gets it as a slash command (`/mcp__ruby-native__ship` in Claude Code). It walks every step in order: add Ruby Native, the seven changes that make the app feel native, the account and the link, then each store step from `status`, doing what has a tool and stopping at what only a person can do. `ruby_native ship` prints the same text for a client without prompt support, and `mcp install` and the install generator both end with the command. [Docs](https://rubynative.com/docs/cli#ship)
 - **The App Store Connect key is a command: `apple key`.** `ruby_native apple key AuthKey.p8 --key-id=… --issuer-id=… --team-id=…` sends the four parts once and waits for Apple's verdict, so the key form is no longer the one step that needed the dashboard. The MCP server has it as `apple_key_set`, which takes the path and never the file. [Docs](https://rubynative.com/docs/cli#apple-key)
 - **`submit --confirm=NAME` says a questionnaire is done.** App privacy, the age rating, and Play's App content have no API, so they close on your word: on the dashboard, or with the submit. The MCP tool takes `confirmations` the same way, and only after you say so.
