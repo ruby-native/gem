@@ -40,6 +40,24 @@ class StatusTest < Minitest::Test
     assert_match "iOS: nothing is in the way of a build. Run `bundle exec ruby_native deploy`.", report
   end
 
+  def test_report_says_when_a_live_store_is_due_an_update_and_which_version
+    minor = { "due" => true, "reason" => "Ruby Native 0.18 is out.", "kind" => "minor", "version" => "1.1", "gem_step" => "Update ruby_native to 0.18 and deploy your site first." }
+    report = RubyNative::CLI::Status.report(status("ios" => { "setup" => "Setup complete", "next" => "build", "blocked_by" => [], "update" => minor }))
+
+    assert_match "iOS: Ruby Native 0.18 is out. Release version 1.1: update ruby_native to 0.18 and deploy your site first, then `bundle exec ruby_native deploy --version=1.1`.", report
+
+    patch = { "due" => true, "reason" => "The icon changed since version 1.0.", "kind" => "patch", "version" => "1.0.1", "gem_step" => nil }
+    report = RubyNative::CLI::Status.report(status("android" => { "setup" => "Setup complete", "next" => "build", "blocked_by" => [], "update" => patch }))
+
+    assert_match "Android: The icon changed since version 1.0. Release version 1.0.1: `bundle exec ruby_native deploy --android --version=1.0.1`.", report
+  end
+
+  def test_report_says_nothing_of_an_update_that_is_not_due
+    report = RubyNative::CLI::Status.report(status("ios" => { "setup" => "Setup complete", "next" => "build", "blocked_by" => [], "update" => { "due" => false } }))
+
+    assert_match "iOS: nothing is in the way of a build. Run `bundle exec ruby_native deploy`.", report
+  end
+
   def test_report_names_the_review_states_in_plain_words
     waiting = RubyNative::CLI::Status.report(status("ios" => { "next" => "wait", "blocked_by" => [] }))
     approved = RubyNative::CLI::Status.report(status("ios" => { "next" => "release", "blocked_by" => [] }))

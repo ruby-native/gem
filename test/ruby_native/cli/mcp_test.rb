@@ -682,6 +682,7 @@ class McpTest < Minitest::Test
     assert_match "`status` is the map", text
     assert_match "/apps/new", text
     assert_match "`verifiable: false`", text
+    assert_match(/pass it as `--version`, and do the `gem_step` first/, text.gsub(/\s+/, " "))
     assert_equal text, RubyNative::CLI::Mcp::Prompts::SHIP
   end
 

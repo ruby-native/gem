@@ -119,7 +119,8 @@ module RubyNative
             word, on the dashboard or as a `confirmations` entry on `submit`, and only after they
             have said, in their words, that it is done.
 
-          When nothing blocks the act: `build` is a deploy. `submit` is the `submit` tool, twice:
+          When nothing blocks the act: `build` is a deploy. When `status` carries an `update`
+          with a `version`, pass it as `--version`, and do the `gem_step` first if there is one. `submit` is the `submit` tool, twice:
           the first call returns the summary and a token; show the summary, get an explicit yes,
           then call again with the token. `wait` means Apple has it and there is nothing to do.
           `release` is the person's, in App Store Connect. `go_live` is the person's, in Play

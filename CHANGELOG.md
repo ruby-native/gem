@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`status` says when a live app is due an update, and which version.** A Ruby Native release that changed the app, a new icon, new permission sentences, iPad support, or an App Store listing change, each with the version to release.
 - **The listing file carries What's new.** `whats_new:` in `config/ruby_native_listing.yml`, with an `android:` override. Apple requires it on every version after the first; Google Play shows it as the release notes on each build.
 - **`deploy --version=1.1` names the version.** Once a version is live, Apple closes it, and a deploy of a live app moves to the next patch on its own. Pass `--version` to pick one.
 - **One command ships the app: `ship`.** The MCP server now publishes a prompt, so an agent with prompt support gets it as a slash command (`/mcp__ruby-native__ship` in Claude Code). It walks every step in order: add Ruby Native, the seven changes that make the app feel native, the account and the link, then each store step from `status`, doing what has a tool and stopping at what only a person can do. `ruby_native ship` prints the same text for a client without prompt support, and `mcp install` and the install generator both end with the command. [Docs](https://rubynative.com/docs/cli#ship)

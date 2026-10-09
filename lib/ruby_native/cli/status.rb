@@ -146,6 +146,9 @@ module RubyNative
         android = label == "Android"
 
         if blockers.empty?
+          update = track["update"] || {}
+          return [ update_line(update, label, android) ] if act == "build" && update["due"]
+
           return [ case act
                    when "submit" then "#{label}: nothing is in the way of submitting for review. Run `bundle exec ruby_native submit`."
                    when "wait" then "#{label}: in App Store review. Nothing to do but wait; `ruby_native withdraw` takes it back out."
@@ -162,6 +165,14 @@ module RubyNative
                end
         [ "#{label}: before #{verb}, #{blockers.size} #{blockers.size == 1 ? "thing needs" : "things need"} doing:", "" ] +
           blocker_lines(blockers)
+      end
+
+      # A live store due a build: why, the version, and the site's gem first when the release needs it.
+      def self.update_line(update, label, android)
+        command = "`bundle exec ruby_native deploy#{" --android" if android} --version=#{update["version"]}`"
+        gem_step = update["gem_step"].to_s.sub(/\.\z/, "")
+        how = gem_step.empty? ? command : "#{gem_step[0].downcase}#{gem_step[1..]}, then #{command}"
+        "#{label}: #{update["reason"]} Release version #{update["version"]}: #{how}."
       end
 
       # The steps are the same copy the dashboard shows, so a person reading
