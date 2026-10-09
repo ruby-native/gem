@@ -212,6 +212,7 @@ class CommandsTest < Minitest::Test
           secondary_category:
           keywords: hiking,trail
           promotional_text: "Now: offline maps"
+          whats_new: # up to 4000 characters
           privacy_policy_url:
           copyright:
           review_contact: # who App Review contacts; never shown on the store
@@ -223,7 +224,7 @@ class CommandsTest < Minitest::Test
             Hikes.
             Offline.
 
-          # ios: and android: replace name, subtitle, or description for one store.
+          # ios: and android: replace name, subtitle, description, or whats_new for one store.
         YAML
         assert_equal listing.compact, YAML.safe_load(written).slice(*listing.keys).compact
       end
@@ -314,6 +315,29 @@ class CommandsTest < Minitest::Test
     end
   end
 
+  def test_listing_carries_whats_new_with_a_play_override_and_its_own_limit
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        File.write("config/ruby_native_listing.yml", "name: Trailhead\nwhats_new: #{"w" * 600}\nandroid:\n  whats_new: Faster maps.\n")
+        sent = nil
+        outcome = with_patch_capture(->(json) { sent = json; ok("changed" => [], "missing" => []) }) { RubyNative::CLI::Listing.push("app_1") }
+
+        assert outcome.ok, outcome.text
+        assert_equal 600, sent[:listing]["whats_new"].length
+        assert_equal({ "whats_new" => "Faster maps." }, sent[:listing]["android"])
+
+        File.write("config/ruby_native_listing.yml", "name: Trailhead\nandroid:\n  whats_new: #{"w" * 501}\n")
+        outcome = RubyNative::CLI::Listing.push("app_1")
+        refute outcome.ok
+        assert_match "android.whats_new is 501 characters, the limit on Google Play is 500", outcome.text
+
+        with_get(ok("listing" => { "name" => "Trailhead", "whats_new" => "Faster maps.\nOffline topo." })) { RubyNative::CLI::Listing.pull("app_1") }
+        assert_equal "Faster maps.\nOffline topo.", YAML.safe_load(File.read("config/ruby_native_listing.yml"))["whats_new"]
+      end
+    end
+  end
+
   def test_listing_store_blocks_refuse_shared_fields_and_check_each_stores_limit
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do
@@ -321,7 +345,7 @@ class CommandsTest < Minitest::Test
         File.write("config/ruby_native_listing.yml", "name: Trailhead\nandroid:\n  keywords: droid\n")
         outcome = RubyNative::CLI::Listing.push("app_1")
         refute outcome.ok
-        assert_match "android: in config/ruby_native_listing.yml can only set name, subtitle, description; keywords is shared by every store.", outcome.text
+        assert_match "android: in config/ruby_native_listing.yml can only set name, subtitle, description, whats_new; keywords is shared by every store.", outcome.text
 
         File.write("config/ruby_native_listing.yml", "subtitle: #{"s" * 50}\nios:\n  subtitle: Short\nandroid:\n  subtitle: #{"s" * 81}\n")
         outcome = RubyNative::CLI::Listing.push("app_1")

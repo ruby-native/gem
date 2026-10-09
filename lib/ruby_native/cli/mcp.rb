@@ -346,11 +346,11 @@ module RubyNative
           name: "listing_push",
           description: "Save config/ruby_native_listing.yml to Ruby Native as the App Store listing draft. Write the " \
                        "file first: name (30), subtitle (30), keywords (100, comma separated, no spaces), " \
-                       "promotional_text (170), description (4000), privacy_policy_url, primary_category and " \
+                       "promotional_text (170), whats_new (4000, required on every version after the first), description (4000), privacy_policy_url, primary_category and " \
                        "secondary_category from Apple's list, copyright (\"2026 Trailhead LLC\"), and review_contact, " \
                        "who App Review contacts, with first_name, last_name, email, and phone (quoted, a + and the " \
-                       "country code: \"+1 503 555 0100\"). An ios: or android: block replaces name, subtitle, or " \
-                       "description for that store alone (Apple refuses a listing that mentions Android; Play's " \
+                       "country code: \"+1 503 555 0100\"). An ios: or android: block replaces name, subtitle, " \
+                       "description, or whats_new for that store alone (Apple refuses a listing that mentions Android; Play's " \
                        "subtitle, its short description, takes 80). Nothing reaches a store: a person publishes it. " \
                        "Reaches rubynative.com and needs `ruby_native login`.",
           inputSchema: {

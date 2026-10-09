@@ -11,14 +11,15 @@ module RubyNative
     # same act as pressing the button.
     class Listing < Command
       PATH = "config/ruby_native_listing.yml".freeze
-      FIELDS = %w[name subtitle primary_category secondary_category keywords promotional_text privacy_policy_url copyright description].freeze
+      FIELDS = %w[name subtitle primary_category secondary_category keywords promotional_text whats_new privacy_policy_url copyright description].freeze
       CONTACT_FIELDS = %w[first_name last_name email phone].freeze
-      LIMITS = { "name" => 30, "subtitle" => 30, "keywords" => 100, "promotional_text" => 170, "description" => 4000 }.freeze
+      LIMITS = { "name" => 30, "subtitle" => 30, "keywords" => 100, "promotional_text" => 170, "whats_new" => 4000, "description" => 4000 }.freeze
       # An `ios:` or `android:` block replaces these for one store: Apple
       # refuses a listing that mentions Android, and Play's short description
       # (the subtitle) has 80 characters. The rest is Apple's alone.
-      STORE_FIELDS = %w[name subtitle description].freeze
-      PLAY_LIMITS = { "name" => 30, "subtitle" => 80, "description" => 4000 }.freeze
+      STORE_FIELDS = %w[name subtitle description whats_new].freeze
+      BLOCK_FIELDS = %w[description whats_new].freeze
+      PLAY_LIMITS = { "name" => 30, "subtitle" => 80, "description" => 4000, "whats_new" => 500 }.freeze
       STORES = { "ios" => "the App Store", "android" => "Google Play" }.freeze
 
       def run
@@ -126,6 +127,9 @@ module RubyNative
         { "ios" => LIMITS, "android" => PLAY_LIMITS }.flat_map do |store, limits|
           own = listing[store] || {}
           limits.filter_map do |field, limit|
+            # Shared release notes are cut to Play's 500 on the way out; only Play's own must fit.
+            next if store == "android" && field == "whats_new" && !own[field]
+
             value = own[field] || listing[field]
             length = value.to_s.length
             next unless length > limit
@@ -148,23 +152,23 @@ module RubyNative
             next
           end
 
-          if field == "description"
-            lines << "description: |-"
+          if BLOCK_FIELDS.include?(field)
+            lines << "#{field}: |-"
             value.to_s.each_line { |line| lines << "  #{line.rstrip}" }
           else
             lines << "#{field}: #{scalar(value)}"
           end
         end
         lines << ""
-        lines << "# ios: and android: replace name, subtitle, or description for one store."
+        lines << "# ios: and android: replace name, subtitle, description, or whats_new for one store."
         STORES.each_key do |store|
           block = (listing[store] || {}).slice(*STORE_FIELDS).reject { |_, value| value.to_s.empty? }
           next if block.empty?
 
           lines << "#{store}:"
           block.each do |field, value|
-            if field == "description"
-              lines << "  description: |-"
+            if BLOCK_FIELDS.include?(field)
+              lines << "  #{field}: |-"
               value.to_s.each_line { |line| lines << "    #{line.rstrip}" }
             else
               lines << "  #{field}: #{scalar(value)}"
