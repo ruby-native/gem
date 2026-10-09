@@ -123,7 +123,7 @@ module RubyNative
           with a `version`, pass it as `--version`, and do the `gem_step` first if there is one. `submit` is the `submit` tool, twice:
           the first call returns the summary and a token; show the summary, get an explicit yes,
           then call again with the token. `wait` means Apple has it and there is nothing to do.
-          `release` is the person's, in App Store Connect. `go_live` is the person's, in Play
+          `release` is the person's, on the Submit page at rubynative.com. `go_live` is the person's, in Play
           Console, and `submit` with platform android prints the promotion steps.
 
           ## Rules

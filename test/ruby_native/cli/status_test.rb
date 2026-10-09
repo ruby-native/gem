@@ -63,7 +63,7 @@ class StatusTest < Minitest::Test
     approved = RubyNative::CLI::Status.report(status("ios" => { "next" => "release", "blocked_by" => [] }))
 
     assert_match "iOS: in App Store review.", waiting
-    assert_match "iOS: approved. Release it from App Store Connect.", approved
+    assert_match "iOS: approved and waiting for you. Press Release on the Submit page at rubynative.com.", approved
   end
 
   def test_report_names_a_paused_subscription

@@ -152,7 +152,7 @@ module RubyNative
           return [ case act
                    when "submit" then "#{label}: nothing is in the way of submitting for review. Run `bundle exec ruby_native submit`."
                    when "wait" then "#{label}: in App Store review. Nothing to do but wait; `ruby_native withdraw` takes it back out."
-                   when "release" then "#{label}: approved. Release it from App Store Connect."
+                   when "release" then "#{label}: approved and waiting for you. Press Release on the Submit page at rubynative.com."
                    when "go_live" then "#{label}: everything Google Play needs is in place."
                    else "#{label}: nothing is in the way of a build. Run `bundle exec ruby_native deploy#{" --android" if android}`."
                    end ]
