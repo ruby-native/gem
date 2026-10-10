@@ -280,6 +280,39 @@ class CommandsTest < Minitest::Test
     end
   end
 
+  def test_listing_push_names_what_it_took_from_the_stores_and_what_both_sides_changed
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        Dir.mkdir("config")
+        File.write("config/ruby_native_listing.yml", "name: Trailhead Hikes\n")
+        answer = ok("changed" => [], "missing" => [],
+          "adopted" => [ { "platform" => "ios", "field" => "subtitle", "store" => "Trail maps" } ],
+          "conflicts" => [ { "platform" => "android", "field" => "name", "store" => "Trailhead Pro", "ours" => "Trailhead Hikes" } ])
+        outcome = with_patch(answer) { RubyNative::CLI::Listing.push("app_1") }
+
+        assert outcome.ok
+        assert_match "Took App Store Connect's subtitle", outcome.text
+        assert_match "ruby_native listing pull", outcome.text
+        assert_match %(Play Console has a different name: "Trailhead Pro"), outcome.text
+        assert_match "ruby_native listing revert name --android", outcome.text
+
+        older = with_patch(ok("changed" => [], "missing" => [])) { RubyNative::CLI::Listing.push("app_1") }
+        refute_match "Took", older.text
+      end
+    end
+  end
+
+  def test_listing_revert_sends_the_fields_and_the_store
+    sent = nil
+    outcome = with_patch_capture(->(json) { sent = json; ok("listing" => {}) }) { RubyNative::CLI::Listing.revert("app_1", %w[name subtitle], platform: "android") }
+
+    assert outcome.ok
+    assert_equal({ revert: %w[name subtitle], platform: "android" }, sent)
+    assert_match "Took Play Console's name, subtitle", outcome.text
+
+    refute RubyNative::CLI::Listing.revert("app_1", []).ok
+  end
+
   def test_listing_publish_pushes_first_and_stops_when_the_push_fails
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do

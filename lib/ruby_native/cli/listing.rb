@@ -30,11 +30,13 @@ module RubyNative
         when "push" then finish(self.class.push(app_id))
         when "pull" then finish(self.class.pull(app_id))
         when "publish" then publish_each(app_id)
+        when "revert" then finish(self.class.revert(app_id, positional.drop(1), platform: @argv.include?("--android") ? "android" : "ios"))
         else
-          puts "Usage: ruby_native listing <push|pull|publish> [--ios|--android]"
+          puts "Usage: ruby_native listing <push|pull|publish|revert FIELD...> [--ios|--android]"
           puts "  push       Save #{PATH} to Ruby Native. Nothing reaches a store."
           puts "  pull       Write #{PATH} from what Ruby Native holds."
           puts "  publish    Push, then send the listing to every store the app has started."
+          puts "  revert     Take App Store Connect's words (Play Console's with --android) for each field named."
           puts "  --ios      Publish to App Store Connect only."
           puts "  --android  Publish the title and descriptions to Google Play only."
           exit 1
@@ -46,6 +48,8 @@ module RubyNative
         pushed = self.class.push(app_id)
         return finish(pushed) unless pushed.ok
 
+        adopted = self.class.store_lines(pushed.data.merge("conflicts" => []))
+        puts adopted.join("\n") if adopted.any?
         finish_each(platforms!(app_id)) { |platform| self.class.send_to_store(app_id, platform) }
       end
 
@@ -66,9 +70,41 @@ module RubyNative
         lines = [ changed.empty? ? "Nothing changed." : "Saved #{changed.join(", ")}." ]
         missing = Array(result.value["missing"])
         lines << "Still missing before it can be submitted: #{missing.join(", ")}." if missing.any?
+        lines.concat(store_lines(result.value))
         lines << "Nothing has reached Apple. `ruby_native listing publish` sends it, or publish from the dashboard."
         success(lines.join("\n"), result.value)
       end
+
+      def self.revert(app_id, fields, platform: "ios")
+        return Outcome.new(ok: false, text: "Name the fields to revert, like `ruby_native listing revert name subtitle`.", data: {}) if fields.empty?
+
+        body = { revert: fields }
+        body[:platform] = "android" if platform == "android"
+        result = Mcp::Platform.patch("/api/v1/apps/#{app_id}/listing", body)
+        return failure(result) unless result.ok?
+
+        store = platform == "android" ? "Play Console" : "App Store Connect"
+        success("Took #{store}'s #{fields.map { |field| field.tr("_", " ") }.join(", ")}. Run `ruby_native listing pull` so #{PATH} has it too, or the next push sends yours again.", result.value)
+      end
+
+      # What reading the stores found: words someone changed there that Ruby Native took, and fields both sides changed.
+      # A server too old to read the stores sends neither.
+      def self.store_lines(value)
+        lines = []
+        adopted = Array(value["adopted"])
+        if adopted.any?
+          lines << "Took #{adopted.map { |row| "#{store_name(row)}'s #{row["field"].to_s.tr("_", " ")}" }.join(", ")}, changed there since the last publish. " \
+                   "Run `ruby_native listing pull` so #{PATH} has it."
+        end
+        Array(value["conflicts"]).each do |row|
+          flag = row["platform"] == "android" ? " --android" : ""
+          lines << "#{store_name(row)} has a different #{row["field"].to_s.tr("_", " ")}: #{row["store"].to_s.inspect}. Publishing sends yours over it; " \
+                   "`ruby_native listing revert #{row["field"]}#{flag}` takes #{store_name(row)}'s."
+        end
+        lines
+      end
+
+      def self.store_name(row) = row["platform"] == "android" ? "Play Console" : "App Store Connect"
 
       def self.pull(app_id)
         result = Mcp::Platform.get("/api/v1/apps/#{app_id}/listing")
