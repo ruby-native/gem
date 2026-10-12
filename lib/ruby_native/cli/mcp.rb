@@ -250,7 +250,7 @@ module RubyNative
         {
           name: "testers_list",
           description: "List the internal TestFlight testers on the app and whether each has accepted the invite. " \
-                       "With platform android, Google Play keeps its list in Play Console, so the answer is the hand-off " \
+                       "With platform android, Google Play keeps its list in Google Play Console, so the answer is the hand-off " \
                        "with the steps. Reaches rubynative.com and needs `ruby_native login`.",
           inputSchema: {
             type: "object",
@@ -402,7 +402,7 @@ module RubyNative
                        "that summary and get their explicit yes before calling again with the token. Only then does " \
                        "it submit. Until Apple approves, `withdraw` takes it back out of the queue. With platform " \
                        "android nothing is ever sent: Ruby Native never promotes to production, so the answer is the " \
-                       "go-live list with the Play Console promotion steps last. Reaches rubynative.com and needs " \
+                       "go-live list with the Google Play Console promotion steps last. Reaches rubynative.com and needs " \
                        "`ruby_native login`.",
           inputSchema: {
             type: "object",
@@ -411,7 +411,7 @@ module RubyNative
               confirmations: {
                 type: "array",
                 items: { type: "string", enum: [ "app_privacy", "age_rating", "play_content" ] },
-                description: "Questionnaires the person says they have completed in App Store Connect or Play Console. Send one only after they say so, in their words; never infer it."
+                description: "Questionnaires the person says they have completed in App Store Connect or Google Play Console. Send one only after they say so, in their words; never infer it."
               },
               platform: { type: "string", enum: [ "ios", "android" ], description: "Defaults to ios." },
               app_id: { type: "string", description: "The app's public id. Defaults to ruby_native.app_id in config/ruby_native.yml." }

@@ -292,7 +292,7 @@ class CommandsTest < Minitest::Test
         assert outcome.ok
         assert_match "Took App Store Connect's subtitle", outcome.text
         assert_match "ruby_native listing pull", outcome.text
-        assert_match %(Play Console has a different name: "Trailhead Pro"), outcome.text
+        assert_match %(Google Play Console has a different name: "Trailhead Pro"), outcome.text
         assert_match "ruby_native listing revert name --android", outcome.text
 
         older = with_patch(ok("changed" => [], "missing" => [])) { RubyNative::CLI::Listing.push("app_1") }
@@ -307,7 +307,7 @@ class CommandsTest < Minitest::Test
 
     assert outcome.ok
     assert_equal({ revert: %w[name subtitle], platform: "android" }, sent)
-    assert_match "Took Play Console's name, subtitle", outcome.text
+    assert_match "Took Google Play Console's name, subtitle", outcome.text
 
     refute RubyNative::CLI::Listing.revert("app_1", []).ok
   end
@@ -400,9 +400,9 @@ class CommandsTest < Minitest::Test
 
   def test_two_stores_print_under_a_heading_each
     outcomes = { "ios" => RubyNative::CLI::Command::Outcome.new(ok: true, text: "On App Store Connect.", data: {}),
-                 "android" => RubyNative::CLI::Command::Outcome.new(ok: true, text: "On Play Console.", data: {}) }
+                 "android" => RubyNative::CLI::Command::Outcome.new(ok: true, text: "On Google Play Console.", data: {}) }
 
-    assert_output("iOS:\nOn App Store Connect.\n\nAndroid:\nOn Play Console.\n") do
+    assert_output("iOS:\nOn App Store Connect.\n\nAndroid:\nOn Google Play Console.\n") do
       RubyNative::CLI::Listing.new([]).send(:finish_each, %w[ios android]) { |platform| outcomes[platform] }
     end
   end
@@ -429,20 +429,20 @@ class CommandsTest < Minitest::Test
         File.write("config/ruby_native_listing.yml", "name: Trailhead\nsubtitle: Maps\n")
         posted = nil
         pushed = ok("changed" => [], "missing" => [])
-        published = ok("note" => "The title and descriptions are on the Play Console listing (en-US).")
+        published = ok("note" => "The title and descriptions are on the Google Play Console listing (en-US).")
         outcome = with_patch(pushed) do
           with_stub(Platform, :post, ->(_path, json = nil) { posted = json; published }) { RubyNative::CLI::Listing.publish("app_1", platform: "android") }
         end
 
         assert_equal({ platform: "android" }, posted)
-        assert_match "Play Console listing", outcome.text
+        assert_match "Google Play Console listing", outcome.text
       end
     end
   end
 
   def test_testers_android_asks_for_the_play_hand_off
     asked = nil
-    refusal = Platform::Result.new(error: "Google Play keeps its internal tester list in Play Console.", status: 422,
+    refusal = Platform::Result.new(error: "Google Play keeps its internal tester list in Google Play Console.", status: 422,
       body: { "blocked_by" => [ { "id" => "play_testers", "who" => "human", "verifiable" => false, "why" => "Console only.", "url" => "https://play.google.com/console", "steps" => [ "Create email list." ] } ] })
     outcome = with_stub(Platform, :get, ->(path) { asked = path; refusal }) { RubyNative::CLI::Testers.list("app_1", platform: "android") }
 
@@ -454,11 +454,11 @@ class CommandsTest < Minitest::Test
 
   def test_withdraw_android_asks_the_platform_route
     asked = nil
-    refusal = Platform::Result.new(error: "Google Play releases are managed in Play Console.", status: 409, body: {})
+    refusal = Platform::Result.new(error: "Google Play releases are managed in Google Play Console.", status: 409, body: {})
     outcome = with_stub(Platform, :request, ->(_klass, path, **) { asked = path; refusal }) { RubyNative::CLI::Submit.withdraw("app_1", platform: "android") }
 
     assert_equal "/api/v1/apps/app_1/submission?platform=android", asked
-    assert_match "Play Console", outcome.text
+    assert_match "Google Play Console", outcome.text
   end
 
   # --- demo account ---

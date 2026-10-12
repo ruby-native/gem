@@ -36,7 +36,7 @@ module RubyNative
           puts "  push       Save #{PATH} to Ruby Native. Nothing reaches a store."
           puts "  pull       Write #{PATH} from what Ruby Native holds."
           puts "  publish    Push, then send the listing to every store the app has started."
-          puts "  revert     Take App Store Connect's words (Play Console's with --android) for each field named."
+          puts "  revert     Take App Store Connect's words (Google Play Console's with --android) for each field named."
           puts "  --ios      Publish to App Store Connect only."
           puts "  --android  Publish the title and descriptions to Google Play only."
           exit 1
@@ -83,7 +83,7 @@ module RubyNative
         result = Mcp::Platform.patch("/api/v1/apps/#{app_id}/listing", body)
         return failure(result) unless result.ok?
 
-        store = platform == "android" ? "Play Console" : "App Store Connect"
+        store = platform == "android" ? "Google Play Console" : "App Store Connect"
         success("Took #{store}'s #{fields.map { |field| field.tr("_", " ") }.join(", ")}. Run `ruby_native listing pull` so #{PATH} has it too, or the next push sends yours again.", result.value)
       end
 
@@ -104,7 +104,7 @@ module RubyNative
         lines
       end
 
-      def self.store_name(row) = row["platform"] == "android" ? "Play Console" : "App Store Connect"
+      def self.store_name(row) = row["platform"] == "android" ? "Google Play Console" : "App Store Connect"
 
       def self.pull(app_id)
         result = Mcp::Platform.get("/api/v1/apps/#{app_id}/listing")

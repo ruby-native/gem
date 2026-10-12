@@ -144,7 +144,7 @@ tabs:
 #   team_id: ABCD123456
 # android:
 #   package: com.example.myapp
-#   # Play Console -> Setup -> App integrity -> App signing key certificate.
+#   # Google Play Console -> Setup -> App integrity -> App signing key certificate.
 #   cert_fingerprint: "AA:BB:CC:..."
 
 # Link only these path prefixes instead of the whole domain. Links outside

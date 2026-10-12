@@ -120,7 +120,7 @@ module RubyNative
       puts "    --ios              The App Store only"
       puts "    --android          Only what stands between the app and Google Play, and the promotion steps"
       puts "  testers       List the testers for every started store"
-      puts "    add EMAIL          Invite a team member to TestFlight (Play keeps its list in Play Console)"
+      puts "    add EMAIL          Invite a team member to TestFlight (Play keeps its list in Google Play Console)"
       puts "    --ios, --android   One store only"
       puts "  withdraw      Take the app back out of the App Store review queue. Works until Apple approves it"
     end
