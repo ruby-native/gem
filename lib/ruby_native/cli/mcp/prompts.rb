@@ -119,6 +119,12 @@ module RubyNative
             word, on the dashboard or as a `confirmations` entry on `submit`, and only after they
             have said, in their words, that it is done.
 
+          The listing is the person's words, so it gets a stop of its own. When a blocker asks for
+          it, write `config/ruby_native_listing.yml` and save it with `listing_push`, then stop: give
+          the person the blocker's `url`, where they read your draft and change
+          what they like. Run `bundle exec ruby_native listing publish` only after they say it reads
+          right.
+
           When nothing blocks the act: `build` is a deploy. When `status` carries an `update`
           with a `version`, pass it as `--version`, and do the `gem_step` first if there is one. `submit` is the `submit` tool, twice:
           the first call returns the summary and a token; show the summary, get an explicit yes,

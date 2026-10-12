@@ -21,4 +21,11 @@ class ShipTest < Minitest::Test
     assert_match "`who: human`", text
     assert_match "Do not run preview yourself", text
   end
+
+  def test_the_prompt_stops_after_pushing_the_listing_and_publishes_only_on_the_persons_word
+    text = RubyNative::CLI::Mcp::Prompts::SHIP
+
+    assert_match "save it with `listing_push`, then stop", text
+    assert_match "listing publish` only after they say it reads", text
+  end
 end
