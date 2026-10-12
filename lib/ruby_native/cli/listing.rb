@@ -11,9 +11,9 @@ module RubyNative
     # same act as pressing the button.
     class Listing < Command
       PATH = "config/ruby_native_listing.yml".freeze
-      FIELDS = %w[name subtitle primary_category secondary_category keywords promotional_text whats_new privacy_policy_url copyright description].freeze
+      FIELDS = %w[name subtitle primary_category secondary_category keywords whats_new privacy_policy_url copyright description].freeze
       CONTACT_FIELDS = %w[first_name last_name email phone].freeze
-      LIMITS = { "name" => 30, "subtitle" => 30, "keywords" => 100, "promotional_text" => 170, "whats_new" => 4000, "description" => 4000 }.freeze
+      LIMITS = { "name" => 30, "subtitle" => 30, "keywords" => 100, "whats_new" => 4000, "description" => 4000 }.freeze
       # An `ios:` or `android:` block replaces these for one store: Apple
       # refuses a listing that mentions Android, and Play's short description
       # (the subtitle) has 80 characters. The rest is Apple's alone.

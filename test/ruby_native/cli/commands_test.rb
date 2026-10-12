@@ -197,7 +197,7 @@ class CommandsTest < Minitest::Test
     Dir.mktmpdir do |dir|
       Dir.chdir(dir) do
         Dir.mkdir("config")
-        listing = { "name" => "Trailhead", "description" => "Hikes.\nOffline.", "keywords" => "hiking,trail", "subtitle" => nil, "primary_category" => "Lifestyle", "promotional_text" => "Now: offline maps" }
+        listing = { "name" => "Trailhead", "description" => "Hikes.\nOffline.", "keywords" => "hiking,trail", "subtitle" => nil, "primary_category" => "Lifestyle" }
         outcome = with_get(ok("listing" => listing)) { RubyNative::CLI::Listing.pull("app_1") }
 
         assert outcome.ok
@@ -211,7 +211,6 @@ class CommandsTest < Minitest::Test
           primary_category: Lifestyle
           secondary_category:
           keywords: hiking,trail
-          promotional_text: "Now: offline maps"
           whats_new: # up to 4000 characters
           privacy_policy_url:
           copyright:
