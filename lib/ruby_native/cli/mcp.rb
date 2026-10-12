@@ -454,6 +454,7 @@ module RubyNative
 
       def run
         @output.sync = true if @output.respond_to?(:sync=)
+        Platform.client = "mcp"
         warn "ruby_native #{RubyNative::VERSION} MCP server ready on stdio."
 
         while (line = @input.gets)
@@ -461,6 +462,8 @@ module RubyNative
 
           handle(line)
         end
+      ensure
+        Platform.client = nil
       end
 
       private

@@ -79,6 +79,26 @@ class PlatformTest < Minitest::Test
     assert_equal "Token tok_123", sent["Authorization"]
   end
 
+  def test_the_mcp_server_names_itself_and_the_cli_does_not
+    sent = []
+    capture = ->(uri) { Net::HTTP::Get.allocate.tap { |r| r.send(:initialize, uri); sent << r } }
+
+    with_stub(RubyNative::CLI::Credentials, :token, -> { "tok_123" }) do
+      with_stub(Net::HTTP, :start, ->(*_args, **_options, &_block) { response(Net::HTTPOK, "200", "[]") }) do
+        with_stub(Net::HTTP::Get, :new, capture) do
+          Platform.get("/api/v1/apps")
+          Platform.client = "mcp"
+          Platform.get("/api/v1/apps")
+        ensure
+          Platform.client = nil
+        end
+      end
+    end
+
+    assert_nil sent.first[Platform::CLIENT_HEADER]
+    assert_equal "mcp", sent.last[Platform::CLIENT_HEADER]
+  end
+
   # A server that cannot be reached is an answer, not a crash: the tools turn
   # it into something the model can say back.
   def test_a_transport_failure_comes_back_as_a_result

@@ -23,6 +23,14 @@ module RubyNative
         # Icons and captures take longer than a status read.
         WRITE_TIMEOUT = 60
 
+        # Sent only while the MCP server runs, so the dashboard marks an agent as connected from that, never from
+        # the CLI or CI, which call through this same client.
+        CLIENT_HEADER = "X-Ruby-Native-Client".freeze
+
+        class << self
+          attr_accessor :client
+        end
+
         NOT_LOGGED_IN = "Not logged in to Ruby Native. Run `ruby_native login` on this machine, " \
                         "or set RUBY_NATIVE_TOKEN.".freeze
         NO_APP_ID = "No app is linked to this project. Run `ruby_native deploy` once to link it, which writes " \
@@ -77,6 +85,7 @@ module RubyNative
           uri = URI("#{HOST}#{path}")
           req = klass.new(uri)
           req["Authorization"] = "Token #{token}"
+          req[CLIENT_HEADER] = client if client
           if json
             req["Content-Type"] = "application/json"
             req.body = JSON.generate(json)
