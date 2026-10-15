@@ -116,7 +116,7 @@ module RubyNative
       puts "  status        Where the app is, what is next, and what is in the way. Works before login, from this checkout"
       puts "  submit        Show exactly what would go to App Store review, then ask before sending it"
       puts "    --yes              Skip the question"
-      puts "    --confirm=NAME     Say a questionnaire is done: app_privacy, age_rating, or play_content"
+      puts "    --confirm=NAME     Say a questionnaire is done: app_privacy, age_rating, or play_content; or answer content rights: no_third_party_content or third_party_content"
       puts "    --ios              The App Store only"
       puts "    --android          Only what stands between the app and Google Play, and the promotion steps"
       puts "  testers       List the testers for every started store"
