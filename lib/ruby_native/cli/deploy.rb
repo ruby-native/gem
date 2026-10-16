@@ -50,7 +50,10 @@ module RubyNative
           return
         end
 
-        check_signals! unless @skip_check
+        unless @skip_check
+          check_signals!
+          warn_scan_without_camera(app_id)
+        end
 
         build = trigger_build(app_id)
         return if @if_needed
@@ -85,6 +88,17 @@ module RubyNative
         puts
         puts "These will not work in the build. Fix them, or deploy anyway with --skip-check."
         exit 1
+      end
+
+      # A warning, not a stop: the build is fine, one button in it isn't.
+      def warn_scan_without_camera(app_id)
+        file, line = Permissions.scan_without_camera(app_id)
+        return unless file
+
+        puts "Heads up: #{Permissions.scan_without_camera_message(file, line)}"
+        puts
+      rescue StandardError
+        nil
       end
 
       def ensure_authenticated!

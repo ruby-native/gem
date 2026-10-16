@@ -178,6 +178,36 @@ class CommandsTest < Minitest::Test
     assert_match "Publish them to the stores from https://rubynative.com/apps/1/screenshots.", outcome.text
   end
 
+  # --- permissions ---
+
+  def test_a_scan_button_without_a_camera_sentence_is_found_with_its_line
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        FileUtils.mkdir_p("app/views/books")
+        File.write("app/views/books/new.html.erb", "<h1>Add</h1>\n<%= native_scan_button_tag \"Scan\", target: \"#q\" %>\n")
+
+        found = with_get(ok("permissions" => { "camera" => nil })) { RubyNative::CLI::Permissions.scan_without_camera("app_1") }
+        assert_equal [ "app/views/books/new.html.erb", 2 ], found
+        assert_match "permissions set camera", RubyNative::CLI::Permissions.scan_without_camera_message(*found)
+
+        fine = with_get(ok("permissions" => { "camera" => "Scan barcodes." })) { RubyNative::CLI::Permissions.scan_without_camera("app_1") }
+        assert_nil fine
+      end
+    end
+  end
+
+  def test_no_scan_button_never_asks_the_platform
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        FileUtils.mkdir_p("app/views")
+        File.write("app/views/index.html.erb", "<h1>Hi</h1>\n")
+        asked = false
+        with_stub(Platform, :get, ->(*) { asked = true; ok({}) }) { RubyNative::CLI::Permissions.scan_without_camera("app_1") }
+        refute asked
+      end
+    end
+  end
+
   # --- listing ---
 
   def test_listing_pull_on_an_empty_listing_writes_a_template_push_accepts

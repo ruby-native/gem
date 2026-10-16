@@ -194,7 +194,11 @@ module RubyNative
         end
 
         used = signals_in(files)
-        PLATFORMS.flat_map { |platform| deployed_offenses_for(platform, app_id, used) }
+        offenses = PLATFORMS.flat_map { |platform| deployed_offenses_for(platform, app_id, used) }
+        if (scan = Permissions.scan_without_camera(app_id))
+          offenses << Offense.new(file: scan[0], line: scan[1], severity: :warning, message: Permissions.scan_without_camera_message(*scan).sub(/\A\S+ /, ""))
+        end
+        offenses
       end
 
       def deployed_offenses_for(platform, app_id, used)
