@@ -410,7 +410,7 @@ module RubyNative
               confirmation_token: { type: "string", description: "The token from the previous call, after the person said yes." },
               confirmations: {
                 type: "array",
-                items: { type: "string", enum: [ "app_privacy", "age_rating", "play_content" ] },
+                items: { type: "string", enum: [ "app_privacy", "age_rating", "play_category", "play_content" ] },
                 description: "Questionnaires the person says they have completed in App Store Connect or Google Play Console. Send one only after they say so, in their words; never infer it."
               },
               platform: { type: "string", enum: [ "ios", "android" ], description: "Defaults to ios." },
