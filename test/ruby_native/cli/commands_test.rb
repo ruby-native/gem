@@ -244,6 +244,8 @@ class CommandsTest < Minitest::Test
           whats_new: # up to 4000 characters
           privacy_policy_url:
           support_url:
+          support_email:
+          website:
           copyright:
           review_contact: # who App Review contacts; never shown on the store
             first_name:

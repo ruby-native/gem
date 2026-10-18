@@ -11,7 +11,7 @@ module RubyNative
     # same act as pressing the button.
     class Listing < Command
       PATH = "config/ruby_native_listing.yml".freeze
-      FIELDS = %w[name subtitle primary_category secondary_category keywords whats_new privacy_policy_url support_url copyright description].freeze
+      FIELDS = %w[name subtitle primary_category secondary_category keywords whats_new privacy_policy_url support_url support_email website copyright description].freeze
       CONTACT_FIELDS = %w[first_name last_name email phone].freeze
       LIMITS = { "name" => 30, "subtitle" => 30, "keywords" => 100, "whats_new" => 4000, "description" => 4000 }.freeze
       # An `ios:` or `android:` block replaces these for one store: Apple
