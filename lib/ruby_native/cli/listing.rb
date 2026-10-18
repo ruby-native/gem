@@ -179,7 +179,7 @@ module RubyNative
       # app with no listing yet is a template rather than a file of comments
       # that push then refuses.
       def self.render(listing)
-        lines = [ "# App Store listing. `ruby_native listing push` saves it to Ruby Native;", "# publishing to App Store Connect is a separate step.", "" ]
+        lines = [ "# App Store and Google Play listing. `ruby_native listing push` saves it to Ruby Native;", "# publishing to a store is a separate step.", "" ]
         FIELDS.each do |field|
           lines.concat(render_contact(listing["review_contact"] || {})) if field == "description"
           value = listing[field]

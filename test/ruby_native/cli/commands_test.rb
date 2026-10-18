@@ -233,8 +233,8 @@ class CommandsTest < Minitest::Test
         assert outcome.ok
         written = File.read("config/ruby_native_listing.yml")
         assert_equal <<~YAML, written
-          # App Store listing. `ruby_native listing push` saves it to Ruby Native;
-          # publishing to App Store Connect is a separate step.
+          # App Store and Google Play listing. `ruby_native listing push` saves it to Ruby Native;
+          # publishing to a store is a separate step.
 
           name: Trailhead
           subtitle: # up to 30 characters
