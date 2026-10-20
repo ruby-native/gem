@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ruby-native": {
+      "command": "bundle",
+      "args": ["exec", "ruby_native", "mcp"]
+    }
+  }
+}

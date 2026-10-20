@@ -1,0 +1,15 @@
+{
+  "name": "ruby-native",
+  "displayName": "Ruby Native",
+  "version": "0.18.0",
+  "description": "Ship a Rails app to the App Store and Google Play from your coding agent. Every ruby_native command as a tool, and a ship prompt that walks the whole journey.",
+  "author": {
+    "name": "Joe Masilotti",
+    "email": "joe@rubynative.com",
+    "url": "https://rubynative.com"
+  },
+  "homepage": "https://rubynative.com/docs/cli#mcp-server",
+  "repository": "https://github.com/ruby-native/gem",
+  "license": "MIT",
+  "keywords": ["rails", "ruby", "ios", "android", "app-store", "google-play", "hotwire-native", "mcp"]
+}

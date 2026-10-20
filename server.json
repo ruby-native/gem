@@ -1,0 +1,11 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.ruby-native/ruby-native",
+  "description": "Ship a Rails app to the App Store and Google Play. Every ruby_native command as a tool.",
+  "repository": {
+    "url": "https://github.com/ruby-native/gem",
+    "source": "github"
+  },
+  "websiteUrl": "https://rubynative.com/docs/cli#mcp-server",
+  "version": "0.18.0"
+}
