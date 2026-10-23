@@ -11,5 +11,19 @@
   "homepage": "https://rubynative.com/docs/cli#mcp-server",
   "repository": "https://github.com/ruby-native/gem",
   "license": "MIT",
-  "keywords": ["rails", "ruby", "ios", "android", "app-store", "google-play", "hotwire-native", "mcp"]
+  "keywords": [
+    "rails",
+    "ruby",
+    "ios",
+    "android",
+    "app-store",
+    "google-play",
+    "hotwire-native",
+    "mcp"
+  ],
+  "icon": "./icon.png",
+  "documentationUrl": "https://rubynative.com/docs/cli#mcp-server",
+  "supportUrl": "https://github.com/ruby-native/gem/issues",
+  "privacyPolicyUrl": "https://rubynative.com/privacy",
+  "termsOfServiceUrl": "https://rubynative.com/terms"
 }

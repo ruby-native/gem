@@ -8,5 +8,15 @@
     "email": "joe@rubynative.com"
   },
   "license": "MIT",
-  "keywords": ["rails", "ruby", "ios", "android", "app-store", "google-play", "hotwire-native", "mcp"]
+  "keywords": [
+    "rails",
+    "ruby",
+    "ios",
+    "android",
+    "app-store",
+    "google-play",
+    "hotwire-native",
+    "mcp"
+  ],
+  "logo": "icon.png"
 }
