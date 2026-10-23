@@ -121,6 +121,8 @@ bundle exec ruby_native mcp install
 
 Then say: set up Ruby Native in this app.
 
+Installed as the Claude Code plugin (`claude plugin marketplace add ruby-native/gem`, then `claude plugin install ruby-native@ruby-native`), the server is the same command. The plugin asks for an optional Ruby Native token; leave it blank and the account tools use the login `ruby_native login` stored on this machine.
+
 Or, in a client that takes JSON:
 
 ```json

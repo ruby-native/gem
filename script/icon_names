@@ -27,7 +27,8 @@ plist("#{metadata}/legacy_aliases.strings").each do |old_name, new_name|
   symbols[old_name] ||= symbols[new_name] if symbols[new_name]
 end
 
-File.write("#{out}/sf_symbols.tsv", symbols.sort.map { |name, ios| "#{name}\t#{ios}\n" }.join)
+# A bare major keeps the file under the 256 KiB text-file limit of Anthropic's plugin directory; Gem::Version reads 13 and 13.0 the same.
+File.write("#{out}/sf_symbols.tsv", symbols.sort.map { |name, ios| "#{name}\t#{ios.to_s.sub(/\.0\z/, "")}\n" }.join)
 File.write("#{out}/material_symbols.txt", File.read("#{native}/packages/android/RubyNative/core/src/main/assets/material_symbols.txt"))
 
 puts "#{symbols.size} SF Symbols, #{File.readlines("#{out}/material_symbols.txt").size} Material Symbols"

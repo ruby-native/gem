@@ -209,7 +209,7 @@ class ConfigValidatorTest < Minitest::Test
             android: book
     YAML
 
-    assert_match "needs iOS 26.0", offense.message
+    assert_match "needs iOS 26.", offense.message
     assert_match "older devices draw a placeholder", offense.message
   end
 

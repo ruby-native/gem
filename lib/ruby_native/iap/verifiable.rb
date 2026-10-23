@@ -3,7 +3,7 @@ module RubyNative
     class VerificationError < StandardError; end
 
     module Verifiable
-      APPLE_ROOT_CERT_PATH = File.join(__dir__, "..", "certs", "AppleRootCA-G3.cer")
+      APPLE_ROOT_CERT_PATH = File.join(__dir__, "..", "certs", "AppleRootCA-G3.pem")
 
       private
 

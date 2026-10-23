@@ -25,5 +25,26 @@
   "documentationUrl": "https://rubynative.com/docs/cli#mcp-server",
   "supportUrl": "https://github.com/ruby-native/gem/issues",
   "privacyPolicyUrl": "https://rubynative.com/privacy",
-  "termsOfServiceUrl": "https://rubynative.com/terms"
+  "termsOfServiceUrl": "https://rubynative.com/terms",
+  "mcpServers": {
+    "ruby-native": {
+      "command": "bundle",
+      "args": [
+        "exec",
+        "ruby_native",
+        "mcp"
+      ],
+      "env": {
+        "RUBY_NATIVE_TOKEN": "${user_config.ruby_native_token}"
+      }
+    }
+  },
+  "userConfig": {
+    "ruby_native_token": {
+      "type": "string",
+      "title": "Ruby Native token",
+      "description": "Optional. A token from ruby_native login or a CI token from your dashboard. Leave it blank to use the login already stored on this machine.",
+      "sensitive": true
+    }
+  }
 }
