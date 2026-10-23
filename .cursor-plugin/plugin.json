@@ -18,5 +18,5 @@
     "hotwire-native",
     "mcp"
   ],
-  "logo": "icon.png"
+  "logo": "plugin/icon.png"
 }

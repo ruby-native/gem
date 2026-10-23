@@ -1,6 +1,9 @@
 {
   "name": "ruby-native",
-  "owner": { "name": "Ruby Native", "url": "https://rubynative.com" },
+  "owner": {
+    "name": "Ruby Native",
+    "url": "https://rubynative.com"
+  },
   "metadata": {
     "description": "Ship a Rails app to the App Store and Google Play from your coding agent.",
     "version": "0.18.0"
@@ -8,7 +11,7 @@
   "plugins": [
     {
       "name": "ruby-native",
-      "source": "./",
+      "source": "./plugin",
       "description": "Ship a Rails app to the App Store and Google Play from your coding agent."
     }
   ]
