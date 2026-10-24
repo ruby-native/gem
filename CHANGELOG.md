@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Fixed
+
+- **Tapping a navbar segment on Android moves the selection.** Segments that use `click:` stayed on the old option before. Both modes.
+- **Navbar segment labels on Android show in full.** Two-word labels like "This year" were cut off.
+- **Signing in from the sign-in screen works on the first try.** Apps with an `eager: true` tab could show the form again after the first attempt. Advanced Mode, Android only.
+- **A tab keeps its back history after Android recovers a crashed page.** Normal Mode.
+- **Rotating or switching dark mode keeps you on the same tab.** It showed another tab's page, or a blank page, before. Advanced Mode, Android only.
+
 ## [0.18.0] - 2026-10-19
 
 ### Added
