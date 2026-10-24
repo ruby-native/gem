@@ -26,6 +26,18 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-native-identity=""'
   end
 
+  def test_native_locale_tag_defaults_to_the_current_locale
+    I18n.with_locale(:en) do
+      html = native_locale_tag
+      assert_includes html, 'data-native-locale="en"'
+      assert_includes html, 'hidden'
+    end
+  end
+
+  def test_native_locale_tag_with_explicit_locale
+    assert_includes native_locale_tag("pt-BR"), 'data-native-locale="pt-BR"'
+  end
+
   def test_native_identity_token_is_stable
     assert_equal native_identity_token(42), native_identity_token(42)
   end
@@ -880,6 +892,7 @@ class RubyNative::HelperTest < ActionView::TestCase
     "native_form_tag" => -> { native_form_tag },
     "native_haptic_data" => -> { native_haptic_data },
     "native_identity_tag" => -> { native_identity_tag(42) },
+    "native_locale_tag" => -> { native_locale_tag },
     "native_menu_tag" => -> { native_menu_tag(anchor: "#profile") },
     "native_navbar_tag" => -> { native_navbar_tag("Orders") },
     "native_overscroll_tag" => -> { native_overscroll_tag(top: "#ffffff") },

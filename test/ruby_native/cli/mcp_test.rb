@@ -595,7 +595,8 @@ class McpTest < Minitest::Test
   end
 
   def test_deployed_builds_is_quiet_when_the_build_is_current
-    result = with_result(ok(latest(ios_gem: RubyNative::VERSION))) do
+    newest = RubyNative::Signals.names.filter_map { |name| RubyNative::Signals.since(name) }.max_by { Gem::Version.new(it) }
+    result = with_result(ok(latest(ios_gem: newest))) do
       call("deployed_builds", "app_id" => "app_1")
     end
 

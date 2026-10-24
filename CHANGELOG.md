@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Added
+
+- **Tab titles and the error screen follow the language your app is set to, not only the phone's.** Add `<%= native_locale_tag %>` to your layout and a language change inside your app retitles the tab bar right away, no restart needed. Both platforms, both modes. Needs a new build.
+
 ### Fixed
 
 - **Deploys that use an asset helper like `image_url` in `config/ruby_native.yml` no longer 500 on every page.** It happened when `assets:precompile` runs on its own, as in a Kamal or Cloud Run Dockerfile.

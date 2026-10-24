@@ -20,9 +20,15 @@ class SignalsTest < Minitest::Test
     RubyNative::Signals.all.each do |name, meta|
       next unless meta["since"]
 
-      assert Gem::Version.new(meta["since"]) <= Gem::Version.new(RubyNative::VERSION),
-        "#{name} claims #{meta["since"]}, which is newer than #{RubyNative::VERSION}"
+      assert Gem::Version.new(meta["since"]) <= next_patch,
+        "#{name} claims #{meta["since"]}, which is past the next release after #{RubyNative::VERSION}"
     end
+  end
+
+  # A signal added between releases claims the version it will ship in.
+  def next_patch
+    major, minor, patch = Gem::Version.new(RubyNative::VERSION).segments
+    Gem::Version.new("#{major}.#{minor}.#{patch.to_i + 1}")
   end
 
   def test_every_singleton_is_a_known_signal

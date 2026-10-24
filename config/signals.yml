@@ -82,6 +82,11 @@ signals:
     renders_when:
       toolbar: false
     singleton: true
+  data-native-locale:
+    since: "0.18.2"
+    helper: native_locale_tag
+    always: true
+    singleton: true
   data-native-menu:
     since: "0.14.0"
     helper: native_menu_tag

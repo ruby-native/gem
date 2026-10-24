@@ -38,6 +38,10 @@ module RubyNative
       OpenSSL::HMAC.hexdigest("SHA256", Rails.application.secret_key_base, parts.join(":"))[0, 16]
     end
 
+    def native_locale_tag(locale = I18n.locale)
+      tag.div(data: { native_locale: locale }, hidden: true)
+    end
+
     def native_back_button_tag(text = nil, **options)
       options[:class] = [options[:class], "native-back-button"].compact.join(" ")
       default_content = tag.svg(
