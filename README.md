@@ -2,6 +2,8 @@
 
 [Ruby Native](https://rubynative.com) turns a Rails app into iOS and Android apps. This gem is the Rails-side integration: view helpers, a YAML config file, endpoints auto-mounted at `/native`, and a CLI for previewing and deploying builds. Full docs, including the complete helper reference and config schema, live at [rubynative.com/docs](https://rubynative.com/docs).
 
+It is built for teams with a Rails product whose customers want an app. You keep one codebase and one roadmap: Ruby Native renders the HTML you already write as native tab bars, navigation, forms, and push notifications, builds the apps in the cloud with no Xcode or Android Studio, and submits them to the App Store and Google Play. A coding agent can drive every step through the bundled MCP server, stopping only for the few clicks Apple keeps for a person. Apps built with it run on 150,000+ devices. Pricing is one plan per app, $199 a month or $1,990 a year, at [rubynative.com/pricing](https://rubynative.com/pricing); the phone preview costs nothing and needs no account.
+
 ## Installation
 
 ```ruby
