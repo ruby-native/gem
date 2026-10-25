@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Ship a Rails app to the App Store and Google Play from your coding agent.",
-    "version": "0.18.1"
+    "version": "0.18.2"
   },
   "plugins": [
     {
