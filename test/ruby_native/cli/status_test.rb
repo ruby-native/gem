@@ -101,8 +101,8 @@ class StatusTest < Minitest::Test
     assert_match "Next: the first native pass", report
 
     done = local.merge("layout" => local["layout"].transform_values { true })
-    assert_match "Next: create the app at", RubyNative::CLI::Status.local_report(done)
-    assert_match "/apps/new", RubyNative::CLI::Status.local_report(done)
+    assert_match "Next: `ruby_native login`", RubyNative::CLI::Status.local_report(done)
+    assert_match "ruby_native link --new", RubyNative::CLI::Status.local_report(done)
     assert_match "Next: run `ruby_native link`", RubyNative::CLI::Status.local_report(done.merge("logged_in" => true))
     assert_match "Next: run `bin/rails generate ruby_native:install`", RubyNative::CLI::Status.local_report(local.merge("config" => false))
   end

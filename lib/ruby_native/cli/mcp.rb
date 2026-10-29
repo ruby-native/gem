@@ -202,6 +202,23 @@ module RubyNative
           annotations: { title: "Link app", readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true }
         },
         {
+          name: "app_create",
+          description: "Create the app on the person's rubynative.com account and link this project to it, in place of " \
+                       "sending them to Create your app. Use the app's name and its production URL, never localhost " \
+                       "or a staging host; ask the person when the codebase doesn't say. Call `link_app` instead when " \
+                       "the account already has this app. Reaches rubynative.com and needs `ruby_native login`.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              name: { type: "string", description: "What the person's customers see under the icon on their Home Screen." },
+              url: { type: "string", description: "The production Rails root URL, like https://example.com." }
+            },
+            required: [ "name", "url" ],
+            additionalProperties: false
+          },
+          annotations: { title: "Create app", readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true }
+        },
+        {
           name: "status",
           description: "Report where the app is on the way to the App Store and Google Play and what is in the way: " \
                        "setup, subscription, the latest build, store state, and a `blocked_by` list per track for its next act. " \
@@ -586,6 +603,9 @@ module RubyNative
           when "deployed_builds" then deployed_builds(arguments)
           when "build_status" then build_status(arguments)
           when "status" then status(arguments)
+          when "app_create"
+            outcome = Link.create(name: string!(arguments, "name"), url: string!(arguments, "url"))
+            tool_result(outcome.text, outcome.data, is_error: !outcome.ok)
           when "link_app"
             outcome = Link.link(arguments["app_id"].to_s.strip.empty? ? nil : arguments["app_id"].to_s.strip)
             tool_result(outcome.text, outcome.data, is_error: !outcome.ok)

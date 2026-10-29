@@ -83,6 +83,7 @@ module RubyNative
       puts "Commands:"
       puts "  Every command that talks to rubynative.com reads the app from config/ruby_native.yml, or takes --app=ID."
       puts "  link [APP_ID]  Link this project to an app on your account (writes ruby_native.app_id)"
+      puts "    --new --name=NAME --url=URL  Create the app on your account first, then link it"
       puts "  apple key PATH --key-id=KEY --issuer-id=ISSUER --team-id=TEAM"
       puts "                Hand over the App Store Connect key (.p8) and wait for Apple to accept it"
       puts "  check         Validate your views against the signal vocabulary"

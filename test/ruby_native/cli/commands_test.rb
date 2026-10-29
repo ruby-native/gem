@@ -85,6 +85,32 @@ class CommandsTest < Minitest::Test
     assert_match 'No app "app_9" on this account', outcome.text
   end
 
+  def test_link_new_creates_the_app_and_links_it
+    Dir.mktmpdir do |dir|
+      Dir.chdir(dir) do
+        FileUtils.mkdir_p("config")
+        File.write("config/ruby_native.yml", "app:\n  mode: normal\n")
+        sent = nil
+        created = ok("public_id" => "app_3", "name" => "Trailhead", "url" => "https://trailhead.app")
+        outcome = with_stub(Platform, :post, ->(path, json = nil) { sent = [ path, json ]; created }) do
+          RubyNative::CLI::Link.create(name: "Trailhead", url: "trailhead.app")
+        end
+
+        assert outcome.ok
+        assert_equal [ "/api/v1/apps", { name: "Trailhead", url: "trailhead.app" } ], sent
+        assert_match "Created Trailhead (app_3) for https://trailhead.app and linked it", outcome.text
+        assert_equal "app_3", Platform.app_id("config/ruby_native.yml")
+      end
+    end
+  end
+
+  def test_link_with_no_apps_points_at_link_new
+    outcome = with_get(ok([])) { RubyNative::CLI::Link.link }
+
+    refute outcome.ok
+    assert_match "ruby_native link --new", outcome.text
+  end
+
   # --- testers ---
 
   def test_testers_list_shows_who_has_accepted

@@ -41,7 +41,7 @@ class McpTest < Minitest::Test
   end
 
   READ_TOOLS = %w[build_status check_views config_errors deployed_builds lookup_signals preview_check screenshots_list status testers_list validate_config].freeze
-  WRITE_TOOLS = %w[apple_key_set demo_account_set icon_set link_app listing_pull listing_push permissions_set screenshots_capture screenshots_setup submit testers_add withdraw].freeze
+  WRITE_TOOLS = %w[app_create apple_key_set demo_account_set icon_set link_app listing_pull listing_push permissions_set screenshots_capture screenshots_setup submit testers_add withdraw].freeze
 
   def test_tools_list_names_every_tool_and_says_which_ones_write
     tools = request("tools/list")["result"]["tools"]
@@ -706,7 +706,7 @@ class McpTest < Minitest::Test
     text = message.dig("content", "text")
     assert_match "native-hidden", text
     assert_match "`status` is the map", text
-    assert_match "/apps/new", text
+    assert_match "`app_create`", text
     assert_match "`verifiable: false`", text
     assert_match(/pass it as `--version`, and do the `gem_step` first/, text.gsub(/\s+/, " "))
     assert_equal text, RubyNative::CLI::Mcp::Prompts::SHIP

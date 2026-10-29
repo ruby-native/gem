@@ -10,7 +10,26 @@ module RubyNative
     class Link < Command
       def run
         ensure_authenticated!
-        finish(self.class.link(positional.first || flag("app")))
+        return finish(self.class.link(positional.first || flag("app"))) unless @argv.include?("--new")
+
+        name, url = flag("name"), flag("url")
+        if name.to_s.strip.empty? || url.to_s.strip.empty?
+          puts "Usage: ruby_native link --new --name=\"App name\" --url=https://example.com"
+          exit 1
+        end
+        finish(self.class.create(name: name, url: url))
+      end
+
+      # Creates the app on the account and links it, so an agent never sends
+      # the person to Create your app.
+      def self.create(name:, url:)
+        result = Mcp::Platform.post("/api/v1/apps", { name: name, url: url })
+        return failure(result) unless result.ok?
+
+        app = result.value
+        Mcp::Platform.write_app_id(app["public_id"])
+        success("Created #{app["name"]} (#{app["public_id"]}) for #{app["url"]} and linked it. Wrote ruby_native.app_id to #{Mcp::Platform::CONFIG_PATH}.",
+          { "app_id" => app["public_id"], "name" => app["name"], "url" => app["url"] })
       end
 
       def self.link(app_id = nil)
@@ -18,7 +37,7 @@ module RubyNative
         return failure(result) unless result.ok?
 
         apps = Array(result.value)
-        return Outcome.new(ok: false, text: "No apps on this account yet. Create one at #{Mcp::Platform::HOST}/apps/new, then run this again.", data: { "apps" => [] }) if apps.empty?
+        return Outcome.new(ok: false, text: "No apps on this account yet. Create one with `ruby_native link --new --name=\"App name\" --url=https://example.com`.", data: { "apps" => [] }) if apps.empty?
 
         app = if app_id.to_s.strip.empty?
           apps.one? ? apps.first : nil

@@ -95,15 +95,13 @@ module RubyNative
 
           ## 3. The account and the app
 
-          If `status` says there is no login or no linked app, the person does two things, and you
-          wait after each one:
+          If `status` says there is no login, run `bundle exec ruby_native login`. It opens the
+          browser, where the person signs in, or creates an account and enters the code we email
+          them, then clicks Approve. Wait for them. No password goes through the terminal.
 
-          1. Create the app at #{Platform::HOST}/apps/new: a name and the site's URL, and an account
-             if they do not have one.
-          2. Run `bundle exec ruby_native login` on this machine. It opens the browser and they click
-             Approve. No password goes through the terminal.
-
-          Then call `link_app`.
+          Then, with no linked app, call `link_app`. If the account has no app for this project yet,
+          call `app_create` with the app's name and its production URL. Take both from the codebase
+          when it says, and ask the person when it does not; never use localhost or a staging host.
 
           ## 4. The stores
 

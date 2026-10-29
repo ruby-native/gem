@@ -21,6 +21,8 @@ class ShipTest < Minitest::Test
     assert_match "`who: human`", text
     assert_match "Do not run preview yourself", text
     assert_match "call `preview_check`", text
+    assert_match "call `app_create`", text
+    refute_match "/apps/new", text, "the agent creates the app; the browser is only for the account"
   end
 
   def test_the_prompt_stops_after_pushing_the_listing_and_publishes_only_on_the_persons_word

@@ -93,8 +93,8 @@ module RubyNative
           "the first native pass, the seven changes in the `ship` prompt (`ruby_native ship` prints it). " \
             "Then `bundle exec ruby_native preview` to see it on a phone."
         elsif !local["logged_in"]
-          "create the app at #{Mcp::Platform::HOST}/apps/new (a name, the site's URL, and an account if you have none), " \
-            "then `ruby_native login` and `ruby_native link`."
+          "`ruby_native login` (it opens the browser to sign in, or to create an account and confirm the email), " \
+            "then `ruby_native link --new --name=NAME --url=URL` to create the app, or `ruby_native link` if it already exists."
         else
           "run `ruby_native link` to pick the app on your account."
         end
