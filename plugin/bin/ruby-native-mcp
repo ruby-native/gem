@@ -1,0 +1,3 @@
+#!/bin/sh
+# Starts the ruby_native gem from the project's own bundle. Nothing is downloaded.
+exec bundle exec ruby_native mcp "$@"

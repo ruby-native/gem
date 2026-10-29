@@ -4,7 +4,7 @@
 
 ## What it runs
 
-The server is the `ruby_native` gem already in your Gemfile, started as `bundle exec ruby_native mcp` in your project directory. Nothing is downloaded or installed by the plugin itself. Install the gem first:
+The server is the `ruby_native` gem already in your Gemfile, started by [`bin/ruby-native-mcp`](bin/ruby-native-mcp), which runs `bundle exec ruby_native mcp` in your project directory. Nothing is downloaded or installed by the plugin itself. Install the gem first:
 
 ```ruby
 gem "ruby_native"

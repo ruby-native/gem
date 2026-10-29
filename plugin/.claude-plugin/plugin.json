@@ -28,12 +28,7 @@
   "termsOfServiceUrl": "https://rubynative.com/terms",
   "mcpServers": {
     "ruby-native": {
-      "command": "bundle",
-      "args": [
-        "exec",
-        "ruby_native",
-        "mcp"
-      ],
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/ruby-native-mcp",
       "env": {
         "RUBY_NATIVE_TOKEN": "${user_config.ruby_native_token}"
       }
