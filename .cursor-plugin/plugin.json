@@ -1,7 +1,7 @@
 {
   "name": "ruby-native",
   "displayName": "Ruby Native",
-  "version": "0.19.0",
+  "version": "0.19.1",
   "description": "Ship a Rails app to the App Store and Google Play from your coding agent. Every ruby_native command as a tool, and a ship prompt that walks the whole journey.",
   "author": {
     "name": "Joe Masilotti",
