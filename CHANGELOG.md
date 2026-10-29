@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- **Your coding agent can create your app on rubynative.com.** Run `ruby_native link --new --name="App name" --url=https://example.com`, or let the `ship` prompt do it, instead of filling in Create your app.
+- **Your coding agent gets the preview ready before handing it to you.** It installs cloudflared and checks your Rails server, so all that's left is running `ruby_native preview` and scanning.
+- **`ruby_native preview` offers to install cloudflared when it's missing.** Needs Homebrew.
+
 ## [0.19.0] - 2026-10-28
 
 ### Fixed
