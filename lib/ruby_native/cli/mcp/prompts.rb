@@ -81,9 +81,16 @@ module RubyNative
           pass.
 
           When you are done, run `validate_config` and `check_views` and fix what they report. Then
-          tell the person to run `bundle exec ruby_native preview` and scan the code it prints with
-          the Ruby Native app on their phone. Do not run preview yourself: it opens a tunnel and
-          waits for a phone. List what you changed and what they should look at on the device,
+          get the preview ready so the person only has to scan: call `preview_check`. If cloudflared
+          is missing, run the install command it gives you, or hand over the download link when
+          there is no Homebrew. If the Rails server is not running, ask the person to start it in
+          its own terminal; if it answers with an error, fix what the check reports. Call
+          `preview_check` again until it says ready.
+
+          Then tell the person to run `bundle exec ruby_native preview`, long-press the Ruby Native
+          app on their phone, tap Switch website, and scan the code it prints. No Ruby Native app
+          yet? It is at https://rubynative.com/try. Do not run preview yourself: it opens a tunnel
+          and waits for a phone. List what you changed and what they should look at on the device,
           since you cannot see the app running in the native shell.
 
           ## 3. The account and the app

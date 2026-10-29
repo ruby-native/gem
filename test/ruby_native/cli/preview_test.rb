@@ -171,6 +171,68 @@ class PreviewTest < Minitest::Test
     assert_match(/Could not reach/, out)
   end
 
+  def test_a_missing_cloudflared_outside_a_terminal_prints_the_install_command
+    stub_tools(cloudflared: false, brew: true)
+    out, _err = capture_io do
+      with_stdin(tty: false) { assert_raises(SystemExit) { @preview.send(:check_cloudflared!) } }
+    end
+    assert_match "brew install cloudflare/cloudflare/cloudflared", out
+    refute_match "Install it now", out
+  end
+
+  def test_a_missing_cloudflared_at_a_terminal_installs_it_on_yes
+    installs = stub_tools(cloudflared: false, brew: true, installs_to: true)
+    out, _err = capture_io do
+      with_stdin(tty: true, answer: "\n") { @preview.send(:check_cloudflared!) }
+    end
+    assert_match "Install it now with Homebrew? [Y/n]", out
+    assert_equal [ "brew install cloudflare/cloudflare/cloudflared" ], installs
+  end
+
+  def test_a_missing_cloudflared_at_a_terminal_stops_on_no
+    installs = stub_tools(cloudflared: false, brew: true)
+    out, _err = capture_io do
+      with_stdin(tty: true, answer: "n\n") { assert_raises(SystemExit) { @preview.send(:check_cloudflared!) } }
+    end
+    assert_empty installs
+    assert_match "Install it with Homebrew:", out
+  end
+
+  def test_without_homebrew_there_is_no_offer
+    stub_tools(cloudflared: false, brew: false)
+    out, _err = capture_io do
+      with_stdin(tty: true, answer: "y\n") { assert_raises(SystemExit) { @preview.send(:check_cloudflared!) } }
+    end
+    refute_match "Install it now", out
+    assert_match "developers.cloudflare.com", out
+  end
+
+  def test_readiness_names_what_preview_would_stop_on_without_exiting
+    stub_tools(cloudflared: false, brew: true)
+    stub_http_raise(Errno::ECONNREFUSED)
+
+    ready = @preview.readiness
+
+    refute ready[:cloudflared]
+    assert_equal "brew install cloudflare/cloudflare/cloudflared", ready[:cloudflared_install]
+    refute ready[:server_ready]
+    assert_match "Nothing is running on port 3000", ready[:server_problem]
+  end
+
+  def test_readiness_is_ready_when_both_checks_pass
+    stub_tools(cloudflared: true, brew: false)
+    response = Net::HTTPOK.new("1.1", "200", "OK")
+    response.instance_variable_set(:@read, true)
+    response.instance_variable_set(:@body, "{}")
+    stub_http_response(response)
+
+    ready = @preview.readiness
+
+    assert ready[:cloudflared]
+    assert ready[:server_ready]
+    assert_nil ready[:server_problem]
+  end
+
   def test_wait_for_tunnel_returns_when_ready
     stub_dns("1.2.3.4")
     @preview.define_singleton_method(:fetch_config_response) { |_uri, ip: nil| Net::HTTPSuccess.new("1.1", "200", "OK") }
@@ -403,6 +465,29 @@ class PreviewTest < Minitest::Test
     yield
   ensure
     ENV["PORT"] = original
+  end
+
+  # Returns the install commands run, so a test can say whether Homebrew was asked.
+  def stub_tools(cloudflared:, brew:, installs_to: false)
+    installs = []
+    installed = cloudflared
+    @preview.define_singleton_method(:cloudflared_installed?) { installed }
+    @preview.define_singleton_method(:homebrew_installed?) { brew }
+    @preview.define_singleton_method(:system) do |command|
+      installs << command
+      installed = installs_to
+    end
+    installs
+  end
+
+  def with_stdin(tty:, answer: "")
+    original = $stdin
+    input = StringIO.new(answer)
+    input.define_singleton_method(:tty?) { tty }
+    $stdin = input
+    yield
+  ensure
+    $stdin = original
   end
 
   def stub_http_response(response)

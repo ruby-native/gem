@@ -9,6 +9,7 @@ require "ruby_native/cli/demo_account"
 require "ruby_native/cli/icon"
 require "ruby_native/cli/listing"
 require "ruby_native/cli/permissions"
+require "ruby_native/cli/preview"
 require "ruby_native/cli/screenshots"
 require "ruby_native/cli/link"
 require "ruby_native/cli/status"
@@ -113,6 +114,22 @@ module RubyNative
             additionalProperties: false
           },
           annotations: { title: "Validate config", readOnlyHint: true, openWorldHint: false }
+        },
+        {
+          name: "preview_check",
+          description: "Check what `bundle exec ruby_native preview` needs before handing it to the person: whether " \
+                       "cloudflared is installed, with the command that installs it, and whether the Rails server " \
+                       "answers on its port with a Ruby Native config. Opens no tunnel and reaches only the local " \
+                       "server. Run it, fix what it reports, and run it again until it says ready.",
+          inputSchema: {
+            type: "object",
+            properties: {
+              port: { type: "integer", description: "The Rails server's port. Defaults to PORT, then 3000, like preview." },
+              url: { type: "string", description: "The Rails server's URL, for a server not on localhost. Overrides port." }
+            },
+            additionalProperties: false
+          },
+          annotations: { title: "Check preview", readOnlyHint: true, openWorldHint: false }
         },
         {
           name: "config_errors",
@@ -532,8 +549,8 @@ module RubyNative
         (2) In the layout <head>, add `<%= stylesheet_link_tag :ruby_native %>` and put
         `viewport-fit=cover` in the viewport meta tag. (3) In the layout <body>, add
         `<%= native_tabs_tag %>` and `<%= native_identity_tag(current_user&.id) %>`.
-        (4) Run `validate_config` and `check_views`, then `bundle exec ruby_native preview` to see it
-        on a phone. Full docs: https://rubynative.com/llms.txt (index) and llms-full.txt (everything).
+        (4) Run `validate_config` and `check_views`, then `preview_check` until it says ready, and
+        hand the person `bundle exec ruby_native preview` to see it on a phone. Full docs: https://rubynative.com/llms.txt (index) and llms-full.txt (everything).
 
         Signals fail silently: an attribute the app does not know is ignored with no error anywhere.
         Call `lookup_signals` before writing one and `check_views` after editing any view.
@@ -564,6 +581,7 @@ module RubyNative
           when "check_views" then check_views(arguments)
           when "lookup_signals" then lookup_signals(arguments)
           when "validate_config" then validate_config(arguments)
+          when "preview_check" then preview_check(arguments)
           when "config_errors" then config_errors(arguments)
           when "deployed_builds" then deployed_builds(arguments)
           when "build_status" then build_status(arguments)
@@ -675,6 +693,27 @@ module RubyNative
             { file: path, key: offense.key, line: offense.line, severity: offense.severity.to_s, message: offense.message }
           end
         })
+      end
+
+      def preview_check(arguments)
+        argv = []
+        argv += [ "--port", arguments["port"].to_s ] if arguments["port"]
+        argv += [ "--url", arguments["url"].to_s ] if arguments["url"].is_a?(String) && !arguments["url"].strip.empty?
+        ready = Preview.new(argv).readiness
+
+        lines = []
+        if ready[:cloudflared]
+          lines << "cloudflared is installed."
+        else
+          lines << "cloudflared is not installed. Install it with: #{ready[:cloudflared_install]}"
+        end
+        lines << (ready[:server_ready] ? "The Rails server answers at #{ready[:upstream]} with a Ruby Native config." : ready[:server_problem])
+        if ready[:cloudflared] && ready[:server_ready]
+          lines << "Ready. Tell the person to run `bundle exec ruby_native preview`, long-press the Ruby Native app " \
+                   "on their phone, tap Switch website, and scan the code it prints."
+        end
+
+        tool_result(lines.join("\n\n"), ready.merge(ready: ready[:cloudflared] && ready[:server_ready]))
       end
 
       # --- Tools that read the API ---

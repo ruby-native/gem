@@ -20,6 +20,7 @@ class ShipTest < Minitest::Test
     assert_match "ruby_native login", text
     assert_match "`who: human`", text
     assert_match "Do not run preview yourself", text
+    assert_match "call `preview_check`", text
   end
 
   def test_the_prompt_stops_after_pushing_the_listing_and_publishes_only_on_the_persons_word

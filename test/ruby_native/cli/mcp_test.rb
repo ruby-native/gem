@@ -40,7 +40,7 @@ class McpTest < Minitest::Test
     assert_empty exchange(%({"jsonrpc":"2.0","method":"notifications/initialized"}))
   end
 
-  READ_TOOLS = %w[build_status check_views config_errors deployed_builds lookup_signals screenshots_list status testers_list validate_config].freeze
+  READ_TOOLS = %w[build_status check_views config_errors deployed_builds lookup_signals preview_check screenshots_list status testers_list validate_config].freeze
   WRITE_TOOLS = %w[apple_key_set demo_account_set icon_set link_app listing_pull listing_push permissions_set screenshots_capture screenshots_setup submit testers_add withdraw].freeze
 
   def test_tools_list_names_every_tool_and_says_which_ones_write
@@ -67,10 +67,10 @@ class McpTest < Minitest::Test
   def test_tools_list_says_which_tools_reach_the_network
     tools = request("tools/list")["result"]["tools"].to_h { |tool| [ tool["name"], tool ] }
 
-    %w[check_views lookup_signals validate_config].each do |name|
+    %w[check_views lookup_signals preview_check validate_config].each do |name|
       refute tools[name].dig("annotations", "openWorldHint"), "#{name} answers locally"
     end
-    (READ_TOOLS + WRITE_TOOLS - %w[check_views lookup_signals validate_config]).each do |name|
+    (READ_TOOLS + WRITE_TOOLS - %w[check_views lookup_signals preview_check validate_config]).each do |name|
       assert tools[name].dig("annotations", "openWorldHint"), "#{name} reaches rubynative.com"
       assert_match "ruby_native login", tools[name]["description"]
     end
@@ -222,6 +222,31 @@ class McpTest < Minitest::Test
       refute structured["supported"]
       assert_equal "0.1.0", structured["gem_version"]
     end
+  end
+
+  # --- preview_check ---
+
+  def test_preview_check_gives_the_install_command_and_the_server_problem
+    result = with_readiness(cloudflared: false, cloudflared_install: "brew install cloudflare/cloudflare/cloudflared",
+      upstream: "http://localhost:3000", server_ready: false, server_problem: "Nothing is running on port 3000.") do
+      call("preview_check")
+    end
+
+    refute result["isError"]
+    assert_match "Install it with: brew install cloudflare/cloudflare/cloudflared", text(result)
+    assert_match "Nothing is running on port 3000.", text(result)
+    refute_match "Ready.", text(result)
+    refute result["structuredContent"]["ready"]
+  end
+
+  def test_preview_check_hands_over_the_scan_once_ready
+    result = with_readiness(cloudflared: true, cloudflared_install: "brew install cloudflare/cloudflare/cloudflared",
+      upstream: "http://localhost:3000", server_ready: true, server_problem: nil) do
+      call("preview_check", "port" => 3000)
+    end
+
+    assert_match "Switch website", text(result)
+    assert result["structuredContent"]["ready"]
   end
 
   # --- validate_config ---
@@ -806,6 +831,15 @@ class McpTest < Minitest::Test
   def write_config(yaml)
     FileUtils.mkdir_p("config")
     File.write("config/ruby_native.yml", yaml)
+  end
+
+  def with_readiness(report)
+    klass = RubyNative::CLI::Preview
+    original = klass.instance_method(:readiness)
+    klass.define_method(:readiness) { report }
+    yield
+  ensure
+    klass.define_method(:readiness, original)
   end
 
   def in_app(&block)

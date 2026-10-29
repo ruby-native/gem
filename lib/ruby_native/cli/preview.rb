@@ -2,6 +2,7 @@ require "open3"
 require "net/http"
 require "uri"
 require "resolv"
+require "stringio"
 require "ruby_native/cli/credentials"
 
 module RubyNative
@@ -17,6 +18,8 @@ module RubyNative
       OUTPUT_TAIL_LINES = 5
       DEPLOY_URL = "https://rubynative.com/deploy"
       QR_QUIET_ZONE = 4
+      BREW_INSTALL = "brew install cloudflare/cloudflare/cloudflared".freeze
+      CLOUDFLARED_DOWNLOADS = "https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/".freeze
 
       def initialize(argv)
         @url = parse_option(argv, "--url")
@@ -28,6 +31,19 @@ module RubyNative
         check_cloudflared!
         check_upstream!
         start_tunnel
+      end
+
+      # What `run` would stop on, without opening a tunnel. The MCP's
+      # preview_check reads this so an agent can fix it before handing over.
+      def readiness
+        problem = upstream_problem
+        {
+          cloudflared: cloudflared_installed?,
+          cloudflared_install: homebrew_installed? ? BREW_INSTALL : CLOUDFLARED_DOWNLOADS,
+          upstream: @upstream,
+          server_ready: problem.nil?,
+          server_problem: problem
+        }
       end
 
       private
@@ -189,15 +205,56 @@ module RubyNative
       end
 
       def check_cloudflared!
-        unless system("which cloudflared > /dev/null 2>&1")
-          puts "cloudflared is not installed."
+        return if cloudflared_installed?
+
+        puts "cloudflared is not installed."
+        puts ""
+        return if offer_to_install_cloudflared
+
+        puts "Install it with Homebrew:"
+        puts "  #{BREW_INSTALL}"
+        puts ""
+        puts "Or see: #{CLOUDFLARED_DOWNLOADS}"
+        exit 1
+      end
+
+      # Only someone at a terminal can say yes; an agent or CI gets the command instead.
+      def offer_to_install_cloudflared
+        return false unless homebrew_installed? && $stdin.tty?
+
+        print "Install it now with Homebrew? [Y/n] "
+        answer = $stdin.gets.to_s.strip.downcase
+        return false unless answer.empty? || answer.start_with?("y")
+
+        if system(BREW_INSTALL) && cloudflared_installed?
           puts ""
-          puts "Install it with Homebrew:"
-          puts "  brew install cloudflare/cloudflare/cloudflared"
+          true
+        else
           puts ""
-          puts "Or see: https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/downloads/"
-          exit 1
+          puts "Homebrew could not install cloudflared."
+          puts ""
+          false
         end
+      end
+
+      def cloudflared_installed?
+        system("which cloudflared > /dev/null 2>&1")
+      end
+
+      def homebrew_installed?
+        system("which brew > /dev/null 2>&1")
+      end
+
+      # check_upstream! prints its advice and exits; this keeps the advice as text.
+      def upstream_problem
+        original = $stdout
+        $stdout = StringIO.new
+        check_upstream!
+        nil
+      rescue SystemExit
+        $stdout.string.strip
+      ensure
+        $stdout = original
       end
 
       def start_tunnel
