@@ -26,18 +26,32 @@
 }
 
 /* In-app defaults so pages feel native without any setup: no gray tap flash,
-   no selecting button labels on long-press, no double-tap zoom on controls.
-   Pair with :active styles for pressed feedback; the bridge makes them apply
-   instantly on touch. */
+   no selecting text or popping link and image previews on long-press, no
+   double-tap zoom on controls. Pair with :active styles for pressed feedback;
+   the bridge makes them apply instantly on touch. */
 [data-native-app] * {
   -webkit-tap-highlight-color: transparent;
 }
 
-[data-native-app] button,
-[data-native-app] [role="button"] {
+[data-native-app] body {
   -webkit-user-select: none;
   user-select: none;
+}
+
+[data-native-app] a,
+[data-native-app] img,
+[data-native-app] button,
+[data-native-app] [role="button"] {
   -webkit-touch-callout: none;
+}
+
+/* Fields stay editable, and .native-selectable opts copyable text back in. */
+[data-native-app] input,
+[data-native-app] textarea,
+[data-native-app] [contenteditable],
+[data-native-app] .native-selectable {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 [data-native-app] a,
