@@ -604,6 +604,24 @@ export const fixtures = [
     })]
   },
   {
+    name: "true tab renders a dot",
+    component: "NativeBadge",
+    props: { tab: true },
+    expected: [signal({
+      "data-native-badge": "",
+      "data-native-badge-tab": "true"
+    })]
+  },
+  {
+    name: "tabs badge by key",
+    component: "NativeBadge",
+    props: { tabs: { library: 3, features: true } },
+    expected: [signal({
+      "data-native-badge": "",
+      "data-native-badge-tabs": '{"library":3,"features":true}'
+    })]
+  },
+  {
     name: "renders the bare badge signal without counts",
     component: "NativeBadge",
     expected: [signal({ "data-native-badge": "" })]

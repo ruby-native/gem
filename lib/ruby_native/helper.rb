@@ -90,13 +90,16 @@ module RubyNative
       tag.button(label, **options)
     end
 
-    def native_badge_tag(count = nil, home: nil, tab: nil)
+    # A tab value is a count, `true` for a dot, or a short string. `tabs:` badges
+    # tabs by their config `key`, while `tab:` targets the tab with `badge: true`.
+    def native_badge_tag(count = nil, home: nil, tab: nil, tabs: nil)
       home = count if count && home.nil?
       tab = count if count && tab.nil?
 
       data = { native_badge: "" }
       data[:native_badge_home] = home unless home.nil?
       data[:native_badge_tab] = tab unless tab.nil?
+      data[:native_badge_tabs] = tabs.to_h.transform_keys(&:to_s).to_json unless tabs.nil?
 
       tag.div(data: data, hidden: true)
     end

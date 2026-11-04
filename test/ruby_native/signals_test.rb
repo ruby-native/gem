@@ -62,7 +62,7 @@ class SignalsTest < Minitest::Test
 
   def test_nearest_suggests_the_closest_signal
     assert_equal "data-native-tabs", RubyNative::Signals.nearest("data-native-tab")
-    assert_equal "data-native-badge-tab", RubyNative::Signals.nearest("data-native-badge-tabs")
+    assert_equal "data-native-badge-tab", RubyNative::Signals.nearest("data-native-badge-tob")
   end
 
   def test_nearest_gives_up_on_an_unrelated_attribute

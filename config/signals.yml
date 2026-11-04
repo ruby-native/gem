@@ -36,6 +36,9 @@ signals:
   data-native-badge-tab:
     since: "0.3.2"
     helper: native_badge_tag
+  data-native-badge-tabs:
+    since: "0.19.2"
+    helper: native_badge_tag
   data-native-button:
     since: "0.4.0"
   data-native-click:

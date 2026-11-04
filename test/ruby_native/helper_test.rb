@@ -209,6 +209,17 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-native-badge-tab="0"'
   end
 
+  def test_native_badge_tag_dot_and_text
+    assert_includes native_badge_tag(tab: true), 'data-native-badge-tab="true"'
+    assert_includes native_badge_tag(tab: "New"), 'data-native-badge-tab="New"'
+  end
+
+  def test_native_badge_tag_by_tab_key
+    html = native_badge_tag(tabs: { library: 3, features: true, inbox: "N" })
+    assert_includes html, %(data-native-badge-tabs="{&quot;library&quot;:3,&quot;features&quot;:true,&quot;inbox&quot;:&quot;N&quot;}")
+    refute_includes html, "data-native-badge-tab="
+  end
+
   def test_native_fab_tag_with_href
     html = native_fab_tag(icon: "square.and.pencil", href: "/compose")
     assert_includes html, 'data-native-fab'

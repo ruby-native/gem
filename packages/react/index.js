@@ -404,16 +404,18 @@ export function NativeSubmitButton({ title = "Save", click = "[type='submit']" }
  * @param {object} props
  * @param {number} [props.count] Sets both `home` and `tab` unless they are given explicitly.
  * @param {number} [props.home]
- * @param {number} [props.tab]
+ * @param {number | boolean | string} [props.tab] A count, `true` for a dot, or a short string.
+ * @param {Record<string, number | boolean | string>} [props.tabs] Badges by tab `key`.
  * @returns {import("react").ReactElement}
  */
-export function NativeBadge({ count, home, tab }) {
+export function NativeBadge({ count, home, tab, tabs }) {
   if (count != null && home == null) home = count
   if (count != null && tab == null) tab = count
   /** @type {Record<string, any>} */
   const props = { "data-native-badge": "", hidden: true }
   if (home != null) props["data-native-badge-home"] = home
-  if (tab != null) props["data-native-badge-tab"] = tab
+  if (tab != null) props["data-native-badge-tab"] = String(tab)
+  if (tabs != null) props["data-native-badge-tabs"] = JSON.stringify(tabs)
   return createElement("div", props)
 }
 

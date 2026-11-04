@@ -420,7 +420,10 @@ export const NativeBadge = defineComponent({
   props: {
     count: { type: Number, default: undefined },
     home: { type: Number, default: undefined },
-    tab: { type: Number, default: undefined }
+    // A count, `true` for a dot, or a short string. The explicit default keeps
+    // Vue from casting an absent Boolean prop to false, which would clear it.
+    tab: { type: [Boolean, Number, String], default: undefined },
+    tabs: { type: Object, default: undefined }
   },
   render() {
     let home = this.home
@@ -430,7 +433,8 @@ export const NativeBadge = defineComponent({
     /** @type {Record<string, any>} */
     const attrs = { "data-native-badge": "", hidden: true }
     if (home != null) attrs["data-native-badge-home"] = home
-    if (tab != null) attrs["data-native-badge-tab"] = tab
+    if (tab != null) attrs["data-native-badge-tab"] = String(tab)
+    if (this.tabs != null) attrs["data-native-badge-tabs"] = JSON.stringify(this.tabs)
     return h("div", attrs)
   }
 })
