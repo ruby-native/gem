@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- **Tab badges can show a dot or a short label.** Pass `tab: true` or `tab: "New"` to `native_badge_tag`. Needs a new build.
+- **Badge any tab by its key, not only the one marked `badge: true`.** `native_badge_tag(tabs: { inbox: 3, whats_new: true })`. Needs a new build.
+
+### Changed
+
+- **Long-pressing text in your app no longer selects it, and long-pressing a link no longer opens a preview.** Add the `native-selectable` class to text people should be able to copy.
+
+### Fixed
+
+- **`pull_to_refresh: false` now turns off pull-to-refresh in Advanced Mode on iOS.** Pages without a native navbar don't get it either. Needs a new build.
+
 ## [0.19.1] - 2026-10-29
 
 ### Added
