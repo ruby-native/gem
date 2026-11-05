@@ -8,8 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- **Tab badges can show a dot or a short label.** Pass `tab: true` or `tab: "New"` to `native_badge_tag`. Needs a new build.
-- **Badge any tab by its key, not only the one marked `badge: true`.** `native_badge_tag(tabs: { inbox: 3, whats_new: true })`. Needs a new build.
+- **Tab badges can show a dot or a short label.** Pass `tab: true` or `tab: "New"` to `native_badge_tag`. Needs a new build, and older builds show no badge.
+- **Badge any tab by its key, not only the one marked `badge: true`.** `native_badge_tag(tabs: { inbox: 3, whats_new: true })`. Needs a new build. Older builds ignore `tabs:`, so keep `badge: true` and `tab:` until your users update.
 - **`RubyNative.share()` opens the native share sheet from your own buttons.** Pass a URL, or leave it out to share the current page. Needs a new build.
 
 ### Changed
