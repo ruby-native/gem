@@ -136,6 +136,8 @@ signals:
     since: "0.9.3"
     helper: native_review_tag
     always: true
+  data-native-secure-session:
+    since: "0.19.2"
   data-native-segment:
     since: "0.10.12"
   data-native-selected:

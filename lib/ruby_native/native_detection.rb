@@ -12,7 +12,8 @@ module RubyNative
     included do
       if respond_to?(:helper_method)
         helper_method :native_app?, :native_version, :native_platform,
-          :native_app_version, :native_app_build, :native_os_version, :native_os_build
+          :native_app_version, :native_app_build, :native_os_version, :native_os_build,
+          :native_secure_session_completion_url
       end
     end
 
@@ -55,6 +56,30 @@ module RubyNative
     # Nil for web browsers and apps built before the User-Agent carried it.
     def native_os_build
       request.user_agent.to_s[SIGNATURE, 4]
+    end
+
+    SECURE_SESSION_COOKIE = "_ruby_native_callback_scheme".freeze
+
+    # Where a provider like Plaid Hosted Link or Stripe Connect onboarding sends
+    # the user when they finish. Pass it as the provider's completion URI, then
+    # link to the provider with `data: { native_secure_session: true }`. The app
+    # opens the link in a secure browser and, on completion, loads `return_to`
+    # in the web view, still signed in.
+    #
+    #   completion_redirect_uri: native_secure_session_completion_url(return_to: bank_done_path)
+    #
+    # Returns nil outside the app (or in a build without secure sessions), so
+    # fall back to a regular web URL there.
+    def native_secure_session_completion_url(return_to:)
+      path = return_to.to_s
+      unless path.start_with?("/") && !path.start_with?("//")
+        raise ArgumentError, "return_to must be a path on your site, like /bank/done"
+      end
+
+      scheme = request.cookies[SECURE_SESSION_COOKIE].to_s
+      return unless scheme.match?(OAuthMiddleware::CALLBACK_SCHEME)
+
+      "#{scheme}://secure-session?#{{ return_to: path }.to_query}"
     end
   end
 end
