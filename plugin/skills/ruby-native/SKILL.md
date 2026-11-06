@@ -13,6 +13,8 @@ The full documentation as one file is https://rubynative.com/llms-full.txt. Read
 
 **In Claude Code with this plugin's MCP server connected**, `status` is the map: it says where the app is on each store's track, what is next, and what is in the way, with who clears each blocker. Read it first and again after every step. The server publishes a prompt, `/mcp__ruby-native__ship`, that walks the whole journey; prefer it over improvising. The tools `validate_config` and `check_views` check your own work without a device.
 
+**In Claude Code without the MCP server**, run the same commands yourself in the project directory. They all start with `bundle exec ruby_native`: `status` is the map, `check` checks your work, and every tool named below has a command beside it. For a submission, `bundle exec ruby_native submit` prints what would go to review and stops without sending; show that, get an explicit yes, then run it again with `--yes`. You may tell the person that `bundle exec ruby_native mcp install` adds the MCP server for richer tools, but it is theirs to run. Never set up an MCP server yourself.
+
 **Anywhere else**, such as claude.ai or Cowork, you cannot run the commands. Walk the person through the same steps below, tell them which command to run at each one, and have them paste the output back. The commands all start with `bundle exec ruby_native`, and `bundle exec ruby_native status` prints the same map the MCP tool returns.
 
 ## 1. Ruby Native in the app
@@ -45,9 +47,9 @@ Read `status`. Each track, iOS and Android, has a next act and a list of blocker
 
 Take the first blocker on the track they are working. A blocker for the agent names the tool or command: deploys are `bundle exec ruby_native deploy`. A blocker for a person gets its why, its URL, and its steps shown exactly as given, then stop; when they say it is done, read `status` again. A questionnaire nobody can see clears only on the person's word.
 
-The listing is the person's words. Write `config/ruby_native_listing.yml`, save it with `listing_push`, and stop so they read the draft where the blocker's URL points. Publish with `bundle exec ruby_native listing publish` only after they say it reads right.
+The listing is the person's words. Write `config/ruby_native_listing.yml`, save it with `listing_push` (or `bundle exec ruby_native listing push`), and stop so they read the draft where the blocker's URL points. Publish with `bundle exec ruby_native listing publish` only after they say it reads right.
 
-Submission is two calls: the first returns a summary and a token; show the summary, get an explicit yes, then send with the token. A mistaken submission is taken back with `withdraw`. Release is the person's, on the Submit page at rubynative.com, and promoting to production on Google Play is theirs in Play Console.
+Submission is two calls: the first returns a summary and a token; show the summary, get an explicit yes, then send with the token. A mistaken submission is taken back with `withdraw` (or `bundle exec ruby_native withdraw`). Release is the person's, on the Submit page at rubynative.com, and promoting to production on Google Play is theirs in Play Console.
 
 ## What only a person can do
 
