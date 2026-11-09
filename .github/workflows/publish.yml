@@ -1,0 +1,122 @@
+# Publishes a tagged release once the demo app is live with it on the App Store.
+# bin/release tags; Ruby Native's ReleaseJob dispatches this two hours after
+# Apple releases the demo. Every step skips what's already out, so a rerun is safe.
+# Publishing uses trusted publishing (OIDC): no RubyGems OTP, npm token, or registry login.
+name: Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish (e.g. 0.21.0). Its v-tag must exist."
+        required: true
+        type: string
+
+concurrency:
+  group: publish-${{ inputs.version }}
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # The trusted publishers on RubyGems and npm name this environment.
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+    env:
+      VERSION: ${{ inputs.version }}
+      TAG: v${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Check out main
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Check the tag exists
+        run: git rev-parse --verify --quiet "refs/tags/$TAG" > /dev/null || { echo "::error::No tag $TAG"; exit 1; }
+
+      # bin/release stamped the changelog when it tagged; the release day is today.
+      - name: Restamp the changelog with the release day
+        run: |
+          today=$(TZ=America/Los_Angeles date +%Y-%m-%d)
+          ruby -e '
+            version, today = ARGV
+            text = File.read("CHANGELOG.md")
+            heading = /^## \[#{Regexp.escape(version)}\] - \d{4}-\d{2}-\d{2}$/
+            abort "CHANGELOG.md has no heading for #{version}" unless text.match?(heading)
+            File.write("CHANGELOG.md", text.sub(heading, "## [#{version}] - #{today}"))
+          ' "$VERSION" "$today"
+          if git diff --quiet; then
+            echo "Already dated $today."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git commit -am "Changelog: $VERSION released $today"
+            git push origin main
+          fi
+          ruby -e '
+            version = ARGV[0]
+            section = File.read("CHANGELOG.md")[/^## \[#{Regexp.escape(version)}\].+?\n(.*?)(?=\n## |\z)/m, 1]&.strip
+            File.write("#{ENV["RUNNER_TEMP"]}/notes.md", section || "See CHANGELOG.md for details.")
+          ' "$VERSION"
+
+      - name: Check out the tag
+        run: git checkout --quiet "$TAG"
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.4"
+
+      - name: Configure RubyGems credentials
+        uses: rubygems/configure-rubygems-credentials@v1.0.0
+
+      - name: Push the gem
+        run: |
+          if curl -fsS "https://rubygems.org/api/v2/rubygems/ruby_native/versions/$VERSION.json" > /dev/null 2>&1; then
+            echo "ruby_native $VERSION is already on RubyGems."
+          else
+            gem build ruby_native.gemspec
+            gem push "ruby_native-$VERSION.gem"
+          fi
+
+      # Trusted publishing needs Node 22.14+ and npm 11.5.1+.
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm
+        run: npm install -g npm@^11.5.1
+
+      - name: Publish the npm packages
+        run: |
+          for dir in packages/*/; do
+            pkg=$(node -p "require('./${dir}package.json').name")
+            if npm view "$pkg@$VERSION" version > /dev/null 2>&1; then
+              echo "$pkg $VERSION is already on npm."
+              continue
+            fi
+            (cd "$dir" && npm ci && npm publish --access public)
+          done
+
+      - name: Publish to the MCP registry
+        run: |
+          if curl -fsS "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.ruby-native/ruby-native" | ruby -rjson -e 'exit(Array(JSON.parse($stdin.read)["servers"]).any? { |e| (e["server"] || e)["version"] == ARGV[0] } ? 0 : 1)' "$VERSION"; then
+            echo "Already on the MCP registry."
+          else
+            curl -fsSL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+            ./mcp-publisher login github-oidc
+            ./mcp-publisher publish
+          fi
+
+      - name: Create the GitHub release
+        run: |
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "GitHub release $TAG already exists."
+          else
+            gh release create "$TAG" --title "$TAG" --notes-file "$RUNNER_TEMP/notes.md" --verify-tag
+          fi
