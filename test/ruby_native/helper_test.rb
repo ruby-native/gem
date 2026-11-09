@@ -89,9 +89,14 @@ class RubyNative::HelperTest < ActionView::TestCase
   # presentation the shell silently ignores lands the page in the wrong place
   # with nothing on screen to explain why.
   def test_native_presentation_tag_rejects_an_unknown_intent
-    error = assert_raises(ArgumentError) { native_presentation_tag :modal }
-    assert_includes error.message, ":root"
-    assert_includes error.message, '"modal"'
+    error = assert_raises(ArgumentError) { native_presentation_tag :sheet }
+    assert_includes error.message, ":root or :modal"
+    assert_includes error.message, '"sheet"'
+  end
+
+  def test_native_presentation_tag_modal
+    assert_includes native_presentation_tag(:modal), 'data-native-presentation="modal"'
+    assert_equal "modal", response.headers["Native-Presentation"]
   end
 
   def test_native_back_button_tag

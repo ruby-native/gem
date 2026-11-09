@@ -122,16 +122,23 @@ module RubyNative
       value
     end
 
-    # The landing intents a page can declare about itself. Only :root so far.
-    # :modal is the obvious second member (both shells hardcode a /new + /edit
-    # rule today that no app can reach), which is why this is a vocabulary
-    # rather than a boolean tag.
-    PRESENTATION_INTENTS = %w[root].freeze
+    # The landing intents a page can declare about itself.
+    PRESENTATION_INTENTS = %w[root modal].freeze
 
-    # Declares that this page is a root: it lands with nothing behind it, and no
-    # back affordance, wherever it lands.
+    # Declares how this page lands, wherever it lands.
     #
     #   <%= native_presentation_tag :root %>
+    #   <%= native_presentation_tag :modal %>
+    #
+    # :root lands with nothing behind it and no back affordance. :modal lands in
+    # Advanced Mode's modal: it presents one, or pushes inside the one already
+    # up, so a multi-step flow reached by redirects stays in a single modal.
+    # Normal Mode has no modals and ignores it.
+    #
+    # A link tap is proposed before anything is fetched, so neither channel
+    # below reaches the shell in time for it. Mark the link instead:
+    #
+    #   <%= link_to "Add player", new_player_path, data: { native_presentation: "modal" } %>
     #
     # Emits the fact on two channels, because the shells need it at two
     # different moments and neither channel reaches both:
@@ -149,16 +156,18 @@ module RubyNative
     #    the only part of that response readable synchronously, since the body
     #    arrives as a promise that consuming would take from Turbo.
     #
-    # Nothing is declared at the origin. Both channels ride the response for the
-    # page itself, so a redirect chain carries the intent to wherever it actually
-    # lands rather than to wherever the link pointed.
+    # Both channels ride the response for the page itself, so a redirect chain
+    # carries the intent to wherever it actually lands rather than to wherever
+    # the form pointed. That is also why a conditional redirect needs nothing
+    # extra: the page it picks declares itself or doesn't.
     #
     # In Advanced Mode this takes effect before the navigation commits when the
     # page arrives from a form submission, because that is the only case where
     # Turbo has already fetched the destination by the time it proposes the
     # visit. A link tap, a deep link and a cold boot are proposed before anything
-    # is fetched, so those fall back to the element and the shell corrects after
-    # the page renders. Normal Mode always uses the element.
+    # is fetched. For :root those fall back to the element and the shell corrects
+    # after the page renders. :modal has no late correction, which is why links
+    # carry the attribute themselves. Normal Mode always uses the element.
     #
     # Do not call this inside a `cache` block. On a cache hit the element comes
     # back from the cache and the header is never set, which silently leaves
