@@ -20,7 +20,8 @@ appearance:
   # Accepts a hex string, or { light:, dark: } for dark mode support.
   tint_color: "#007AFF"
 
-  # Color shown briefly during launch and as the safe-area fill.
+  # Window color behind your pages, shown during transitions and as the
+  # safe-area fill. The launch screen color is set in your app's Settings.
   # Accepts a hex string, or { light:, dark: } for dark mode support.
   background_color: "#FFFFFF"
 
@@ -67,25 +68,31 @@ appearance:
   #     background_color: "#1E293B"
   #     # Title and icon color. Defaults to black or white, picked for contrast.
   #     foreground_color: "#FFFFFF"
+  #     # Center plain titles like iOS. Defaults to start, Material's convention.
+  #     title_alignment: center
   #   tab_bar:
   #     background_color: "#1E293B"
   #     # Icon and label color. Defaults to the theme's, with tint_color on the
   #     # selected tab. Set this and unselected tabs dim to 60% of it.
   #     foreground_color: "#FFFFFF"
 
+  # A close button on Advanced Mode modals: Done on iOS, an X on Android. Leave
+  # it out for each platform's default (off on iOS, on on Android).
+  # modal_close_button: true
+
   # Show a launch splash while the first screen loads. It holds your launch icon
-  # and background_color in frame, with a spinner, until the web content paints.
+  # and launch screen color in frame, with a spinner, until the web content paints.
   # Off by default; set enabled: true to turn it on.
   # https://rubynative.com/docs/appearance#splash-screen
   # splash:
   #   enabled: true
   #
   #   # Spinner color. Accepts a hex string, or { light:, dark: } for dark mode.
-  #   # Defaults to a contrast-aware pick from your background_color.
+  #   # Defaults to a contrast-aware pick from your launch screen color.
   #   spinner_color: "#007AFF"
   #
   #   # Status bar content over the splash. Options: light (white) or dark.
-  #   # Defaults to a contrast-aware pick from your background_color.
+  #   # Defaults to a contrast-aware pick from your launch screen color.
   #   status_bar: dark
 
 # Configure the native tab bar on the bottom of the screen.

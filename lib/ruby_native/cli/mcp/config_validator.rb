@@ -26,7 +26,7 @@ module RubyNative
         TOP_LEVEL_KEYS = %w[app appearance tabs auth errors analytics ios android linked_paths ruby_native].freeze
         APP_KEYS = %w[name mode entry_path].freeze
         # `android` is the per-platform chrome block, read only by the Android app.
-        APPEARANCE_KEYS = %w[tint_color background_color theme landscape navbar splash android].freeze
+        APPEARANCE_KEYS = %w[tint_color background_color theme landscape navbar splash android modal_close_button].freeze
         NAVBAR_KEYS = %w[logo background_color foreground_color status_bar].freeze
         SPLASH_KEYS = %w[enabled spinner_color status_bar].freeze
         TAB_KEYS = %w[title titles path icon icons key eager search badge auto_route].freeze
@@ -37,6 +37,7 @@ module RubyNative
         MODES = %w[normal advanced].freeze
         THEMES = %w[auto light dark].freeze
         STATUS_BARS = %w[light dark].freeze
+        TITLE_ALIGNMENTS = %w[start center].freeze
 
         # UIColor(hex:) takes exactly six hex digits and an optional `#`. A
         # three-digit shorthand parses as nil, which reads on device as the
@@ -177,8 +178,20 @@ module RubyNative
           check_color(appearance["background_color"], "appearance.background_color")
           check_enum(appearance["theme"], "appearance.theme", THEMES)
           check_boolean(appearance["landscape"], "appearance.landscape")
+          check_boolean(appearance["modal_close_button"], "appearance.modal_close_button")
           check_navbar(appearance["navbar"])
           check_splash(appearance["splash"])
+          check_android_title_alignment(appearance.dig("android", "navbar")) if appearance["android"].is_a?(Hash)
+        end
+
+        # Android decodes this as a string, so a typo leaves the title start-aligned instead of failing.
+        def check_android_title_alignment(navbar)
+          return unless navbar.is_a?(Hash)
+
+          value = navbar["title_alignment"]
+          return if value.nil? || sentinel?(value) || TITLE_ALIGNMENTS.include?(value.to_s)
+
+          warning("appearance.android.navbar.title_alignment", "`appearance.android.navbar.title_alignment` is #{value.inspect}. It takes #{TITLE_ALIGNMENTS.join(" or ")}, so the title stays start-aligned.")
         end
 
         def check_navbar(navbar)
