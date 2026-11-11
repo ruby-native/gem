@@ -76,7 +76,7 @@ appearance:
   #     # selected tab. Set this and unselected tabs dim to 60% of it.
   #     foreground_color: "#FFFFFF"
 
-  # A close button on Advanced Mode modals: Done on iOS, an X on Android. Leave
+  # An X that closes Advanced Mode modals, on both platforms. Leave
   # it out for each platform's default (off on iOS, on on Android).
   # modal_close_button: true
 
