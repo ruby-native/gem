@@ -120,12 +120,12 @@ class ConfigValidatorTest < Minitest::Test
     assert_match "needs both", offense.message
   end
 
-  def test_modal_close_button_has_to_be_a_boolean
-    assert_empty validate("appearance:\n  modal_close_button: true\n")
+  def test_modal_dismiss_button_has_to_be_a_boolean
+    assert_empty validate("appearance:\n  modal_dismiss_button: true\n")
 
-    offense = validate("appearance:\n  modal_close_button: \"yes\"\n").first
+    offense = validate("appearance:\n  modal_dismiss_button: \"yes\"\n").first
     assert_equal :error, offense.severity
-    assert_equal "appearance.modal_close_button", offense.key
+    assert_equal "appearance.modal_dismiss_button", offense.key
   end
 
   def test_an_unknown_android_title_alignment_is_a_warning

@@ -78,7 +78,7 @@ appearance:
 
   # An X that closes Advanced Mode modals, on both platforms. Leave
   # it out for each platform's default (off on iOS, on on Android).
-  # modal_close_button: true
+  # modal_dismiss_button: true
 
   # Show a launch splash while the first screen loads. It holds your launch icon
   # and launch screen color in frame, with a spinner, until the web content paints.
