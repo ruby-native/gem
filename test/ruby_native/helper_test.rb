@@ -99,6 +99,21 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_equal "modal", response.headers["Native-Presentation"]
   end
 
+  def test_native_presentation_tag_modal_not_dismissible
+    html = native_presentation_tag(:modal, dismissible: false)
+    assert_includes html, 'data-native-presentation="modal"'
+    assert_includes html, 'data-native-dismissible="false"'
+  end
+
+  def test_native_presentation_tag_dismissible_by_default
+    refute_includes native_presentation_tag(:modal), "data-native-dismissible"
+  end
+
+  def test_native_presentation_tag_dismissible_false_needs_a_modal
+    error = assert_raises(ArgumentError) { native_presentation_tag :root, dismissible: false }
+    assert_includes error.message, ":modal"
+  end
+
   def test_native_back_button_tag
     html = native_back_button_tag
     assert_includes html, "<button"

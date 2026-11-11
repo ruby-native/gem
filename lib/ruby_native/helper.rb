@@ -129,6 +129,11 @@ module RubyNative
     #
     #   <%= native_presentation_tag :root %>
     #   <%= native_presentation_tag :modal %>
+    #   <%= native_presentation_tag :modal, dismissible: false %>
+    #
+    # `dismissible: false` makes a modal the user can't close: no close button,
+    # no swipe down, no back. Only the server moves them on, by redirecting to a
+    # page without it. Use it for paywalls and sign-in.
     #
     # :root lands with nothing behind it and no back affordance. :modal lands in
     # Advanced Mode's modal: it presents one, or pushes inside the one already
@@ -172,7 +177,7 @@ module RubyNative
     # Do not call this inside a `cache` block. On a cache hit the element comes
     # back from the cache and the header is never set, which silently leaves
     # Advanced Mode with only the slower path.
-    def native_presentation_tag(presentation)
+    def native_presentation_tag(presentation, dismissible: true)
       value = presentation.to_s
       unless PRESENTATION_INTENTS.include?(value)
         raise ArgumentError,
@@ -193,7 +198,16 @@ module RubyNative
         response.headers["Native-Presentation"] = value
       end
 
-      tag.div(data: { native_presentation: value }, hidden: true)
+      unless [ true, false ].include?(dismissible)
+        raise ArgumentError, "native_presentation_tag dismissible: must be true or false, got #{dismissible.inspect}"
+      end
+      if !dismissible && value != "modal"
+        raise ArgumentError, "native_presentation_tag dismissible: false only applies to :modal"
+      end
+
+      data = { native_presentation: value }
+      data[:native_dismissible] = "false" unless dismissible
+      tag.div(data: data, hidden: true)
     end
 
     def native_navbar_tag(title = nil, pull_to_refresh: true, &block)

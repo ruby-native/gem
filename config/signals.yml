@@ -52,6 +52,9 @@ signals:
     since: "0.17.0"
   data-native-destructive:
     since: "0.14.0"
+  data-native-dismissible:
+    since: "0.20.1"
+    helper: native_presentation_tag
   data-native-fab:
     since: "0.8.0"
     helper: native_fab_tag
