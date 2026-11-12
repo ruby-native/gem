@@ -52,6 +52,9 @@ signals:
     since: "0.17.0"
   data-native-destructive:
     since: "0.14.0"
+  data-native-dismiss-button:
+    since: "0.20.1"
+    helper: native_presentation_tag
   data-native-dismissible:
     since: "0.20.1"
     helper: native_presentation_tag

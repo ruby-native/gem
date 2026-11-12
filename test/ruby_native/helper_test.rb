@@ -109,6 +109,17 @@ class RubyNative::HelperTest < ActionView::TestCase
     refute_includes native_presentation_tag(:modal), "data-native-dismissible"
   end
 
+  def test_native_presentation_tag_dismiss_button_overrides_per_page
+    assert_includes native_presentation_tag(:modal, dismiss_button: true), 'data-native-dismiss-button="true"'
+    assert_includes native_presentation_tag(:modal, dismiss_button: false), 'data-native-dismiss-button="false"'
+    refute_includes native_presentation_tag(:modal), "data-native-dismiss-button"
+  end
+
+  def test_native_presentation_tag_dismiss_button_needs_a_modal
+    error = assert_raises(ArgumentError) { native_presentation_tag :root, dismiss_button: true }
+    assert_includes error.message, ":modal"
+  end
+
   def test_native_presentation_tag_dismissible_false_needs_a_modal
     error = assert_raises(ArgumentError) { native_presentation_tag :root, dismissible: false }
     assert_includes error.message, ":modal"

@@ -135,6 +135,10 @@ module RubyNative
     # no swipe down, no back. Only the server moves them on, by redirecting to a
     # page without it. Use it for paywalls and sign-in.
     #
+    # `dismiss_button:` shows (true) or hides (false) the modal's dismiss button
+    # on this page, overriding `appearance.modal_dismiss_button`. A modal that
+    # isn't dismissible never shows one.
+    #
     # :root lands with nothing behind it and no back affordance. :modal lands in
     # Advanced Mode's modal: it presents one, or pushes inside the one already
     # up, so a multi-step flow reached by redirects stays in a single modal.
@@ -177,7 +181,7 @@ module RubyNative
     # Do not call this inside a `cache` block. On a cache hit the element comes
     # back from the cache and the header is never set, which silently leaves
     # Advanced Mode with only the slower path.
-    def native_presentation_tag(presentation, dismissible: true)
+    def native_presentation_tag(presentation, dismissible: true, dismiss_button: nil)
       value = presentation.to_s
       unless PRESENTATION_INTENTS.include?(value)
         raise ArgumentError,
@@ -204,9 +208,16 @@ module RubyNative
       if !dismissible && value != "modal"
         raise ArgumentError, "native_presentation_tag dismissible: false only applies to :modal"
       end
+      unless [ nil, true, false ].include?(dismiss_button)
+        raise ArgumentError, "native_presentation_tag dismiss_button: must be true or false, got #{dismiss_button.inspect}"
+      end
+      if !dismiss_button.nil? && value != "modal"
+        raise ArgumentError, "native_presentation_tag dismiss_button: only applies to :modal"
+      end
 
       data = { native_presentation: value }
       data[:native_dismissible] = "false" unless dismissible
+      data[:native_dismiss_button] = dismiss_button.to_s unless dismiss_button.nil?
       tag.div(data: data, hidden: true)
     end
 
