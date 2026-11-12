@@ -199,7 +199,9 @@ module RubyNative
             "so Advanced Mode will not see it before the navigation commits."
           )
         end
-        response.headers["Native-Presentation"] = value
+        # A 422 re-render answers the POST, so its URL is the collection
+        # (/players), and a :modal header there would mark that page modal.
+        response.headers["Native-Presentation"] = value unless response.status.to_i >= 400
       end
 
       unless [ true, false ].include?(dismissible)

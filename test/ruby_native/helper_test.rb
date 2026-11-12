@@ -99,6 +99,12 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_equal "modal", response.headers["Native-Presentation"]
   end
 
+  def test_native_presentation_tag_skips_the_header_on_a_failed_submit
+    response.status = 422
+    assert_includes native_presentation_tag(:modal), 'data-native-presentation="modal"'
+    assert_nil response.headers["Native-Presentation"]
+  end
+
   def test_native_presentation_tag_modal_not_dismissible
     html = native_presentation_tag(:modal, dismissible: false)
     assert_includes html, 'data-native-presentation="modal"'
