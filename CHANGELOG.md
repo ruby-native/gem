@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- **Open providers like Plaid Hosted Link in a secure browser and come back signed in.** Mark the link with `data: { native_secure_session: true }` and pass `native_secure_session_completion_url(return_to:)` as the completion URL. Needs a new build.
+- **Any page can open as a modal in Advanced Mode, and multi-step flows stay in one modal.** Mark links with `data: { native_presentation: "modal" }`, and add `native_presentation_tag :modal` to pages a form or redirect lands on. Needs a new build.
+- **`native_presentation_tag :modal, dismissible: false` makes a modal people can't close.** Advanced Mode, needs a new build.
+- **Choose whether modals show a close button, the same on both platforms.** Set `appearance.modal_dismiss_button`, or `dismiss_button:` on `native_presentation_tag` for one page. Advanced Mode, needs a new build.
+- **Center navbar titles on Android with `appearance.android.navbar.title_alignment: center`.** Needs a new build.
+
+### Fixed
+
+- **Signing in on Android no longer loads the first page twice or flashes an error.** Advanced Mode, when the login page isn't a modal.
+
 ## [0.20.0] - 2026-11-06
 
 ### Added
