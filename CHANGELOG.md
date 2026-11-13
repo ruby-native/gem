@@ -14,6 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Choose whether modals show a close button, the same on both platforms.** Set `appearance.modal_dismiss_button`, or `dismiss_button:` on `native_presentation_tag` for one page. Advanced Mode, needs a new build.
 - **Center navbar titles on Android with `appearance.android.navbar.title_alignment: center`.** Needs a new build.
 
+### Changed
+
+- **In-app purchases are checked against your app's bundle ID.** Set `ios.bundle_id` in `config/ruby_native.yml` and a purchase, restore, or App Store notification made for any other app is rejected. It has to match the bundle ID in App Store Connect exactly, since a mismatch rejects every purchase. Without it purchases still work, and your server logs a warning.
+- **App Store transactions get a stricter certificate check.** The signing certificates must be Apple's App Store ones and valid when the transaction was signed. A malformed transaction now answers 422, not 500.
+
 ### Fixed
 
 - **Signing in on Android no longer loads the first page twice or flashes an error.** Advanced Mode, when the login page isn't a modal.
