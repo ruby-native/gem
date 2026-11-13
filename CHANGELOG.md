@@ -18,6 +18,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Signing in on Android no longer loads the first page twice or flashes an error.** Advanced Mode, when the login page isn't a modal.
 - **Signing out on Android no longer freezes the app.** It stopped responding when you signed out from a page opened on the first tab. Advanced Mode.
+- **Push notifications on Android reach the right person after an account switch.** The app registers its push token again when the signed-in user changes, for apps that use `native_identity_tag`. Needs a new build.
+- **A push registration that fails on Android is tried again on the next page.** A redirect to a sign-in page no longer counts as registered, and a token that changes mid-request is still sent. Needs a new build.
 
 ## [0.20.0] - 2026-11-06
 
