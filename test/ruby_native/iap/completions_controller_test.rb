@@ -180,7 +180,75 @@ class RubyNative::IAP::CompletionsControllerTest < ActionDispatch::IntegrationTe
     assert_rejected intent, events
   end
 
+  # --- The app the transaction is for ---
+
+  def test_completes_a_transaction_for_the_configured_bundle_id
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+
+    StoreKitSigning.with_bundle_id("com.example.app") do
+      chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent))) } }
+    end
+
+    assert_response :ok
+    assert intent.reload.completed?
+    assert_equal 1, events.size
+  end
+
+  def test_rejects_a_transaction_for_another_bundle_id
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+
+    StoreKitSigning.with_bundle_id("com.example.other") do
+      chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent))) } }
+    end
+
+    assert_rejected intent, events
+  end
+
+  def test_rejects_a_transaction_with_no_bundle_id_when_one_is_configured
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+
+    StoreKitSigning.with_bundle_id("com.example.app") do
+      chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent).except("bundleId"))) } }
+    end
+
+    assert_rejected intent, events
+  end
+
+  def test_without_a_configured_bundle_id_purchases_complete_and_the_warning_is_logged_once
+    chain = StoreKitSigning.new
+    intents = Array.new(3) { create_intent }
+    events = capture_events
+    RubyNative::IAP::Verifiable.instance_variable_set(:@warned_missing_bundle_id, false)
+
+    log = with_captured_log do
+      chain.trusted do
+        in_production { intents.each { |intent| complete(intent, chain.sign(transaction_for(intent))) } }
+      end
+    end
+
+    assert_nil RubyNative.config.dig(:ios, :bundle_id)
+    assert intents.all? { |intent| intent.reload.completed? }
+    assert_equal 3, events.size
+    assert_equal 1, log.scan("Set ios.bundle_id in config/ruby_native.yml").size
+  end
+
   private
+
+  def with_captured_log
+    io = StringIO.new
+    original = Rails.logger
+    Rails.logger = Logger.new(io)
+    yield
+    io.string
+  ensure
+    Rails.logger = original
+  end
 
   def create_intent
     RubyNative::IAP::PurchaseIntent.create!(

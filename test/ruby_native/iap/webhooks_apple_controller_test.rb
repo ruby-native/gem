@@ -57,7 +57,9 @@ class RubyNative::Webhooks::AppleControllerTest < ActionDispatch::IntegrationTes
   def test_a_signed_notification_fires_the_callback
     intent = RubyNative::IAP::PurchaseIntent.create!(customer_id: "user_42", product_id: "com.example.annual")
 
-    @chain.trusted { notify(signed_notification(app_account_token: intent.uuid)) }
+    StoreKitSigning.with_bundle_id("com.example.app") do
+      @chain.trusted { notify(signed_notification(app_account_token: intent.uuid)) }
+    end
 
     assert_response :ok
     event = @events.sole
@@ -66,6 +68,24 @@ class RubyNative::Webhooks::AppleControllerTest < ActionDispatch::IntegrationTes
     assert_equal "com.example.annual", event.product_id
     assert_equal "sandbox", event.environment
     assert intent.reload.completed?
+  end
+
+  def test_rejects_a_notification_for_another_bundle_id
+    StoreKitSigning.with_bundle_id("com.example.app") do
+      @chain.trusted { notify(signed_notification(bundle_id: "com.example.other")) }
+    end
+
+    assert_response :unprocessable_entity
+    assert_empty @events
+  end
+
+  def test_rejects_a_notification_whose_transaction_is_for_another_bundle_id
+    StoreKitSigning.with_bundle_id("com.example.app") do
+      @chain.trusted { notify(signed_notification(transaction_bundle_id: "com.example.other")) }
+    end
+
+    assert_response :unprocessable_entity
+    assert_empty @events
   end
 
   def test_rejects_a_notification_from_an_untrusted_chain
@@ -92,10 +112,12 @@ class RubyNative::Webhooks::AppleControllerTest < ActionDispatch::IntegrationTes
       headers: {"CONTENT_TYPE" => "application/json"}
   end
 
-  def signed_notification(app_account_token: "no-such-intent", x5c: @chain.x5c)
+  def signed_notification(
+    app_account_token: "no-such-intent", bundle_id: "com.example.app", transaction_bundle_id: "com.example.app", x5c: @chain.x5c
+  )
     transaction = {
       "appAccountToken" => app_account_token,
-      "bundleId" => "com.example.app",
+      "bundleId" => transaction_bundle_id,
       "productId" => "com.example.annual",
       "originalTransactionId" => "2000000000000000",
       "transactionId" => "2000000000000001",
@@ -108,7 +130,7 @@ class RubyNative::Webhooks::AppleControllerTest < ActionDispatch::IntegrationTes
         "notificationType" => "DID_RENEW",
         "notificationUUID" => "notification-uuid",
         "data" => {
-          "bundleId" => "com.example.app",
+          "bundleId" => bundle_id,
           "environment" => "Sandbox",
           "signedTransactionInfo" => @chain.sign(transaction)
         }

@@ -207,6 +207,7 @@ class RubyNative::IAP::VerificationTest < Minitest::Test
       assert_equal "DID_RENEW", notification.notification_type
       assert_equal "notification-uuid", notification.notification_uuid
       assert_equal "com.example.app", notification.bundle_id
+      assert_equal "com.example.app", notification.transaction_bundle_id
       assert_equal "sandbox", notification.environment
       assert_equal "intent-uuid", notification.app_account_token
       assert_equal "com.example.annual", notification.product_id
@@ -263,6 +264,7 @@ class RubyNative::IAP::VerificationTest < Minitest::Test
   def transaction_info
     {
       "appAccountToken" => "intent-uuid",
+      "bundleId" => "com.example.app",
       "productId" => "com.example.annual",
       "originalTransactionId" => "2000000000000000",
       "transactionId" => "2000000000000001",

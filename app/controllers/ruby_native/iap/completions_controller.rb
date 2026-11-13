@@ -44,6 +44,7 @@ module RubyNative
 
         if signed_transaction.present?
           transaction = decode_and_verify_jws(signed_transaction)
+          verify_bundle_id!(transaction["bundleId"])
           if transaction["appAccountToken"] != intent.uuid
             raise VerificationError, "appAccountToken does not match intent UUID"
           end

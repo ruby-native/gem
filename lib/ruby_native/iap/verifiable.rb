@@ -11,6 +11,15 @@ module RubyNative
 
       CHAIN_LENGTH = 3
 
+      def self.warn_missing_bundle_id
+        return if @warned_missing_bundle_id
+
+        @warned_missing_bundle_id = true
+        Rails.logger.warn(
+          "[RubyNative] Set ios.bundle_id in config/ruby_native.yml so in-app purchases are checked against your app."
+        )
+      end
+
       private
 
       # `at` is the time the chain has to be valid at, so a payload signed
@@ -61,6 +70,16 @@ module RubyNative
         raise VerificationError, "Certificate chain verification failed: #{store.error_string}"
       rescue RangeError
         raise VerificationError, "Certificate chain cannot be verified at #{at}"
+      end
+
+      def verify_bundle_id!(bundle_id)
+        expected = RubyNative.config&.dig(:ios, :bundle_id)
+
+        if expected.blank?
+          Verifiable.warn_missing_bundle_id
+        elsif bundle_id != expected.to_s
+          raise VerificationError, "bundleId does not match ios.bundle_id in config/ruby_native.yml"
+        end
       end
 
       def apple_root_certificate

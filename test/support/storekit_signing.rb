@@ -49,6 +49,14 @@ class StoreKitSigning
     JWT.encode(payload, key, "ES256", {x5c: x5c}.compact)
   end
 
+  # The bundle ID verified payloads are checked against, as `ios.bundle_id` in the config.
+  def self.with_bundle_id(bundle_id)
+    RubyNative.config[:ios] = {bundle_id: bundle_id}
+    yield
+  ensure
+    RubyNative.load_config
+  end
+
   # Points the verifier at this chain's root in place of Apple's.
   def trusted
     Tempfile.create(["root", ".pem"]) do |file|
