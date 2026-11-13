@@ -62,4 +62,47 @@ ActiveRecord::Schema.define do
   end
   add_index :ruby_native_purchase_intents, :uuid, unique: true
   add_index :ruby_native_purchase_intents, :customer_id
+
+  create_table :users, force: true do |t|
+    t.string :name
+  end
+
+  # Same columns as the Action Push Native install migration.
+  create_table :action_push_native_devices, force: true do |t|
+    t.string :name
+    t.string :platform, null: false
+    t.string :token, null: false
+    t.belongs_to :owner, polymorphic: true
+    t.timestamps
+  end
+end
+
+class User < ActiveRecord::Base
+  has_many :push_devices, class_name: "ApplicationPushDevice", as: :owner, dependent: :destroy
+end
+
+# Stands in for ActionPushNative::Device, which the gem does not depend on.
+# Keep the platform enum in step with it.
+class ApplicationPushDevice < ActiveRecord::Base
+  self.table_name = "action_push_native_devices"
+
+  belongs_to :owner, polymorphic: true, optional: true
+
+  enum :platform, {apple: "apple", google: "google"}, validate: true
+end
+
+# The push endpoint inherits from the host app's ApplicationController.
+class ApplicationController < ActionController::Base
+  cattr_accessor :require_sign_in, default: false
+
+  # A generated Rails app gets this from the Action Controller railtie.
+  protect_from_forgery with: :exception
+
+  before_action(if: :require_sign_in) { head :unauthorized unless current_user }
+
+  private
+
+  def current_user
+    User.find_by(id: cookies[:user_id])
+  end
 end
