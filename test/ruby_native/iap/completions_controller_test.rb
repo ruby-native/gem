@@ -145,17 +145,26 @@ class RubyNative::IAP::CompletionsControllerTest < ActionDispatch::IntegrationTe
     assert_rejected intent, events
   end
 
-  def test_a_chain_that_is_not_certificates_fires_no_callback
+  def test_rejects_a_chain_with_an_entry_that_is_not_a_certificate
     chain = StoreKitSigning.new
     intent = create_intent
     events = capture_events
-    garbage = Base64.strict_encode64("not a certificate")
+    x5c = [Base64.strict_encode64("not a certificate"), *chain.x5c.drop(1)]
 
-    chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent), x5c: [garbage])) } }
+    chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent), x5c: x5c)) } }
 
-    refute_predicate response, :successful?
-    assert intent.reload.pending?
-    assert_empty events
+    assert_rejected intent, events
+  end
+
+  def test_rejects_a_leaf_that_was_expired_when_the_transaction_was_signed
+    chain = StoreKitSigning.new(leaf: {not_before: Time.now - 800.days, not_after: Time.now - 70.days})
+    intent = create_intent
+    events = capture_events
+    transaction = transaction_for(intent).merge("signedDate" => 10.days.ago.to_i * 1000)
+
+    chain.trusted { in_production { complete(intent, chain.sign(transaction)) } }
+
+    assert_rejected intent, events
   end
 
   # The unsigned fallback is for a request with no transaction at all. One that

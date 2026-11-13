@@ -1,4 +1,5 @@
 require "test_helper"
+require "support/storekit_signing"
 
 # Unlike completions, restore has no unsigned path to test through -- there is no
 # Xcode fallback, because a restore has nothing to fall back to. So the signature
@@ -178,6 +179,21 @@ class RubyNative::IAP::RestoresControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
     assert_equal "martian", event.environment
     assert intent.reload.completed?
+  end
+
+  # --- Verification ---
+
+  def test_returns_unprocessable_entity_for_a_chain_entry_that_is_not_a_certificate
+    chain = StoreKitSigning.new
+    intent = create_intent(customer_id: "user_42")
+    x5c = [Base64.strict_encode64("not a certificate"), *chain.x5c.drop(1)]
+    jws = chain.sign({"appAccountToken" => intent.uuid, "transactionId" => "t_1"}, x5c: x5c)
+
+    event = capture_event { chain.trusted { restore(customer_id: "user_42", signed_transactions: [jws]) } }
+
+    assert_response :unprocessable_entity
+    assert_nil event
+    assert intent.reload.pending?
   end
 
   private

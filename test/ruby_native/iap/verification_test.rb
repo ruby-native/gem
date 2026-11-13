@@ -87,6 +87,82 @@ class RubyNative::IAP::VerificationTest < Minitest::Test
     end
   end
 
+  def test_a_chain_of_two_certificates_is_rejected
+    x5c = @chain.x5c([@chain.leaf, @chain.root])
+
+    assert_chain_rejected @chain, "Expected 3 x5c certificates", x5c: x5c
+  end
+
+  def test_a_chain_of_four_certificates_is_rejected
+    x5c = @chain.x5c([@chain.leaf, @chain.intermediate, @chain.intermediate, @chain.root])
+
+    assert_chain_rejected @chain, "Expected 3 x5c certificates", x5c: x5c
+  end
+
+  def test_an_x5c_entry_that_is_not_a_certificate_is_rejected
+    x5c = [Base64.strict_encode64("not a certificate"), *@chain.x5c.drop(1)]
+
+    assert_chain_rejected @chain, "could not be parsed", x5c: x5c
+  end
+
+  def test_an_x5c_entry_that_is_not_a_string_is_rejected
+    assert_chain_rejected @chain, "not a string", x5c: [1, *@chain.x5c.drop(1)]
+  end
+
+  def test_a_leaf_without_the_app_store_signing_extension_is_rejected
+    assert_chain_rejected StoreKitSigning.new(leaf: {marker: nil}), "Leaf certificate"
+  end
+
+  def test_an_intermediate_without_the_wwdr_extension_is_rejected
+    assert_chain_rejected StoreKitSigning.new(intermediate: {marker: nil}), "Intermediate certificate"
+  end
+
+  def test_an_intermediate_that_is_not_a_certificate_authority_is_rejected
+    assert_chain_rejected StoreKitSigning.new(intermediate: {ca: false}), "Certificate chain verification failed"
+  end
+
+  # --- Validity at the signed date ---
+
+  def test_a_leaf_that_has_since_expired_is_accepted_for_a_payload_signed_while_it_was_valid
+    chain = StoreKitSigning.new(leaf: {not_before: days_ago(800), not_after: days_ago(70)})
+    payload = PAYLOAD.merge("signedDate" => milliseconds(days_ago(100)))
+
+    chain.trusted do
+      assert_equal payload, verify(chain.sign(payload))
+    end
+  end
+
+  def test_a_leaf_expired_at_the_signed_date_is_rejected
+    chain = StoreKitSigning.new(leaf: {not_before: days_ago(800), not_after: days_ago(70)})
+
+    assert_chain_rejected chain, "certificate has expired", payload: {"signedDate" => milliseconds(days_ago(10))}
+  end
+
+  def test_a_leaf_not_yet_valid_at_the_signed_date_is_rejected
+    chain = StoreKitSigning.new(leaf: {not_before: days_ago(800), not_after: days_ago(70)})
+
+    assert_chain_rejected chain, "not yet valid", payload: {"signedDate" => milliseconds(days_ago(900))}
+  end
+
+  def test_a_payload_without_a_signed_date_is_checked_against_the_current_time
+    chain = StoreKitSigning.new(leaf: {not_before: days_ago(800), not_after: days_ago(70)})
+
+    assert_chain_rejected chain, "certificate has expired"
+  end
+
+  def test_a_signed_date_that_is_not_a_number_falls_back_to_the_current_time
+    chain = StoreKitSigning.new(leaf: {not_before: days_ago(800), not_after: days_ago(70)})
+
+    assert_chain_rejected chain, "certificate has expired", payload: {"signedDate" => "2026-01-01"}
+    @chain.trusted do
+      assert_equal({"signedDate" => "2026-01-01"}, verify(@chain.sign({"signedDate" => "2026-01-01"})))
+    end
+  end
+
+  def test_a_signed_date_too_large_to_be_a_time_is_rejected
+    assert_chain_rejected @chain, "cannot be verified", payload: {"signedDate" => 1e30}
+  end
+
   # --- Signature ---
 
   def test_a_payload_altered_after_signing_is_rejected
@@ -154,6 +230,22 @@ class RubyNative::IAP::VerificationTest < Minitest::Test
 
   def verify(jws)
     Verifier.new.decode_and_verify_jws(jws)
+  end
+
+  def assert_chain_rejected(chain, message, payload: PAYLOAD, **signing)
+    chain.trusted do
+      error = assert_raises(RubyNative::IAP::VerificationError) { verify(chain.sign(payload, **signing)) }
+
+      assert_match message, error.message
+    end
+  end
+
+  def days_ago(days)
+    Time.now - days * 24 * 3600
+  end
+
+  def milliseconds(time)
+    (time.to_f * 1000).to_i
   end
 
   def notification_payload(signed_transaction_info)
