@@ -213,6 +213,18 @@ export const fixtures = [
     expected: [signal({ "data-native-navbar": "Today", "data-native-pull-to-refresh": "false" })]
   },
   {
+    name: "can hide the logo",
+    component: "NativeNavbar",
+    props: { title: "Settings", logo: false },
+    expected: [signal({ "data-native-navbar": "Settings", "data-native-navbar-logo": "false" })]
+  },
+  {
+    name: "leaves the logo attribute off by default",
+    component: "NativeNavbar",
+    props: { title: "Home" },
+    expected: [signal({ "data-native-navbar": "Home" })]
+  },
+  {
     name: "renders buttons as children",
     component: "NativeNavbar",
     props: { title: "Today" },

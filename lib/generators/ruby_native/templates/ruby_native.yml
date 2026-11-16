@@ -42,7 +42,8 @@ appearance:
   #   # Centered logo, shown instead of the page title. Set this to an image URL.
   #   # For a local asset, point it at image_url wrapped in ERB so the URL is
   #   # fingerprinted (the app re-downloads only when the image changes). The
-  #   # docs page above has the exact snippet to copy.
+  #   # docs page above has the exact snippet to copy. Accepts { light:, dark: }
+  #   # for dark mode, and `native_navbar_tag logo: false` hides it on one page.
   #   logo: "https://cdn.example.com/logo.png"
   #
   #   # Bar background color.

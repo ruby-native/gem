@@ -14,7 +14,9 @@ appearance:
   landscape: true
   modal_dismiss_button: true
   navbar:
-    logo: "https://cdn.example.com/logo.png"
+    logo:
+      light: "https://cdn.example.com/logo.png"
+      dark: "https://cdn.example.com/logo-dark.png"
     background_color:
       light: "#3B3F54"
       dark: "#1E293B"

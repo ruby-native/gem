@@ -223,12 +223,19 @@ module RubyNative
       tag.div(data: data, hidden: true)
     end
 
-    def native_navbar_tag(title = nil, pull_to_refresh: true, &block)
+    # `logo: false` hides `appearance.navbar.logo` on this page and shows the
+    # title instead. The logo shows everywhere else, as it does without the option.
+    def native_navbar_tag(title = nil, pull_to_refresh: true, logo: nil, &block)
+      unless [ nil, true, false ].include?(logo)
+        raise ArgumentError, "native_navbar_tag logo: must be true or false, got #{logo.inspect}"
+      end
+
       builder = NavbarBuilder.new(self)
       capture(builder, &block) if block
 
       data = { native_navbar: title.to_s }
       data[:native_pull_to_refresh] = "false" unless pull_to_refresh
+      data[:native_navbar_logo] = logo.to_s unless logo.nil?
       tag.div(data: data, hidden: true) { builder.to_html }
     end
 

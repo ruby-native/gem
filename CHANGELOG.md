@@ -13,6 +13,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`native_presentation_tag :modal, dismissible: false` makes a modal people can't close.** Advanced Mode, needs a new build. Older builds ignore it and show a back button, so keep your server-side check until your users update.
 - **Choose whether modals show a close button, the same on both platforms.** Set `appearance.modal_dismiss_button`, or `dismiss_button:` on `native_presentation_tag` for one page. Advanced Mode, needs a new build.
 - **Center navbar titles on Android with `appearance.android.navbar.title_alignment: center`.** Needs a new build.
+- **Hide the navbar logo on one page with `native_navbar_tag "Settings", logo: false`.** That page shows its title, title menu, or segments instead, and every other page keeps the logo. Needs a new build, and older builds keep showing the logo.
+- **Give the navbar logo a dark mode image.** Set `appearance.navbar.logo` to `{ light:, dark: }` and the app swaps them with the theme. Needs a new build, and older builds show the light image in both themes.
 
 ### Changed
 

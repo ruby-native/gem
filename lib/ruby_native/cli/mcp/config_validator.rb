@@ -199,6 +199,7 @@ module RubyNative
           return error("appearance.navbar", "`appearance.navbar` has to be a mapping.") unless navbar.is_a?(Hash)
 
           unknown_keys(navbar, NAVBAR_KEYS, "appearance.navbar")
+          check_logo(navbar["logo"], "appearance.navbar.logo")
           check_color(navbar["background_color"], "appearance.navbar.background_color")
           check_color(navbar["foreground_color"], "appearance.navbar.foreground_color")
           check_enum(navbar["status_bar"], "appearance.navbar.status_bar", STATUS_BARS)
@@ -406,6 +407,16 @@ module RubyNative
         end
 
         # --- Value checks ---
+
+        def check_logo(value, key)
+          return if value.nil? || value.is_a?(String)
+          return error(key, "`#{key}` has to be an image URL, or a mapping with `light` and `dark` URLs.") unless value.is_a?(Hash)
+
+          missing = %w[light dark] - value.keys.map(&:to_s)
+          return if missing.empty?
+
+          error(key, "`#{key}` is a mapping without #{missing.map { |field| "`#{field}`" }.join(" and ")}. A per-theme logo needs both, or the config fails to decode and the app shows its error screen.")
+        end
 
         def check_color(value, key)
           return if value.nil?

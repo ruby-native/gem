@@ -457,6 +457,23 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-native-pull-to-refresh="false"'
   end
 
+  def test_native_navbar_tag_logo_omitted_by_default
+    assert_not_includes native_navbar_tag("Today"), "data-native-navbar-logo"
+  end
+
+  def test_native_navbar_tag_logo_false
+    assert_includes native_navbar_tag("Settings", logo: false), 'data-native-navbar-logo="false"'
+  end
+
+  def test_native_navbar_tag_logo_true
+    assert_includes native_navbar_tag(logo: true), 'data-native-navbar-logo="true"'
+  end
+
+  def test_native_navbar_tag_logo_rejects_a_path
+    error = assert_raises(ArgumentError) { native_navbar_tag(logo: "/logo.png") }
+    assert_match "logo: must be true or false", error.message
+  end
+
   def test_native_navbar_tag_without_title
     html = native_navbar_tag
     assert_includes html, 'data-native-navbar=""'

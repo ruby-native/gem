@@ -107,6 +107,9 @@ signals:
     helper: native_navbar_tag
     always: true
     singleton: true
+  data-native-navbar-logo:
+    since: "0.21.0"
+    helper: native_navbar_tag
   data-native-overscroll-bottom:
     since: "0.5.0"
     helper: native_overscroll_tag

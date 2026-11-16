@@ -46,6 +46,7 @@
       },
       "foreground_color": "#FFFFFF",
       "logo": "https://cdn.example.com/logo.png",
+      "logo_dark": "https://cdn.example.com/logo-dark.png",
       "status_bar": "light"
     },
     "splash": {

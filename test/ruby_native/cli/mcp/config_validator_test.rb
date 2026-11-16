@@ -154,6 +154,18 @@ class ConfigValidatorTest < Minitest::Test
     assert_equal :error, offense.severity
   end
 
+  def test_a_light_and_dark_logo_is_valid
+    assert_empty validate("appearance:\n  navbar:\n    logo:\n      light: \"/logo.png\"\n      dark: \"/logo-dark.png\"\n")
+  end
+
+  def test_a_logo_missing_dark_is_an_error
+    offense = validate("appearance:\n  navbar:\n    logo:\n      light: \"/logo.png\"\n").first
+
+    assert_equal "appearance.navbar.logo", offense.key
+    assert_equal :error, offense.severity
+    assert_match "`dark`", offense.message
+  end
+
   def test_an_unknown_appearance_key_is_a_warning
     assert_match "Unknown key `tintColor`", validate("appearance:\n  tintColor: \"#007AFF\"\n").first.message
   end

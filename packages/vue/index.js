@@ -205,12 +205,15 @@ export const NativeNavbar = defineComponent({
   name: "NativeNavbar",
   props: {
     title: { type: String, default: "" },
-    pullToRefresh: { type: Boolean, default: true }
+    pullToRefresh: { type: Boolean, default: true },
+    // An explicit undefined default, or Vue casts an absent Boolean prop to false.
+    logo: { type: Boolean, default: undefined }
   },
   render() {
     /** @type {Record<string, any>} */
     const props = { "data-native-navbar": this.title, hidden: true }
     if (!this.pullToRefresh) props["data-native-pull-to-refresh"] = "false"
+    if (typeof this.logo === "boolean") props["data-native-navbar-logo"] = String(this.logo)
     return h("div", props, this.$slots.default?.())
   }
 })
