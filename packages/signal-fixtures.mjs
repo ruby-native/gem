@@ -480,6 +480,17 @@ export const fixtures = [
     })]
   },
   {
+    name: "renders a title next to the icon",
+    component: "NativeFab",
+    props: { icon: "plus", title: "New post", href: "/posts/new" },
+    expected: [signal({
+      "data-native-fab": "true",
+      "data-native-icon": "plus",
+      "data-native-href": "/posts/new",
+      "data-native-title": "New post"
+    })]
+  },
+  {
     name: "icons alone fall back to the iOS name on the web",
     component: "NativeFab",
     props: { icons: { ios: "plus", android: "add" }, href: "/posts/new" },

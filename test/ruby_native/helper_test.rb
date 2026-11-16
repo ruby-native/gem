@@ -292,6 +292,17 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-native-color="tint"'
   end
 
+  def test_native_fab_tag_with_title
+    html = native_fab_tag(icon: "plus", title: "New <post>", href: "/posts/new")
+    assert_includes html, 'data-native-title="New &lt;post&gt;"'
+    assert_includes html, 'data-native-icon="plus"'
+  end
+
+  def test_native_fab_tag_omits_blank_title
+    refute_includes native_fab_tag(icon: "plus", title: ""), "data-native-title"
+    refute_includes native_fab_tag(icon: "plus"), "data-native-title"
+  end
+
   def test_native_fab_tag_requires_icon
     assert_raises(ArgumentError) { native_fab_tag }
   end

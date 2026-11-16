@@ -243,13 +243,16 @@ module RubyNative
     # Material FAB on Android. The icon color is derived automatically to
     # stay readable against it. Pass `:tint` instead of a hex to inherit
     # `appearance.tint_color`, keeping the button in sync with the app accent.
-    def native_fab_tag(icon: nil, icons: nil, href: nil, click: nil, color: nil)
+    # `title:` shows text next to the icon (an extended FAB). The icon stays
+    # required so builds that predate titles still show a usable button.
+    def native_fab_tag(icon: nil, icons: nil, href: nil, title: nil, click: nil, color: nil)
       resolved = RubyNative::Helper.resolve_icon(icon: icon, icons: icons, platform: try(:native_platform))
       raise ArgumentError, "native_fab_tag requires an icon" if resolved.nil?
       data = { native_fab: true, native_icon: resolved }
       data[:native_href] = href if href
       data[:native_click] = click if click
       data[:native_color] = color if color
+      data[:native_title] = title if title.present?
       tag.div(data: data, hidden: true)
     end
 
