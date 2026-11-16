@@ -29,6 +29,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Signing in on Android no longer loads the first page twice or flashes an error.** Advanced Mode, when the login page isn't a modal.
 - **Signing out on Android no longer freezes the app.** It stopped responding when you signed out from a page opened on the first tab. Advanced Mode.
 - **Push notifications on Android reach the right person after an account switch.** The app registers its push token again when the signed-in user changes, for apps that use `native_identity_tag`. Needs a new build.
+- **Android app icons that fill the whole square no longer show a thin dark edge.** It showed on Pixel and other phones that crop the icon to a circle. Your next Android build picks it up, with no new gem needed.
 - **A push registration that fails on Android is tried again on the next page.** A redirect to a sign-in page no longer counts as registered, and a token that changes mid-request is still sent. Needs a new build.
 - **A redirect to a sign-in page no longer counts as a registered push token on iOS.** The app keeps trying until your server accepts the token. Needs a new build.
 - **Universal links with encoded characters open the right page on iOS.** A link to `/tags/c%23` used to open `/tags/c#`, and a link with a mixed-case host was ignored. A trailing slash is now kept as written. Needs a new build.
