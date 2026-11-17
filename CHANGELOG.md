@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## Unreleased
+
+### Added
+
+- **Inspect your pages in the Ruby Native app with Safari's Web Inspector or Chrome's `chrome://inspect`.** Both platforms. Your own builds stay closed to inspectors.
+
 ## [0.21.0] - 2026-11-17
 
 ### Added
