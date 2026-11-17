@@ -19,7 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **The iOS launch splash is on by default, and shows on the very first launch too.** Your launch icon stays on screen with a spinner until the first page paints, like Android, instead of cutting to a plain spinner. Set `appearance.splash.enabled: false` to turn it off. Needs a new build. [Docs](https://rubynative.com/docs/appearance#splash-screen)
+- **The iOS launch splash is on by default, first launch included.** Turn it off with `appearance.splash.enabled: false`. Needs a new build.
 - **In-app purchases are checked against your app's bundle ID.** Set `ios.bundle_id` in `config/ruby_native.yml` and a purchase, restore, or App Store notification made for any other app is rejected. It has to match the bundle ID in App Store Connect exactly, since a mismatch rejects every purchase. Without it purchases still work, and your server logs a warning.
 - **Android apps open from the last config they loaded, like iOS.** The app starts right away, checks for a newer `config/ruby_native.yml` in the background, and restarts once if it changed. A server error or a bad config no longer puts people who already use the app on the error screen. Needs a new build.
 - **App Store transactions get a stricter certificate check.** The signing certificates must be Apple's App Store ones and valid when the transaction was signed. A malformed transaction now answers 422, not 500.
