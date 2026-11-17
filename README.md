@@ -66,6 +66,16 @@ tabs:
 
 Changes are picked up without restarting the server in development. See [rubynative.com/docs](https://rubynative.com/docs) for the full schema: appearance and dark mode, navbar branding, Advanced Mode, OAuth, and linked domains.
 
+### Disable in-app purchase routes
+
+If your app does not use in-app purchases, add this to `config/initializers/ruby_native.rb`:
+
+```ruby
+RubyNative.configure { |config| config.iap_enabled = false }
+```
+
+This removes the purchase, completion, restore, and Apple subscription webhook routes. In-app purchase routes are enabled by default. Restart the server after changing the initializer.
+
 ## Preview
 
 Preview your app on a real device without deploying:

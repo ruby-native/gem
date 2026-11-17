@@ -18,6 +18,7 @@ require "ruby_native/engine"
 
 module RubyNative
   mattr_accessor :subscription_callbacks, default: []
+  mattr_accessor :iap_enabled, default: true
 
   # Screenshot configuration. Set via `RubyNative.configure` in an initializer.
   mattr_accessor :screenshot_key
