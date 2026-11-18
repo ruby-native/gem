@@ -13,6 +13,12 @@ class RubyNative::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unauthorized
   end
 
+  def test_returns_unauthorized_when_token_is_not_a_string
+    get "/native/auth/session", params: {token: {value: "bogus"}}
+
+    assert_response :unauthorized
+  end
+
   def test_returns_unauthorized_when_token_is_invalid
     get "/native/auth/session", params: {token: "bogus"}
 

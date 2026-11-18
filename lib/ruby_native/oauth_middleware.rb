@@ -70,7 +70,7 @@ module RubyNative
     end
 
     def self.read_token(token)
-      return nil if token.blank?
+      return nil unless token.is_a?(String) && token.present?
 
       data = encryptor.decrypt_and_verify(token, purpose: "ruby_native_oauth")
       data&.symbolize_keys
