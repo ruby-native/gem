@@ -1,6 +1,24 @@
 require "test_helper"
 
 class RubyNative::Auth::SessionsControllerTest < ActionDispatch::IntegrationTest
+  def test_returns_unauthorized_when_token_is_missing
+    get "/native/auth/session"
+
+    assert_response :unauthorized
+  end
+
+  def test_returns_unauthorized_when_token_is_blank
+    get "/native/auth/session", params: {token: ""}
+
+    assert_response :unauthorized
+  end
+
+  def test_returns_unauthorized_when_token_is_not_a_string
+    get "/native/auth/session", params: {token: {value: "bogus"}}
+
+    assert_response :unauthorized
+  end
+
   def test_returns_unauthorized_when_token_is_invalid
     get "/native/auth/session", params: {token: "bogus"}
 
