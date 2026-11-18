@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **Malformed push token registrations no longer show up as errors in your error tracker.**
+- **Malformed push token registrations and OAuth sign-in requests no longer show up as errors in your error tracker.**
 
 ## [0.21.0] - 2026-11-17
 
