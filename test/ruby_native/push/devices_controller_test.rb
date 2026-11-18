@@ -137,19 +137,24 @@ class RubyNative::Push::DevicesControllerTest < ActionDispatch::IntegrationTest
 
   # --- Bad input ---
 
-  # A full app answers 422 here. The dummy app has no Active Record railtie
-  # to map RecordInvalid, so only the failure is pinned.
-  def test_an_unknown_platform_is_not_a_success
+  def test_an_unknown_platform_returns_unprocessable_entity
     register(@user, token: "apns-token", platform: "ios", name: "iPhone")
 
-    refute_predicate response, :successful?
+    assert_response :unprocessable_entity
     assert_equal 0, ApplicationPushDevice.count
   end
 
-  def test_a_missing_token_is_not_a_success
+  def test_a_missing_token_returns_bad_request
     register(@user, platform: "apple", name: "iPhone")
 
-    refute_predicate response, :successful?
+    assert_response :bad_request
+    assert_equal 0, ApplicationPushDevice.count
+  end
+
+  def test_a_nonscalar_token_returns_bad_request
+    register(@user, token: {value: "apns-token"}, platform: "apple", name: "iPhone")
+
+    assert_response :bad_request
     assert_equal 0, ApplicationPushDevice.count
   end
 
