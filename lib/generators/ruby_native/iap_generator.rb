@@ -32,6 +32,18 @@ module RubyNative
           "db/migrate/add_restored_transaction_id_to_ruby_native_purchase_intents.rb"
       end
 
+      def enable_iap_routes
+        path = "config/initializers/ruby_native.rb"
+        line = "RubyNative.configure { |config| config.iap_enabled = true }\n"
+        full_path = File.join(destination_root, path)
+
+        if !File.exist?(full_path)
+          create_file path, line
+        elsif !File.read(full_path).include?("iap_enabled")
+          append_to_file path, "\n#{line}"
+        end
+      end
+
       def print_next_steps
         say ""
         say "Ruby Native IAP installed!", :green
