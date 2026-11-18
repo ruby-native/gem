@@ -6,9 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Unreleased
 
+### Breaking
+
+- **Add `config.iap_enabled = true` to `RubyNative.configure` if your app sells in-app purchases.** Without it, purchases and Apple's subscription notifications stop reaching your app.
+
 ### Added
 
 - **Inspect your pages in the Ruby Native app with Safari's Web Inspector or Chrome's `chrome://inspect`.** Both platforms. Your own builds stay closed to inspectors.
+- **Handle push device registration yourself by setting `config.push_enabled = false` in `RubyNative.configure`.**
+
+### Fixed
+
+- **Malformed push token registrations no longer show up as errors in your error tracker.**
 
 ## [0.21.0] - 2026-11-17
 
