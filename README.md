@@ -66,6 +66,20 @@ tabs:
 
 Changes are picked up without restarting the server in development. See [rubynative.com/docs](https://rubynative.com/docs) for the full schema: appearance and dark mode, navbar branding, Advanced Mode, OAuth, and linked domains.
 
+### In-app purchase and push routes
+
+In-app purchase routes are off by default. `bin/rails g ruby_native:iap` turns them on, or add this to `config/initializers/ruby_native.rb`:
+
+```ruby
+RubyNative.configure { |config| config.iap_enabled = true }
+```
+
+This adds the purchase, completion, restore, and Apple subscription webhook routes.
+
+The push device route, `POST /native/push/devices`, is on by default. Set `config.push_enabled = false` to handle it yourself with your own `post "/native/push/devices"` route, since the app always sends tokens to that path.
+
+Restart the server after changing the initializer.
+
 ## Preview
 
 Preview your app on a real device without deploying:

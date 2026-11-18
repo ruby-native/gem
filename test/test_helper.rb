@@ -39,6 +39,10 @@ YAML
 require "ruby_native"
 require "active_record"
 
+# Defaults captured before the dummy app turns IAP on for the controller tests.
+ROUTE_DEFAULTS = {iap_enabled: RubyNative.iap_enabled, push_enabled: RubyNative.push_enabled}.freeze
+RubyNative.iap_enabled = true
+
 Dummy::Application.initialize!
 
 # Captured before any test reads the config; see RubyNative.config.

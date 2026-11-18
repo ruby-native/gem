@@ -20,6 +20,33 @@ class RubyNative::Generators::IapGeneratorTest < Rails::Generators::TestCase
       "The column migration must sort after the create, got #{create} then #{add_column}"
   end
 
+  def test_turns_on_iap_routes_in_a_new_initializer
+    run_generator
+
+    assert_file "config/initializers/ruby_native.rb", /config\.iap_enabled = true/
+  end
+
+  def test_appends_to_an_existing_initializer
+    FileUtils.mkdir_p(File.join(destination_root, "config/initializers"))
+    File.write(File.join(destination_root, "config/initializers/ruby_native.rb"), "RubyNative.configure { |config| config.screenshot_key = \"key\" }\n")
+
+    run_generator
+
+    assert_file "config/initializers/ruby_native.rb" do |content|
+      assert_match(/screenshot_key/, content)
+      assert_match(/config\.iap_enabled = true/, content)
+    end
+  end
+
+  def test_rerunning_does_not_add_the_flag_twice
+    run_generator
+    run_generator
+
+    assert_file "config/initializers/ruby_native.rb" do |content|
+      assert_equal 1, content.scan("iap_enabled").size
+    end
+  end
+
   # Re-running on an app that already ran the create migration is the upgrade
   # path for the restored_transaction_id column.
   def test_rerunning_adds_only_the_missing_migration

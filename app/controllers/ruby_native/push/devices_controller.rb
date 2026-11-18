@@ -4,8 +4,12 @@ module RubyNative
       skip_forgery_protection
 
       def create
-        device = ruby_native_user.push_devices.find_or_initialize_by(token: params[:token])
-        device.update!(platform: params[:platform], name: params[:name])
+        token = params[:token]
+        return head :bad_request unless token.is_a?(String) && token.present?
+
+        device = ruby_native_user.push_devices.find_or_initialize_by(token: token)
+        return head :unprocessable_entity unless device.update(platform: params[:platform], name: params[:name])
+
         head :ok
       end
 
