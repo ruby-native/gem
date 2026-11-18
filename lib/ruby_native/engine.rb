@@ -42,6 +42,12 @@ module RubyNative
       end
     end
 
+    config.after_initialize do
+      if RubyNative.subscription_callbacks.any? && !RubyNative.iap_enabled
+        Rails.logger.warn("[RubyNative] on_subscription_change is set but in-app purchase routes are off. Add `config.iap_enabled = true` to RubyNative.configure.")
+      end
+    end
+
     initializer "ruby_native.routes" do |app|
       app.routes.prepend do
         get "/.well-known/apple-app-site-association", to: "ruby_native/aasa#show"

@@ -19,6 +19,11 @@ require "ruby_native/engine"
 module RubyNative
   mattr_accessor :subscription_callbacks, default: []
 
+  # Read when routes are drawn, so set them in an initializer. The IAP
+  # generator turns on `iap_enabled`; set `push_enabled` false to use your own endpoint.
+  mattr_accessor :iap_enabled, default: false
+  mattr_accessor :push_enabled, default: true
+
   # Screenshot configuration. Set via `RubyNative.configure` in an initializer.
   mattr_accessor :screenshot_key
   mattr_accessor :screenshot_sign_in
