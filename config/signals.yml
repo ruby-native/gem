@@ -52,6 +52,12 @@ signals:
     since: "0.17.0"
   data-native-destructive:
     since: "0.14.0"
+  data-native-dismiss-button:
+    since: "0.21.0"
+    helper: native_presentation_tag
+  data-native-dismissible:
+    since: "0.21.0"
+    helper: native_presentation_tag
   data-native-fab:
     since: "0.8.0"
     helper: native_fab_tag
@@ -101,6 +107,9 @@ signals:
     helper: native_navbar_tag
     always: true
     singleton: true
+  data-native-navbar-logo:
+    since: "0.21.0"
+    helper: native_navbar_tag
   data-native-overscroll-bottom:
     since: "0.5.0"
     helper: native_overscroll_tag
@@ -117,7 +126,6 @@ signals:
     since: "0.11.2"
     helper: native_presentation_tag
     always: true
-    singleton: true
   data-native-price:
     since: "0.5.3"
   data-native-pull-to-refresh:
@@ -136,6 +144,8 @@ signals:
     since: "0.9.3"
     helper: native_review_tag
     always: true
+  data-native-secure-session:
+    since: "0.21.0"
   data-native-segment:
     since: "0.10.12"
   data-native-selected:

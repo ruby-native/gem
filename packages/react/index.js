@@ -201,13 +201,15 @@ export function NativeToast({ message, icon, icons, duration = 4, appearance = "
  * @param {object} props
  * @param {string} [props.title]
  * @param {boolean} [props.pullToRefresh]
+ * @param {boolean} [props.logo]
  * @param {import("react").ReactNode} [props.children]
  * @returns {import("react").ReactElement}
  */
-export function NativeNavbar({ title = "", pullToRefresh = true, children }) {
+export function NativeNavbar({ title = "", pullToRefresh = true, logo, children }) {
   /** @type {Record<string, any>} */
   const props = { "data-native-navbar": title, hidden: true }
   if (!pullToRefresh) props["data-native-pull-to-refresh"] = "false"
+  if (typeof logo === "boolean") props["data-native-navbar-logo"] = String(logo)
   return createElement("div", props, children)
 }
 
@@ -345,9 +347,10 @@ export function NativeShareMenuItem({ title = "Share", url, icon = "square.and.a
  * @param {string} [props.href]
  * @param {string} [props.click]
  * @param {string} [props.color]
+ * @param {string} [props.title]
  * @returns {import("react").ReactElement}
  */
-export function NativeFab({ icon, icons, href, click, color }) {
+export function NativeFab({ icon, icons, href, click, color, title }) {
   const resolved = resolveIcon(icon, icons)
   if (!resolved) throw new Error("NativeFab requires `icon` or `icons`")
   /** @type {Record<string, any>} */
@@ -355,6 +358,7 @@ export function NativeFab({ icon, icons, href, click, color }) {
   if (href) props["data-native-href"] = href
   if (click) props["data-native-click"] = click
   if (color) props["data-native-color"] = color
+  if (title) props["data-native-title"] = title
   return createElement("div", props)
 }
 

@@ -122,16 +122,32 @@ module RubyNative
       value
     end
 
-    # The landing intents a page can declare about itself. Only :root so far.
-    # :modal is the obvious second member (both shells hardcode a /new + /edit
-    # rule today that no app can reach), which is why this is a vocabulary
-    # rather than a boolean tag.
-    PRESENTATION_INTENTS = %w[root].freeze
+    # The landing intents a page can declare about itself.
+    PRESENTATION_INTENTS = %w[root modal].freeze
 
-    # Declares that this page is a root: it lands with nothing behind it, and no
-    # back affordance, wherever it lands.
+    # Declares how this page lands, wherever it lands.
     #
     #   <%= native_presentation_tag :root %>
+    #   <%= native_presentation_tag :modal %>
+    #   <%= native_presentation_tag :modal, dismissible: false %>
+    #
+    # `dismissible: false` makes a modal the user can't close: no close button,
+    # no swipe down, no back. Only the server moves them on, by redirecting to a
+    # page without it. Use it for paywalls and sign-in.
+    #
+    # `dismiss_button:` shows (true) or hides (false) the modal's dismiss button
+    # on this page, overriding `appearance.modal_dismiss_button`. A modal that
+    # isn't dismissible never shows one.
+    #
+    # :root lands with nothing behind it and no back affordance. :modal lands in
+    # Advanced Mode's modal: it presents one, or pushes inside the one already
+    # up, so a multi-step flow reached by redirects stays in a single modal.
+    # Normal Mode has no modals and ignores it.
+    #
+    # A link tap is proposed before anything is fetched, so neither channel
+    # below reaches the shell in time for it. Mark the link instead:
+    #
+    #   <%= link_to "Add player", new_player_path, data: { native_presentation: "modal" } %>
     #
     # Emits the fact on two channels, because the shells need it at two
     # different moments and neither channel reaches both:
@@ -149,21 +165,23 @@ module RubyNative
     #    the only part of that response readable synchronously, since the body
     #    arrives as a promise that consuming would take from Turbo.
     #
-    # Nothing is declared at the origin. Both channels ride the response for the
-    # page itself, so a redirect chain carries the intent to wherever it actually
-    # lands rather than to wherever the link pointed.
+    # Both channels ride the response for the page itself, so a redirect chain
+    # carries the intent to wherever it actually lands rather than to wherever
+    # the form pointed. That is also why a conditional redirect needs nothing
+    # extra: the page it picks declares itself or doesn't.
     #
     # In Advanced Mode this takes effect before the navigation commits when the
     # page arrives from a form submission, because that is the only case where
     # Turbo has already fetched the destination by the time it proposes the
     # visit. A link tap, a deep link and a cold boot are proposed before anything
-    # is fetched, so those fall back to the element and the shell corrects after
-    # the page renders. Normal Mode always uses the element.
+    # is fetched. For :root those fall back to the element and the shell corrects
+    # after the page renders. :modal has no late correction, which is why links
+    # carry the attribute themselves. Normal Mode always uses the element.
     #
     # Do not call this inside a `cache` block. On a cache hit the element comes
     # back from the cache and the header is never set, which silently leaves
     # Advanced Mode with only the slower path.
-    def native_presentation_tag(presentation)
+    def native_presentation_tag(presentation, dismissible: true, dismiss_button: nil)
       value = presentation.to_s
       unless PRESENTATION_INTENTS.include?(value)
         raise ArgumentError,
@@ -181,18 +199,43 @@ module RubyNative
             "so Advanced Mode will not see it before the navigation commits."
           )
         end
-        response.headers["Native-Presentation"] = value
+        # A 422 re-render answers the POST, so its URL is the collection
+        # (/players), and a :modal header there would mark that page modal.
+        response.headers["Native-Presentation"] = value unless response.status.to_i >= 400
       end
 
-      tag.div(data: { native_presentation: value }, hidden: true)
+      unless [ true, false ].include?(dismissible)
+        raise ArgumentError, "native_presentation_tag dismissible: must be true or false, got #{dismissible.inspect}"
+      end
+      if !dismissible && value != "modal"
+        raise ArgumentError, "native_presentation_tag dismissible: false only applies to :modal"
+      end
+      unless [ nil, true, false ].include?(dismiss_button)
+        raise ArgumentError, "native_presentation_tag dismiss_button: must be true or false, got #{dismiss_button.inspect}"
+      end
+      if !dismiss_button.nil? && value != "modal"
+        raise ArgumentError, "native_presentation_tag dismiss_button: only applies to :modal"
+      end
+
+      data = { native_presentation: value }
+      data[:native_dismissible] = "false" unless dismissible
+      data[:native_dismiss_button] = dismiss_button.to_s unless dismiss_button.nil?
+      tag.div(data: data, hidden: true)
     end
 
-    def native_navbar_tag(title = nil, pull_to_refresh: true, &block)
+    # `logo: false` hides `appearance.navbar.logo` on this page and shows the
+    # title instead. The logo shows everywhere else, as it does without the option.
+    def native_navbar_tag(title = nil, pull_to_refresh: true, logo: nil, &block)
+      unless [ nil, true, false ].include?(logo)
+        raise ArgumentError, "native_navbar_tag logo: must be true or false, got #{logo.inspect}"
+      end
+
       builder = NavbarBuilder.new(self)
       capture(builder, &block) if block
 
       data = { native_navbar: title.to_s }
       data[:native_pull_to_refresh] = "false" unless pull_to_refresh
+      data[:native_navbar_logo] = logo.to_s unless logo.nil?
       tag.div(data: data, hidden: true) { builder.to_html }
     end
 
@@ -200,13 +243,16 @@ module RubyNative
     # Material FAB on Android. The icon color is derived automatically to
     # stay readable against it. Pass `:tint` instead of a hex to inherit
     # `appearance.tint_color`, keeping the button in sync with the app accent.
-    def native_fab_tag(icon: nil, icons: nil, href: nil, click: nil, color: nil)
+    # `title:` shows text next to the icon (an extended FAB). The icon stays
+    # required so builds that predate titles still show a usable button.
+    def native_fab_tag(icon: nil, icons: nil, href: nil, title: nil, click: nil, color: nil)
       resolved = RubyNative::Helper.resolve_icon(icon: icon, icons: icons, platform: try(:native_platform))
       raise ArgumentError, "native_fab_tag requires an icon" if resolved.nil?
       data = { native_fab: true, native_icon: resolved }
       data[:native_href] = href if href
       data[:native_click] = click if click
       data[:native_color] = color if color
+      data[:native_title] = title if title.present?
       tag.div(data: data, hidden: true)
     end
 

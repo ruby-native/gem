@@ -1,4 +1,5 @@
 require "test_helper"
+require "support/storekit_signing"
 
 class RubyNative::IAP::CompletionsControllerTest < ActionDispatch::IntegrationTest
   def setup
@@ -58,5 +59,239 @@ class RubyNative::IAP::CompletionsControllerTest < ActionDispatch::IntegrationTe
     post "/native/iap/completions/nonexistent"
 
     assert_response :not_found
+  end
+
+  # --- Signed transactions ---
+
+  def test_a_signed_transaction_completes_the_intent_with_what_apple_signed
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+
+    chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent))) } }
+
+    assert_response :ok
+    assert intent.reload.completed?
+    assert intent.production?
+    event = events.sole
+    assert_equal "subscription.created", event.type
+    assert_equal "user_42", event.owner_token
+    assert_equal "com.example.lifetime", event.product_id
+    assert_equal "2000000000000000", event.original_transaction_id
+    assert_equal "2000000000000001", event.transaction_id
+    assert_equal Time.utc(2026, 1, 1), event.purchase_date
+    assert_equal Time.utc(2027, 1, 1), event.expires_date
+    assert_equal "production", event.environment
+    assert_equal "/dashboard", event.success_path
+  end
+
+  def test_production_rejects_a_completion_with_no_signed_transaction
+    intent = create_intent
+    events = capture_events
+
+    in_production { post "/native/iap/completions/#{intent.uuid}" }
+
+    assert_rejected intent, events
+  end
+
+  def test_production_rejects_a_blank_signed_transaction
+    intent = create_intent
+    events = capture_events
+
+    in_production { complete(intent, "") }
+
+    assert_rejected intent, events
+  end
+
+  def test_rejects_a_transaction_signed_by_an_untrusted_chain
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+
+    in_production { complete(intent, chain.sign(transaction_for(intent))) }
+
+    assert_rejected intent, events
+  end
+
+  def test_rejects_a_transaction_altered_after_signing
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+    header, _payload, signature = chain.sign(transaction_for(intent)).split(".")
+    altered = Base64.urlsafe_encode64(transaction_for(intent).merge("productId" => "com.example.other").to_json, padding: false)
+
+    chain.trusted { in_production { complete(intent, [header, altered, signature].join(".")) } }
+
+    assert_rejected intent, events
+  end
+
+  def test_rejects_a_transaction_signed_for_another_intent
+    chain = StoreKitSigning.new
+    intent = create_intent
+    other = create_intent
+    events = capture_events
+
+    chain.trusted { in_production { complete(intent, chain.sign(transaction_for(other))) } }
+
+    assert_rejected intent, events
+  end
+
+  def test_rejects_a_string_that_is_not_a_jws
+    intent = create_intent
+    events = capture_events
+
+    in_production { complete(intent, "not.a.jws") }
+
+    assert_rejected intent, events
+  end
+
+  def test_rejects_a_chain_with_an_entry_that_is_not_a_certificate
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+    x5c = [Base64.strict_encode64("not a certificate"), *chain.x5c.drop(1)]
+
+    chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent), x5c: x5c)) } }
+
+    assert_rejected intent, events
+  end
+
+  def test_rejects_a_leaf_that_was_expired_when_the_transaction_was_signed
+    chain = StoreKitSigning.new(leaf: {not_before: Time.now - 800.days, not_after: Time.now - 70.days})
+    intent = create_intent
+    events = capture_events
+    transaction = transaction_for(intent).merge("signedDate" => 10.days.ago.to_i * 1000)
+
+    chain.trusted { in_production { complete(intent, chain.sign(transaction)) } }
+
+    assert_rejected intent, events
+  end
+
+  # The unsigned fallback is for a request with no transaction at all. One that
+  # fails verification must not fall through to it.
+  def test_a_local_environment_still_verifies_a_signed_transaction
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+
+    complete(intent, chain.sign(transaction_for(intent)))
+
+    assert Rails.env.local?
+    assert_rejected intent, events
+  end
+
+  # --- The app the transaction is for ---
+
+  def test_completes_a_transaction_for_the_configured_bundle_id
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+
+    StoreKitSigning.with_bundle_id("com.example.app") do
+      chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent))) } }
+    end
+
+    assert_response :ok
+    assert intent.reload.completed?
+    assert_equal 1, events.size
+  end
+
+  def test_rejects_a_transaction_for_another_bundle_id
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+
+    StoreKitSigning.with_bundle_id("com.example.other") do
+      chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent))) } }
+    end
+
+    assert_rejected intent, events
+  end
+
+  def test_rejects_a_transaction_with_no_bundle_id_when_one_is_configured
+    chain = StoreKitSigning.new
+    intent = create_intent
+    events = capture_events
+
+    StoreKitSigning.with_bundle_id("com.example.app") do
+      chain.trusted { in_production { complete(intent, chain.sign(transaction_for(intent).except("bundleId"))) } }
+    end
+
+    assert_rejected intent, events
+  end
+
+  def test_without_a_configured_bundle_id_purchases_complete_and_the_warning_is_logged_once
+    chain = StoreKitSigning.new
+    intents = Array.new(3) { create_intent }
+    events = capture_events
+    RubyNative::IAP::Verifiable.instance_variable_set(:@warned_missing_bundle_id, false)
+
+    log = with_captured_log do
+      chain.trusted do
+        in_production { intents.each { |intent| complete(intent, chain.sign(transaction_for(intent))) } }
+      end
+    end
+
+    assert_nil RubyNative.config.dig(:ios, :bundle_id)
+    assert intents.all? { |intent| intent.reload.completed? }
+    assert_equal 3, events.size
+    assert_equal 1, log.scan("Set ios.bundle_id in config/ruby_native.yml").size
+  end
+
+  private
+
+  def with_captured_log
+    io = StringIO.new
+    original = Rails.logger
+    Rails.logger = Logger.new(io)
+    yield
+    io.string
+  ensure
+    Rails.logger = original
+  end
+
+  def create_intent
+    RubyNative::IAP::PurchaseIntent.create!(
+      customer_id: "user_42",
+      product_id: "com.example.annual",
+      success_path: "/dashboard"
+    )
+  end
+
+  def capture_events
+    [].tap { |events| RubyNative.on_subscription_change { |event| events << event } }
+  end
+
+  def complete(intent, signed_transaction)
+    post "/native/iap/completions/#{intent.uuid}",
+      params: {signed_transaction: signed_transaction}.to_json,
+      headers: {"CONTENT_TYPE" => "application/json"}
+  end
+
+  def transaction_for(intent)
+    {
+      "appAccountToken" => intent.uuid,
+      "bundleId" => "com.example.app",
+      "productId" => "com.example.lifetime",
+      "originalTransactionId" => "2000000000000000",
+      "transactionId" => "2000000000000001",
+      "purchaseDate" => Time.utc(2026, 1, 1).to_i * 1000,
+      "expiresDate" => Time.utc(2027, 1, 1).to_i * 1000,
+      "environment" => "Production"
+    }
+  end
+
+  def in_production
+    original = Rails.env
+    Rails.env = "production"
+    yield
+  ensure
+    Rails.env = original
+  end
+
+  def assert_rejected(intent, events)
+    assert_response :unprocessable_entity
+    assert intent.reload.pending?
+    assert_empty events
   end
 end

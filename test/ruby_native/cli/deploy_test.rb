@@ -598,10 +598,8 @@ class DeployTest < Minitest::Test
     end
   end
 
-  private
+  # --- Signal preflight ---
 
-  # Minitest 6 dropped minitest/mock, so swap singleton methods by hand.
-  # Remove-then-define keeps the redefinition warnings out of the test output.
   def test_the_signal_preflight_blocks_a_deploy_with_broken_signals
     offense = RubyNative::CLI::Check::Offense.new(
       file: "app/views/pages/show.html.erb", line: 1, severity: :error, message: "Unknown signal `data-native-tab`."
@@ -614,14 +612,28 @@ class DeployTest < Minitest::Test
     assert_match "--skip-check", output
   end
 
+  def test_run_stops_before_the_build_when_signals_are_broken
+    offense = RubyNative::CLI::Check::Offense.new(
+      file: "a.erb", line: 1, severity: :error, message: "Unknown signal `data-native-tab`."
+    )
+
+    output, status, triggered = run_deploy_with_offenses([offense], argv: [])
+
+    assert_equal 1, status
+    assert_match "Unknown signal `data-native-tab`.", output
+    refute triggered
+  end
+
   def test_skip_check_bypasses_the_signal_preflight
     offense = RubyNative::CLI::Check::Offense.new(
       file: "a.erb", line: 1, severity: :error, message: "Unknown signal `data-native-tab`."
     )
 
-    _output, status = capture_deploy_preflight([offense], argv: ["--skip-check"])
+    output, status, triggered = run_deploy_with_offenses([offense], argv: ["--skip-check"])
 
     assert_equal 0, status
+    refute_match "Unknown signal", output
+    assert triggered
   end
 
   def test_a_warning_alone_does_not_block_a_deploy
@@ -642,13 +654,15 @@ class DeployTest < Minitest::Test
     assert_equal 0, status
   end
 
+  private
+
   def capture_deploy_preflight(offenses, argv:)
     deploy = RubyNative::CLI::Deploy.new(argv)
     status = 0
 
     output, = with_singleton_stub(RubyNative::CLI::Check, :signal_offenses, ->(*) { offenses }) do
       capture_io do
-        deploy.send(:check_signals!) unless argv.include?("--skip-check")
+        deploy.send(:check_signals!)
       rescue SystemExit => error
         status = error.status
       end
@@ -657,6 +671,31 @@ class DeployTest < Minitest::Test
     [output, status]
   end
 
+  def run_deploy_with_offenses(offenses, argv:)
+    deploy = stubbed_deploy(argv)
+    status = 0
+    triggered = false
+    deploy.define_singleton_method(:resolve_app_id!) { "app_123" }
+    deploy.define_singleton_method(:warn_scan_without_camera) { |_app_id| }
+    deploy.define_singleton_method(:trigger_build) do |_app_id|
+      triggered = true
+      {"id" => 1}
+    end
+    deploy.define_singleton_method(:poll_build_status) { |*| }
+
+    output, = with_singleton_stub(RubyNative::CLI::Check, :signal_offenses, ->(*) { offenses }) do
+      capture_io do
+        deploy.run
+      rescue SystemExit => error
+        status = error.status
+      end
+    end
+
+    [output, status, triggered]
+  end
+
+  # Minitest 6 dropped minitest/mock, so swap singleton methods by hand.
+  # Remove-then-define keeps the redefinition warnings out of the test output.
   def with_singleton_stub(receiver, name, replacement)
     original = receiver.method(name)
     own = receiver.singleton_class.instance_methods(false).include?(name)

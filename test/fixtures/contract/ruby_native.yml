@@ -1,0 +1,103 @@
+# Every key the gem reads and the native apps decode. The JSON it serves is
+# pinned in config.json beside it; see test/ruby_native/config_contract_test.rb.
+app:
+  name: Contract App
+  mode: advanced
+  entry_path: /home
+
+appearance:
+  tint_color: "#007AFF"
+  background_color:
+    light: "#FFFFFF"
+    dark: "#000000"
+  theme: auto
+  landscape: true
+  modal_dismiss_button: true
+  navbar:
+    logo:
+      light: "https://cdn.example.com/logo.png"
+      dark: "https://cdn.example.com/logo-dark.png"
+    background_color:
+      light: "#3B3F54"
+      dark: "#1E293B"
+    foreground_color: "#FFFFFF"
+    status_bar: light
+  splash:
+    enabled: true
+    spinner_color: "#007AFF"
+    status_bar: dark
+  android:
+    navbar:
+      background_color: "#1E293B"
+      foreground_color:
+        light: "#FFFFFF"
+        dark: "#E2E8F0"
+      title_alignment: center
+    tab_bar:
+      background_color:
+        light: "#F8FAFC"
+        dark: "#1E293B"
+      foreground_color: "#0F172A"
+
+tabs:
+  - title: Home
+    path: /home
+    icon: house
+    key: home
+    eager: true
+  - title: Orders
+    path: /orders
+    icons:
+      ios: bag
+      android: shopping_bag
+    key: orders
+    badge: true
+    auto_route:
+      - /orders/
+      - /receipts/
+  - title: Search
+    path: /search
+    icon: magnifyingglass
+    icons:
+      ios: magnifyingglass
+      android: search
+    key: search
+    search: true
+    auto_route: false
+
+auth:
+  oauth_paths:
+    - /auth/google
+    - /auth/github
+
+errors:
+  offline:
+    icons:
+      ios: wifi.slash
+      android: wifi_off
+  generic:
+    icon: exclamationmark.triangle
+    icons:
+      android: error
+
+analytics: false
+
+ios:
+  bundle_id: com.example.app
+  team_id: ABCDE12345
+
+android:
+  package: com.example.app
+  cert_fingerprint: "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF"
+  firebase:
+    app_id: "1:123456789012:android:0123456789abcdef"
+    api_key: example-api-key
+    project_id: example-app
+    sender_id: 123456789012
+
+linked_paths:
+  - /pair/
+  - /invite/
+
+ruby_native:
+  app_id: app_example

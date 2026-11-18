@@ -61,6 +61,7 @@ class RubyNative::IAP::NormalizableTest < Minitest::Test
       subtype: subtype,
       notification_uuid: "uuid",
       bundle_id: "com.example",
+      transaction_bundle_id: "com.example",
       app_account_token: "token",
       product_id: "prod",
       original_transaction_id: "orig",

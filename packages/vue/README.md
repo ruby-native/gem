@@ -44,7 +44,7 @@ Each component renders a hidden `data-native-*` signal element that the Ruby Nat
 - `NativeShareButton` - native nav bar button that opens the share sheet
 - `NativeShareMenuItem` - menu item that opens the share sheet
 - `NativeSubmitButton` - native "Save" button that submits a form
-- `NativeFab` - floating action button
+- `NativeFab` - floating action button (icon, optional title)
 - `NativeOverscroll` - per-page overscroll colors
 - `NativeBadge` - set the badge count on a home screen or tab bar icon
 - `NativeBackButton` - visible button that pops the native navigation stack

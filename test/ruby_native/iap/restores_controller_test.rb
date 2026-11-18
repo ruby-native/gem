@@ -1,4 +1,5 @@
 require "test_helper"
+require "support/storekit_signing"
 
 # Unlike completions, restore has no unsigned path to test through -- there is no
 # Xcode fallback, because a restore has nothing to fall back to. So the signature
@@ -180,6 +181,63 @@ class RubyNative::IAP::RestoresControllerTest < ActionDispatch::IntegrationTest
     assert intent.reload.completed?
   end
 
+  # --- Verification ---
+
+  def test_returns_unprocessable_entity_for_a_chain_entry_that_is_not_a_certificate
+    chain = StoreKitSigning.new
+    intent = create_intent(customer_id: "user_42")
+    x5c = [Base64.strict_encode64("not a certificate"), *chain.x5c.drop(1)]
+    jws = chain.sign({"appAccountToken" => intent.uuid, "transactionId" => "t_1"}, x5c: x5c)
+
+    event = capture_event { chain.trusted { restore(customer_id: "user_42", signed_transactions: [jws]) } }
+
+    assert_response :unprocessable_entity
+    assert_nil event
+    assert intent.reload.pending?
+  end
+
+  def test_restores_a_signed_transaction_for_the_configured_bundle_id
+    chain = StoreKitSigning.new
+    intent = create_intent(customer_id: "user_42")
+    jws = chain.sign({"appAccountToken" => intent.uuid, "transactionId" => "t_1", "bundleId" => "com.example.app"})
+
+    event = capture_event do
+      StoreKitSigning.with_bundle_id("com.example.app") do
+        chain.trusted { restore(customer_id: "user_42", signed_transactions: [jws]) }
+      end
+    end
+
+    assert_response :ok
+    assert_equal "user_42", event.owner_token
+    assert intent.reload.completed?
+  end
+
+  def test_does_not_restore_a_transaction_for_another_bundle_id
+    intent = create_intent(customer_id: "user_42")
+    stub_transaction("jws", intent: intent, bundle_id: "com.example.other")
+
+    event = capture_event do
+      StoreKitSigning.with_bundle_id("com.example.app") { restore(customer_id: "user_42") }
+    end
+
+    assert_response :unprocessable_entity
+    assert_nil event
+    assert intent.reload.pending?
+  end
+
+  def test_does_not_restore_a_transaction_with_no_bundle_id_when_one_is_configured
+    intent = create_intent(customer_id: "user_42")
+    stub_transaction("jws", intent: intent, bundle_id: nil)
+
+    event = capture_event do
+      StoreKitSigning.with_bundle_id("com.example.app") { restore(customer_id: "user_42") }
+    end
+
+    assert_response :unprocessable_entity
+    assert_nil event
+    assert intent.reload.pending?
+  end
+
   private
 
   # Stands in for an app that has this gem version but has not run the migration.
@@ -200,11 +258,15 @@ class RubyNative::IAP::RestoresControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-  def stub_transaction(jws, intent: nil, app_account_token: :from_intent, transaction_id: "t_1", environment: "Production")
+  def stub_transaction(
+    jws,
+    intent: nil, app_account_token: :from_intent, transaction_id: "t_1", environment: "Production", bundle_id: "com.example.app"
+  )
     token = (app_account_token == :from_intent) ? intent&.uuid : app_account_token
 
     STUBS[jws] = {
       "appAccountToken" => token,
+      "bundleId" => bundle_id,
       "productId" => "com.example.annual",
       "originalTransactionId" => "o_1",
       "transactionId" => transaction_id,

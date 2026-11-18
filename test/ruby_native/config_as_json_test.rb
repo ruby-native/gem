@@ -224,6 +224,20 @@ class RubyNative::ConfigAsJsonTest < Minitest::Test
     assert_equal "#FFFFFF", navbar[:foreground_color]
   end
 
+  def test_light_and_dark_logo_goes_out_as_logo_and_logo_dark
+    write_config(
+      app: {name: "Test App"},
+      appearance: {navbar: {logo: {light: "/logo.png", dark: "/logo-dark.png"}}},
+      tabs: [{title: "Home", path: "/", icon: "house"}]
+    )
+    RubyNative.load_config
+
+    navbar = RubyNative.config_as_json[:appearance][:navbar]
+    assert_equal "/logo.png", navbar[:logo]
+    assert_equal "/logo-dark.png", navbar[:logo_dark]
+    assert_equal({light: "/logo.png", dark: "/logo-dark.png"}, RubyNative.config.dig(:appearance, :navbar, :logo))
+  end
+
   def test_emits_analytics_false
     with_analytics_config(false) do
       assert_equal false, RubyNative.config_as_json[:analytics]

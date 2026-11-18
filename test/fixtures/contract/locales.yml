@@ -1,0 +1,34 @@
+en:
+  ruby_native:
+    tabs:
+      home:
+        title: Home
+      orders:
+        title: Orders
+      search:
+        title: Search
+    errors:
+      offline:
+        title: You're offline
+        message: Check your connection and try again.
+      generic:
+        title: Something went wrong
+        message: Please try again.
+      retry: Retry
+it:
+  ruby_native:
+    tabs:
+      home:
+        title: Casa
+      orders:
+        title: Ordini
+      search:
+        title: Cerca
+    errors:
+      offline:
+        title: Sei offline
+        message: Controlla la connessione e riprova.
+      generic:
+        title: Qualcosa è andato storto
+        message: Riprova.
+      retry: Riprova

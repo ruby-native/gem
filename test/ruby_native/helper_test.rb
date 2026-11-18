@@ -89,9 +89,46 @@ class RubyNative::HelperTest < ActionView::TestCase
   # presentation the shell silently ignores lands the page in the wrong place
   # with nothing on screen to explain why.
   def test_native_presentation_tag_rejects_an_unknown_intent
-    error = assert_raises(ArgumentError) { native_presentation_tag :modal }
-    assert_includes error.message, ":root"
-    assert_includes error.message, '"modal"'
+    error = assert_raises(ArgumentError) { native_presentation_tag :sheet }
+    assert_includes error.message, ":root or :modal"
+    assert_includes error.message, '"sheet"'
+  end
+
+  def test_native_presentation_tag_modal
+    assert_includes native_presentation_tag(:modal), 'data-native-presentation="modal"'
+    assert_equal "modal", response.headers["Native-Presentation"]
+  end
+
+  def test_native_presentation_tag_skips_the_header_on_a_failed_submit
+    response.status = 422
+    assert_includes native_presentation_tag(:modal), 'data-native-presentation="modal"'
+    assert_nil response.headers["Native-Presentation"]
+  end
+
+  def test_native_presentation_tag_modal_not_dismissible
+    html = native_presentation_tag(:modal, dismissible: false)
+    assert_includes html, 'data-native-presentation="modal"'
+    assert_includes html, 'data-native-dismissible="false"'
+  end
+
+  def test_native_presentation_tag_dismissible_by_default
+    refute_includes native_presentation_tag(:modal), "data-native-dismissible"
+  end
+
+  def test_native_presentation_tag_dismiss_button_overrides_per_page
+    assert_includes native_presentation_tag(:modal, dismiss_button: true), 'data-native-dismiss-button="true"'
+    assert_includes native_presentation_tag(:modal, dismiss_button: false), 'data-native-dismiss-button="false"'
+    refute_includes native_presentation_tag(:modal), "data-native-dismiss-button"
+  end
+
+  def test_native_presentation_tag_dismiss_button_needs_a_modal
+    error = assert_raises(ArgumentError) { native_presentation_tag :root, dismiss_button: true }
+    assert_includes error.message, ":modal"
+  end
+
+  def test_native_presentation_tag_dismissible_false_needs_a_modal
+    error = assert_raises(ArgumentError) { native_presentation_tag :root, dismissible: false }
+    assert_includes error.message, ":modal"
   end
 
   def test_native_back_button_tag
@@ -253,6 +290,17 @@ class RubyNative::HelperTest < ActionView::TestCase
   def test_native_fab_tag_with_tint_color
     html = native_fab_tag(icon: "plus", color: :tint)
     assert_includes html, 'data-native-color="tint"'
+  end
+
+  def test_native_fab_tag_with_title
+    html = native_fab_tag(icon: "plus", title: "New <post>", href: "/posts/new")
+    assert_includes html, 'data-native-title="New &lt;post&gt;"'
+    assert_includes html, 'data-native-icon="plus"'
+  end
+
+  def test_native_fab_tag_omits_blank_title
+    refute_includes native_fab_tag(icon: "plus", title: ""), "data-native-title"
+    refute_includes native_fab_tag(icon: "plus"), "data-native-title"
   end
 
   def test_native_fab_tag_requires_icon
@@ -418,6 +466,23 @@ class RubyNative::HelperTest < ActionView::TestCase
   def test_native_navbar_tag_pull_to_refresh_disabled
     html = native_navbar_tag("Today", pull_to_refresh: false)
     assert_includes html, 'data-native-pull-to-refresh="false"'
+  end
+
+  def test_native_navbar_tag_logo_omitted_by_default
+    assert_not_includes native_navbar_tag("Today"), "data-native-navbar-logo"
+  end
+
+  def test_native_navbar_tag_logo_false
+    assert_includes native_navbar_tag("Settings", logo: false), 'data-native-navbar-logo="false"'
+  end
+
+  def test_native_navbar_tag_logo_true
+    assert_includes native_navbar_tag(logo: true), 'data-native-navbar-logo="true"'
+  end
+
+  def test_native_navbar_tag_logo_rejects_a_path
+    error = assert_raises(ArgumentError) { native_navbar_tag(logo: "/logo.png") }
+    assert_match "logo: must be true or false", error.message
   end
 
   def test_native_navbar_tag_without_title

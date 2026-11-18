@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.21.0] - 2026-11-17
+
+### Added
+
+- **Open providers like Plaid Hosted Link in a secure browser and come back signed in.** Mark the link with `data: { native_secure_session: true }` and pass `native_secure_session_completion_url(return_to:)` as the completion URL. Needs a new build.
+- **Any page can open as a modal in Advanced Mode, and multi-step flows stay in one modal.** Mark links with `data: { native_presentation: "modal" }`, and add `native_presentation_tag :modal` to pages a form or redirect lands on. Needs a new build. Older builds push the page like any other link, and they read a marked link as the page's own presentation, so render `native_presentation_tag :root` above any marked link until your users update.
+- **`native_presentation_tag :modal, dismissible: false` makes a modal people can't close.** Advanced Mode, needs a new build. Older builds ignore it and show a back button, so keep your server-side check until your users update.
+- **Choose whether modals show a close button, the same on both platforms.** Set `appearance.modal_dismiss_button`, or `dismiss_button:` on `native_presentation_tag` for one page. Advanced Mode, needs a new build.
+- **Center navbar titles on Android with `appearance.android.navbar.title_alignment: center`.** Needs a new build.
+- **Floating action buttons can show text next to the icon with `title:`.** Both platforms, both modes. Needs a new build, and older builds show the icon alone.
+- **Hide the navbar logo on one page with `native_navbar_tag "Settings", logo: false`.** That page shows its title, title menu, or segments instead, and every other page keeps the logo. Needs a new build, and older builds keep showing the logo.
+- **Give the navbar logo a dark mode image.** Set `appearance.navbar.logo` to `{ light:, dark: }` and the app swaps them with the theme. Needs a new build, and older builds show the light image in both themes.
+
+### Changed
+
+- **The iOS launch splash is on by default, first launch included.** Turn it off with `appearance.splash.enabled: false`. Needs a new build.
+- **In-app purchases are checked against your app's bundle ID.** Set `ios.bundle_id` in `config/ruby_native.yml` and a purchase, restore, or App Store notification made for any other app is rejected. It has to match the bundle ID in App Store Connect exactly, since a mismatch rejects every purchase. Without it purchases still work, and your server logs a warning.
+- **Android apps open from the last config they loaded, like iOS.** The app starts right away, checks for a newer `config/ruby_native.yml` in the background, and restarts once if it changed. A server error or a bad config no longer puts people who already use the app on the error screen. Needs a new build.
+- **App Store transactions get a stricter certificate check.** The signing certificates must be Apple's App Store ones and valid when the transaction was signed. A malformed transaction now answers 422, not 500.
+
+### Fixed
+
+- **`entry_path` works on Android.** The app opens there in both modes, and a single-tab Advanced Mode app opens on its tab's path, like iOS. Needs a new build.
+- **An unrecognized `theme` or `status_bar`, or a tab with no icon, no longer stops an iOS app from loading.** It falls back to the default, like Android. Needs a new build, and older builds still stop.
+- **Signing in on Android no longer loads the first page twice or flashes an error.** Advanced Mode, when the login page isn't a modal.
+- **Signing out on Android no longer freezes the app.** It stopped responding when you signed out from a page opened on the first tab. Advanced Mode.
+- **Push notifications on Android reach the right person after an account switch.** The app registers its push token again when the signed-in user changes, for apps that use `native_identity_tag`. Needs a new build.
+- **Android app icons that fill the whole square no longer show a thin dark edge.** It showed on Pixel and other phones that crop the icon to a circle. Your next Android build picks it up, with no new gem needed.
+- **A push registration that fails on Android is tried again on the next page.** A redirect to a sign-in page no longer counts as registered, and a token that changes mid-request is still sent. Needs a new build.
+- **A redirect to a sign-in page no longer counts as a registered push token on iOS.** The app keeps trying until your server accepts the token. Needs a new build.
+- **Universal links with encoded characters open the right page on iOS.** A link to `/tags/c%23` used to open `/tags/c#`, and a link with a mixed-case host was ignored. A trailing slash is now kept as written. Needs a new build.
+
 ## [0.20.0] - 2026-11-06
 
 ### Added

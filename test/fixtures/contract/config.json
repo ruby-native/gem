@@ -1,0 +1,160 @@
+{
+  "analytics": false,
+  "android": {
+    "cert_fingerprint": "00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF",
+    "firebase": {
+      "api_key": "example-api-key",
+      "app_id": "1:123456789012:android:0123456789abcdef",
+      "project_id": "example-app",
+      "sender_id": "123456789012"
+    },
+    "package": "com.example.app"
+  },
+  "app": {
+    "entry_path": "/home",
+    "mode": "advanced",
+    "name": "Contract App"
+  },
+  "appearance": {
+    "android": {
+      "navbar": {
+        "background_color": "#1E293B",
+        "foreground_color": {
+          "dark": "#E2E8F0",
+          "light": "#FFFFFF"
+        },
+        "title_alignment": "center"
+      },
+      "tab_bar": {
+        "background_color": {
+          "dark": "#1E293B",
+          "light": "#F8FAFC"
+        },
+        "foreground_color": "#0F172A"
+      }
+    },
+    "background_color": {
+      "dark": "#000000",
+      "light": "#FFFFFF"
+    },
+    "landscape": true,
+    "modal_dismiss_button": true,
+    "navbar": {
+      "background_color": {
+        "dark": "#1E293B",
+        "light": "#3B3F54"
+      },
+      "foreground_color": "#FFFFFF",
+      "logo": "https://cdn.example.com/logo.png",
+      "logo_dark": "https://cdn.example.com/logo-dark.png",
+      "status_bar": "light"
+    },
+    "splash": {
+      "enabled": true,
+      "spinner_color": "#007AFF",
+      "status_bar": "dark"
+    },
+    "theme": "auto",
+    "tint_color": "#007AFF"
+  },
+  "auth": {
+    "oauth_paths": [
+      "/auth/google",
+      "/auth/github"
+    ]
+  },
+  "errors": {
+    "generic": {
+      "icon": "exclamationmark.triangle",
+      "icons": {
+        "android": "error"
+      },
+      "message": {
+        "en": "Please try again.",
+        "it": "Riprova."
+      },
+      "title": {
+        "en": "Something went wrong",
+        "it": "Qualcosa è andato storto"
+      }
+    },
+    "offline": {
+      "icon": "wifi.slash",
+      "icons": {
+        "android": "wifi_off",
+        "ios": "wifi.slash"
+      },
+      "message": {
+        "en": "Check your connection and try again.",
+        "it": "Controlla la connessione e riprova."
+      },
+      "title": {
+        "en": "You're offline",
+        "it": "Sei offline"
+      }
+    },
+    "retry": {
+      "en": "Retry",
+      "it": "Riprova"
+    }
+  },
+  "ios": {
+    "bundle_id": "com.example.app",
+    "team_id": "ABCDE12345"
+  },
+  "linked_paths": [
+    "/pair/",
+    "/invite/"
+  ],
+  "ruby_native": {
+    "app_id": "app_example"
+  },
+  "tabs": [
+    {
+      "eager": true,
+      "icon": "house",
+      "key": "home",
+      "path": "/home",
+      "title": "Home",
+      "titles": {
+        "en": "Home",
+        "it": "Casa"
+      }
+    },
+    {
+      "auto_route": [
+        "/orders/",
+        "/receipts/"
+      ],
+      "badge": true,
+      "icon": "bag",
+      "icons": {
+        "android": "shopping_bag",
+        "ios": "bag"
+      },
+      "key": "orders",
+      "path": "/orders",
+      "title": "Orders",
+      "titles": {
+        "en": "Orders",
+        "it": "Ordini"
+      }
+    },
+    {
+      "auto_route": false,
+      "icon": "magnifyingglass",
+      "icons": {
+        "android": "search",
+        "ios": "magnifyingglass"
+      },
+      "key": "search",
+      "path": "/search",
+      "search": true,
+      "title": "Search",
+      "titles": {
+        "en": "Search",
+        "it": "Cerca"
+      }
+    }
+  ]
+}

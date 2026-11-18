@@ -12,7 +12,11 @@ module RubyNative
         transactions = Array(params[:signed_transactions])
         return head :bad_request if transactions.empty?
 
-        transactions.each { |signed_transaction| restore(decode_and_verify_jws(signed_transaction)) }
+        transactions.each do |signed_transaction|
+          transaction = decode_and_verify_jws(signed_transaction)
+          verify_bundle_id!(transaction["bundleId"])
+          restore(transaction)
+        end
 
         head :ok
       rescue VerificationError, JWT::DecodeError => e

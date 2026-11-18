@@ -1,7 +1,9 @@
 require "test_helper"
 
 class RubyNative::NativeDetectionTest < Minitest::Test
-  FakeRequest = Struct.new(:user_agent)
+  FakeRequest = Struct.new(:user_agent, :cookies) do
+    def initialize(user_agent, cookies = {}) = super
+  end
 
   class FakeController
     include RubyNative::NativeDetection
@@ -191,5 +193,34 @@ class RubyNative::NativeDetectionTest < Minitest::Test
     assert_nil controller.native_app_build
     assert_nil controller.native_os_version
     assert_nil controller.native_os_build
+  end
+
+  def test_secure_session_completion_url_uses_the_app_scheme_cookie
+    controller = secure_session_controller("rubynative-com-example-app")
+    assert_equal "rubynative-com-example-app://secure-session?return_to=%2Fbank%2Fdone%3Fok%3D1",
+      controller.native_secure_session_completion_url(return_to: "/bank/done?ok=1")
+  end
+
+  def test_secure_session_completion_url_is_nil_without_the_cookie
+    assert_nil secure_session_controller(nil).native_secure_session_completion_url(return_to: "/bank/done")
+  end
+
+  def test_secure_session_completion_url_ignores_a_scheme_that_is_not_the_apps
+    assert_nil secure_session_controller("javascript").native_secure_session_completion_url(return_to: "/bank/done")
+    assert_nil secure_session_controller("https").native_secure_session_completion_url(return_to: "/bank/done")
+  end
+
+  def test_secure_session_completion_url_requires_a_path_on_the_site
+    controller = secure_session_controller("rubynative-com-example-app")
+    [ "https://evil.com", "//evil.com", "bank/done", "" ].each do |return_to|
+      assert_raises(ArgumentError) { controller.native_secure_session_completion_url(return_to: return_to) }
+    end
+  end
+
+  private
+
+  def secure_session_controller(scheme)
+    cookies = scheme ? { "_ruby_native_callback_scheme" => scheme } : {}
+    FakeController.new(FakeRequest.new("Ruby Native iOS/1.4 RubyNative/0.19.2", cookies))
   end
 end

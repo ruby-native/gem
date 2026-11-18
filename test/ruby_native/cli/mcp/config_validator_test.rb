@@ -120,6 +120,22 @@ class ConfigValidatorTest < Minitest::Test
     assert_match "needs both", offense.message
   end
 
+  def test_modal_dismiss_button_has_to_be_a_boolean
+    assert_empty validate("appearance:\n  modal_dismiss_button: true\n")
+
+    offense = validate("appearance:\n  modal_dismiss_button: \"yes\"\n").first
+    assert_equal :error, offense.severity
+    assert_equal "appearance.modal_dismiss_button", offense.key
+  end
+
+  def test_an_unknown_android_title_alignment_is_a_warning
+    assert_empty validate("appearance:\n  android:\n    navbar:\n      title_alignment: center\n")
+
+    offense = validate("appearance:\n  android:\n    navbar:\n      title_alignment: middle\n").first
+    assert_equal :warning, offense.severity
+    assert_equal "appearance.android.navbar.title_alignment", offense.key
+  end
+
   def test_an_unknown_theme_is_an_error
     offense = validate("appearance:\n  theme: sytem\n").first
 
@@ -136,6 +152,18 @@ class ConfigValidatorTest < Minitest::Test
 
     assert_equal "appearance.navbar.status_bar", offense.key
     assert_equal :error, offense.severity
+  end
+
+  def test_a_light_and_dark_logo_is_valid
+    assert_empty validate("appearance:\n  navbar:\n    logo:\n      light: \"/logo.png\"\n      dark: \"/logo-dark.png\"\n")
+  end
+
+  def test_a_logo_missing_dark_is_an_error
+    offense = validate("appearance:\n  navbar:\n    logo:\n      light: \"/logo.png\"\n").first
+
+    assert_equal "appearance.navbar.logo", offense.key
+    assert_equal :error, offense.severity
+    assert_match "`dark`", offense.message
   end
 
   def test_an_unknown_appearance_key_is_a_warning

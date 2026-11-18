@@ -174,6 +174,7 @@ module RubyNative
     # emitting it so they still boot when the YAML omits the block.
     payload[:appearance] ||= {}
     localize_tab_titles(payload[:tabs])
+    split_navbar_logo(payload.dig(:appearance, :navbar))
     errors = error_screen_config(payload[:errors])
     if errors.empty?
       payload.delete(:errors)
@@ -181,6 +182,16 @@ module RubyNative
       payload[:errors] = errors
     end
     payload
+  end
+
+  # A `{ light:, dark: }` logo goes out as `logo` plus `logo_dark`. Builds before
+  # 0.21 decode `logo` as a plain String and fail the whole config on a mapping.
+  def self.split_navbar_logo(navbar)
+    return unless navbar.is_a?(Hash) && navbar[:logo].is_a?(Hash)
+
+    logo = navbar[:logo]
+    navbar[:logo] = logo[:light]
+    navbar[:logo_dark] = logo[:dark]
   end
 
   # Fills each tab's `titles` from `ruby_native.tabs.<key>.title` in the host

@@ -7,6 +7,8 @@ module RubyNative
 
       def process(signed_payload)
         notification = parse_notification(signed_payload)
+        verify_bundle_id!(notification.bundle_id)
+        verify_bundle_id!(notification.transaction_bundle_id)
         intent = PurchaseIntent.find_by(uuid: notification.app_account_token)
 
         event = build_event(notification, intent)
