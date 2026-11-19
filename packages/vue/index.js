@@ -204,14 +204,16 @@ export const NativeToast = defineComponent({
 export const NativeNavbar = defineComponent({
   name: "NativeNavbar",
   props: {
-    title: { type: String, default: "" },
+    // Omit to show the page's <title>; "", null, or false shows no title.
+    title: { type: [String, Boolean], default: undefined },
     pullToRefresh: { type: Boolean, default: true },
     // An explicit undefined default, or Vue casts an absent Boolean prop to false.
     logo: { type: Boolean, default: undefined }
   },
   render() {
     /** @type {Record<string, any>} */
-    const props = { "data-native-navbar": this.title, hidden: true }
+    const props = { "data-native-navbar": this.title || "", hidden: true }
+    if (this.title !== undefined && !this.title) props["data-native-navbar-title"] = "false"
     if (!this.pullToRefresh) props["data-native-pull-to-refresh"] = "false"
     if (typeof this.logo === "boolean") props["data-native-navbar-logo"] = String(this.logo)
     return h("div", props, this.$slots.default?.())

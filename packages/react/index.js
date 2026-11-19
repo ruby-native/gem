@@ -199,15 +199,16 @@ export function NativeToast({ message, icon, icons, duration = 4, appearance = "
 
 /**
  * @param {object} props
- * @param {string} [props.title]
+ * @param {string | false | null} [props.title] Omit to show the page's `<title>`; `""`, `null`, or `false` shows no title.
  * @param {boolean} [props.pullToRefresh]
  * @param {boolean} [props.logo]
  * @param {import("react").ReactNode} [props.children]
  * @returns {import("react").ReactElement}
  */
-export function NativeNavbar({ title = "", pullToRefresh = true, logo, children }) {
+export function NativeNavbar({ title, pullToRefresh = true, logo, children }) {
   /** @type {Record<string, any>} */
-  const props = { "data-native-navbar": title, hidden: true }
+  const props = { "data-native-navbar": title || "", hidden: true }
+  if (title !== undefined && !title) props["data-native-navbar-title"] = "false"
   if (!pullToRefresh) props["data-native-pull-to-refresh"] = "false"
   if (typeof logo === "boolean") props["data-native-navbar-logo"] = String(logo)
   return createElement("div", props, children)

@@ -207,6 +207,18 @@ export const fixtures = [
     expected: [signal({ "data-native-navbar": "" })]
   },
   {
+    name: "hides the title when it is explicitly blank",
+    component: "NativeNavbar",
+    props: { title: "" },
+    expected: [signal({ "data-native-navbar": "", "data-native-navbar-title": "false" })]
+  },
+  {
+    name: "hides the title when it is false",
+    component: "NativeNavbar",
+    props: { title: false },
+    expected: [signal({ "data-native-navbar": "", "data-native-navbar-title": "false" })]
+  },
+  {
     name: "can disable pull to refresh",
     component: "NativeNavbar",
     props: { title: "Today", pullToRefresh: false },

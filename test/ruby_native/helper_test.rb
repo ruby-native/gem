@@ -468,6 +468,30 @@ class RubyNative::HelperTest < ActionView::TestCase
     assert_includes html, 'data-native-pull-to-refresh="false"'
   end
 
+  def test_native_navbar_tag_without_a_title_keeps_the_page_title
+    html = native_navbar_tag
+    assert_includes html, 'data-native-navbar=""'
+    refute_includes html, "data-native-navbar-title"
+  end
+
+  def test_native_navbar_tag_blank_title_hides_the_title
+    [ "", nil, false ].each do |title|
+      html = native_navbar_tag(title)
+      assert_includes html, 'data-native-navbar=""', "title: #{title.inspect}"
+      assert_includes html, 'data-native-navbar-title="false"', "title: #{title.inspect}"
+    end
+  end
+
+  def test_native_navbar_tag_title_omits_the_hidden_flag
+    refute_includes native_navbar_tag("Today"), "data-native-navbar-title"
+  end
+
+  def test_native_navbar_tag_blank_title_with_logo
+    html = native_navbar_tag("", logo: true)
+    assert_includes html, 'data-native-navbar-title="false"'
+    assert_includes html, 'data-native-navbar-logo="true"'
+  end
+
   def test_native_navbar_tag_logo_omitted_by_default
     assert_not_includes native_navbar_tag("Today"), "data-native-navbar-logo"
   end

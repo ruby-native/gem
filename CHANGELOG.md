@@ -9,15 +9,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Breaking
 
 - **Add `config.iap_enabled = true` to `RubyNative.configure` if your app sells in-app purchases.** Without it, purchases and Apple's subscription notifications stop reaching your app.
+- **`native_navbar_tag` with an empty or `nil` title now shows no title instead of the page's `<title>`.** Leave the title out entirely, as in `native_navbar_tag`, to keep showing the page's `<title>`.
 
 ### Added
 
 - **Inspect your pages in the Ruby Native app with Safari's Web Inspector or Chrome's `chrome://inspect`.** Both platforms. Your own builds stay closed to inspectors.
 - **Handle push device registration yourself by setting `config.push_enabled = false` in `RubyNative.configure`.**
+- **Hide the navbar title on a page with `native_navbar_tag(false)`.** Also `title={false}` on the React and Vue `NativeNavbar`. Needs a new build.
+- **Fade the navbar logo out during the push by adding `data: { native_navbar_logo: false }` to a link to a page that hides it.** Advanced Mode.
 
 ### Fixed
 
 - **Malformed push token registrations and OAuth sign-in requests no longer show up as errors in your error tracker.**
+- **The navbar logo no longer slides with each screen on Android when you push or go back.** Advanced Mode, Android only.
 
 ## [0.21.0] - 2026-11-17
 

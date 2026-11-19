@@ -110,6 +110,9 @@ signals:
   data-native-navbar-logo:
     since: "0.21.0"
     helper: native_navbar_tag
+  data-native-navbar-title:
+    since: "0.21.1"
+    helper: native_navbar_tag
   data-native-overscroll-bottom:
     since: "0.5.0"
     helper: native_overscroll_tag
